@@ -28,6 +28,12 @@ function createNotesTestApp() {
       );
       return { notes: owned.map(present), total: owned.length };
     },
+    async listTrash(userId, pagination) {
+      const owned = [...notes.values()].filter(
+        (note) => note.userId === userId && note.state === 'trashed',
+      );
+      return { notes: owned.map(present), total: owned.length, pagination };
+    },
     async get(userId, noteId) {
       const note = notes.get(noteId);
       if (!note || note.userId !== userId) throw notFoundError();
@@ -55,6 +61,34 @@ function createNotesTestApp() {
           'The note changed before your update could be saved.',
         );
       Object.assign(note, input, { revision: note.revision + 1 });
+      return present(note);
+    },
+    async trash(userId, noteId) {
+      const note = notes.get(noteId);
+      if (!note || note.userId !== userId) throw notFoundError();
+      if (!['active', 'archived'].includes(note.state))
+        throw new AppError(
+          409,
+          'INVALID_STATE_TRANSITION',
+          'The resource is not available for this operation.',
+        );
+      note.restoreState = note.state;
+      note.state = 'trashed';
+      note.trashedAt = '2026-09-09T00:01:00.000Z';
+      return present(note);
+    },
+    async restore(userId, noteId) {
+      const note = notes.get(noteId);
+      if (!note || note.userId !== userId) throw notFoundError();
+      if (note.state !== 'trashed')
+        throw new AppError(
+          409,
+          'INVALID_STATE_TRANSITION',
+          'The resource is not available for this operation.',
+        );
+      note.state = note.restoreState ?? 'active';
+      note.restoreState = null;
+      note.trashedAt = null;
       return present(note);
     },
   };
@@ -240,5 +274,51 @@ describe('notes API', () => {
     expect(unsafeLink.status).toBe(400);
     expect(unsafeLink.body.error.fields.contentJson).toContain('unsafe');
     expect(unsupportedNode.status).toBe(400);
+  });
+
+  it('moves owned notes to Trash and restores them', async () => {
+    const app = createNotesTestApp();
+    const created = await userRequest(app, 'a', 'post', '/api/v1/notes')
+      .set('x-csrf-token', 'test')
+      .send({ title: 'Recover me' });
+    const noteId = created.body.data.id;
+
+    const trashed = await userRequest(
+      app,
+      'a',
+      'delete',
+      `/api/v1/notes/${noteId}`,
+    ).set('x-csrf-token', 'test');
+    const normalList = await userRequest(app, 'a', 'get', '/api/v1/notes');
+    const trashList = await userRequest(app, 'a', 'get', '/api/v1/trash');
+    const foreignTrash = await userRequest(app, 'b', 'get', '/api/v1/trash');
+    const foreignRestore = await userRequest(
+      app,
+      'b',
+      'post',
+      `/api/v1/notes/${noteId}/restore`,
+    ).set('x-csrf-token', 'test');
+    const restored = await userRequest(
+      app,
+      'a',
+      'post',
+      `/api/v1/notes/${noteId}/restore`,
+    ).set('x-csrf-token', 'test');
+
+    expect(trashed.body.data).toMatchObject({
+      title: 'Recover me',
+      state: 'trashed',
+      restoreState: 'active',
+    });
+    expect(normalList.body.data).toHaveLength(0);
+    expect(trashList.body.data).toHaveLength(1);
+    expect(foreignTrash.body.data).toHaveLength(0);
+    expect(foreignRestore.status).toBe(404);
+    expect(restored.body.data).toMatchObject({
+      title: 'Recover me',
+      state: 'active',
+      restoreState: null,
+      trashedAt: null,
+    });
   });
 });

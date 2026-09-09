@@ -1,7 +1,8 @@
 import { query } from '../../db/query.js';
 
 const NOTE_COLUMNS = `
-  id, user_id, title, content_json, state, revision,
+  id, user_id, notebook_id, title, content_json, state, restore_state,
+  is_favorite, revision, trashed_at,
   created_at, updated_at
 `;
 
@@ -9,10 +10,14 @@ function toNote(row) {
   if (!row) return null;
   return {
     id: row.id,
+    notebookId: row.notebook_id,
     title: row.title,
     contentJson: row.content_json,
     state: row.state,
+    restoreState: row.restore_state,
+    isFavorite: row.is_favorite,
     revision: row.revision,
+    trashedAt: row.trashed_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -84,6 +89,44 @@ export function createNotesRepository(database = { query }) {
           searchableText ?? null,
           revision,
         ],
+      );
+      return toNote(result.rows[0]);
+    },
+
+    async moveToTrash(client, userId, noteId) {
+      const result = await client.query(
+        `UPDATE notes
+         SET state = 'trashed',
+             restore_state = state,
+             trashed_at = NOW(),
+             updated_at = NOW()
+         WHERE id = $1 AND user_id = $2 AND state IN ('active', 'archived')
+         RETURNING ${NOTE_COLUMNS}`,
+        [noteId, userId],
+      );
+      return toNote(result.rows[0]);
+    },
+
+    async findOwnedNotebook(client, userId, notebookId) {
+      if (!notebookId) return null;
+      const result = await client.query(
+        'SELECT id FROM notebooks WHERE id = $1 AND user_id = $2',
+        [notebookId, userId],
+      );
+      return result.rows[0] ?? null;
+    },
+
+    async restore(client, userId, noteId, { state, notebookId }) {
+      const result = await client.query(
+        `UPDATE notes
+         SET state = $3,
+             notebook_id = $4,
+             restore_state = NULL,
+             trashed_at = NULL,
+             updated_at = NOW()
+         WHERE id = $1 AND user_id = $2 AND state = 'trashed'
+         RETURNING ${NOTE_COLUMNS}`,
+        [noteId, userId, state, notebookId ?? null],
       );
       return toNote(result.rows[0]);
     },

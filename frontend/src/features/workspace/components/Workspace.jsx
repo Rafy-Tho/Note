@@ -15,6 +15,9 @@ function draftSignature(note) {
 
 export function Workspace({ session, onSignOut }) {
   const [notes, setNotes] = useState([]);
+  const [trashNotes, setTrashNotes] = useState([]);
+  const [view, setView] = useState('notes');
+  const [trashStatus, setTrashStatus] = useState('ready');
   const [selected, setSelected] = useState(null);
   const [draft, setDraft] = useState(null);
   const [status, setStatus] = useState('loading');
@@ -41,6 +44,21 @@ export function Workspace({ session, onSignOut }) {
         setStatus('ready');
       });
   }, []);
+
+  useEffect(() => {
+    if (view !== 'trash') return;
+    setTrashStatus('loading');
+    notesApi
+      .listTrash()
+      .then((data) => {
+        setTrashNotes(data);
+        setTrashStatus('ready');
+      })
+      .catch((requestError) => {
+        setError(requestError.message);
+        setTrashStatus('ready');
+      });
+  }, [view]);
 
   useEffect(() => {
     setDraft(selected);
@@ -152,6 +170,53 @@ export function Workspace({ session, onSignOut }) {
     setSelected(note);
   }
 
+  function switchView(nextView) {
+    if (nextView === view) return;
+    if (savingRef.current) return;
+    if (
+      dirtyRef.current &&
+      !window.confirm('You have unsaved changes. Switch views anyway?')
+    )
+      return;
+    setView(nextView);
+    setSelected(nextView === 'trash' ? null : (notes[0] ?? null));
+  }
+
+  async function trashCurrentNote() {
+    if (!draft || savingRef.current) return;
+    if (!window.confirm('Move this note to Trash?')) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await notesApi.trash(draft.id);
+      const remaining = notes.filter((note) => note.id !== draft.id);
+      setNotes(remaining);
+      setSelected(remaining[0] ?? null);
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function restoreNote(note) {
+    setBusy(true);
+    setError(null);
+    try {
+      const restored = await notesApi.restore(note.id);
+      setTrashNotes((current) =>
+        current.filter((currentNote) => currentNote.id !== restored.id),
+      );
+      setNotes((current) => [restored, ...current]);
+      setView('notes');
+      setSelected(restored);
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function reloadServerCopy() {
     if (!draft) return;
     try {
@@ -199,6 +264,20 @@ export function Workspace({ session, onSignOut }) {
           <span className={styles.email}>{session.user.email}</span>
           <button
             className={styles.secondaryButton}
+            onClick={() => switchView('notes')}
+            aria-pressed={view === 'notes'}
+          >
+            Notes
+          </button>
+          <button
+            className={styles.secondaryButton}
+            onClick={() => switchView('trash')}
+            aria-pressed={view === 'trash'}
+          >
+            Trash
+          </button>
+          <button
+            className={styles.secondaryButton}
             onClick={signOut}
             disabled={busy}
           >
@@ -214,18 +293,50 @@ export function Workspace({ session, onSignOut }) {
           <div className={styles.collectionHeader}>
             <div>
               <p className={styles.eyebrow}>Private notes</p>
-              <h1 id="workspace-title">Notes</h1>
+              <h1 id="workspace-title">
+                {view === 'trash' ? 'Trash' : 'Notes'}
+              </h1>
             </div>
-            <button
-              className={styles.primaryButton}
-              onClick={createNote}
-              disabled={busy}
-            >
-              + New note
-            </button>
+            {view === 'notes' && (
+              <button
+                className={styles.primaryButton}
+                onClick={createNote}
+                disabled={busy}
+              >
+                + New note
+              </button>
+            )}
           </div>
           {error && <Alert>{error}</Alert>}
-          {notes.length === 0 ? (
+          {view === 'trash' && trashStatus === 'loading' ? (
+            <div className={styles.empty} aria-live="polite">
+              Loading Trash...
+            </div>
+          ) : view === 'trash' && trashNotes.length === 0 ? (
+            <div className={styles.empty}>
+              <h2>Trash is empty.</h2>
+              <p>Notes moved here can be restored later.</p>
+            </div>
+          ) : view === 'trash' ? (
+            <div className={styles.noteList} aria-label="Trashed notes">
+              {trashNotes.map((note) => (
+                <div className={styles.noteRow} key={note.id}>
+                  <strong>{note.title || 'Untitled note'}</strong>
+                  <span>
+                    {documentText(note.contentJson).slice(0, 72) ||
+                      'Blank note'}
+                  </span>
+                  <button
+                    className={styles.secondaryButton}
+                    onClick={() => restoreNote(note)}
+                    disabled={busy}
+                  >
+                    Restore
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : notes.length === 0 ? (
             <div className={styles.empty}>
               <h2>Your workspace is clear.</h2>
               <p>Create a note to begin capturing your thoughts.</p>
@@ -270,6 +381,13 @@ export function Workspace({ session, onSignOut }) {
                     Reload server copy
                   </button>
                 )}
+                <button
+                  className={styles.dangerButton}
+                  onClick={trashCurrentNote}
+                  disabled={busy || saveStatus === 'Saving'}
+                >
+                  Move to Trash
+                </button>
               </div>
               <input
                 className={styles.titleInput}

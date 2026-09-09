@@ -137,6 +137,10 @@ export function validateNoteList(query) {
   };
 }
 
+export function validateTrashList(query) {
+  return assertPagination(query);
+}
+
 export function validateCreateNote(body) {
   assertObject(body);
   const title = body.title ?? '';

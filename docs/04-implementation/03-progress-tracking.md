@@ -12,7 +12,7 @@
 | Field | Value |
 | --- | --- |
 | Current phase | Implementation |
-| Current step | Step 8 - Rich Text and Autosave Slice |
+| Current step | Step 9 - Trash and Restore Slice |
 | Overall status | In Progress |
 | Blocker | None for the completed bootstrap and database gates. |
 | Last updated | 2026-09-09 |
@@ -30,7 +30,7 @@
 | 6 | Authentication slice | In Progress | Users can register, sign in, use protected routes, and sign out through the UI. | React auth screens, session-aware routing, API client, CSRF-aware logout, client validation, loading/success/failure states, frontend lint/build/tests pass. Browser journey coverage remains pending. |
 | 7 | Core notes slice | Complete | Users can create, view, list, and edit only their own notes through the UI. | Notes API ownership tests, frontend document tests, PostgreSQL-backed timestamps, frontend build, and Playwright authenticated create/edit/reload journey pass. |
 | 8 | Rich text and autosave slice | In Progress | Rich text is safe and stale saves cannot overwrite newer content. | Tiptap editor, safe document validation, searchable text, queued 800 ms autosave, revision-conflict recovery, API/security tests, frontend tests, lint, and build pass. Playwright verification is pending because Chromium is unavailable locally. |
-| 9 | Trash and restore slice | Not Started | Users can recover owned notes without unintended data loss. | |
+| 9 | Trash and restore slice | In Progress | Users can recover owned notes without unintended data loss. | Transactional Trash/restore API, ownership checks, normal-list exclusion, recovery fallback, Trash UI, API/service tests, lint, and build pass. Playwright verification is pending because Chromium is unavailable locally. |
 | 10 | Minimum tags slice | Not Started | Owned tags can be managed and indexed for Search. | |
 | 11 | P0 Search slice | Not Started | Authorized search results meet the performance target through the UI. | |
 | 12 | P1 organization slice | Not Started | P1 organization and recovery behavior works without unintended data loss. | |

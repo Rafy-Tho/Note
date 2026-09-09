@@ -4,6 +4,9 @@ export const notesApi = {
   list() {
     return authApi.request('/notes');
   },
+  listTrash() {
+    return authApi.request('/trash');
+  },
   create(note) {
     return authApi.request('/notes', {
       method: 'POST',
@@ -18,5 +21,11 @@ export const notesApi = {
       method: 'PATCH',
       body: JSON.stringify(note),
     });
+  },
+  trash(noteId) {
+    return authApi.request(`/notes/${noteId}`, { method: 'DELETE' });
+  },
+  restore(noteId) {
+    return authApi.request(`/notes/${noteId}/restore`, { method: 'POST' });
   },
 };

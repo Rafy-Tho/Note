@@ -10,7 +10,10 @@ import { getConfig } from './config/env.js';
 import { createAuthRepository } from './modules/auth/auth.repository.js';
 import { createAuthService } from './modules/auth/auth.service.js';
 import { createAuthRouter } from './modules/auth/auth.routes.js';
-import { createNotesRouter } from './modules/notes/notes.routes.js';
+import {
+  createNotesRouter,
+  createTrashRouter,
+} from './modules/notes/notes.routes.js';
 
 export function createApp({
   databaseCheck,
@@ -30,7 +33,14 @@ export function createApp({
 
   app.use('/api/v1/health', createHealthRouter({ databaseCheck }));
   app.use('/api/v1/auth', createAuthRouter({ authService, config }));
-  app.use('/api/v1/notes', createNotesRouter({ authService, config, service: notesService }));
+  app.use(
+    '/api/v1/notes',
+    createNotesRouter({ authService, config, service: notesService }),
+  );
+  app.use(
+    '/api/v1/trash',
+    createTrashRouter({ authService, config, service: notesService }),
+  );
   configureRoutes(app);
 
   app.use(notFoundHandler);

@@ -4,6 +4,7 @@ import {
   validateCreateNote,
   validateNoteId,
   validateNoteList,
+  validateTrashList,
   validateUpdateNote,
 } from './notes.validation.js';
 
@@ -19,6 +20,23 @@ export function createNotesController({ service }) {
         sendCollection(response, result.notes, {
           page: filters.page,
           limit: filters.limit,
+          total: result.total,
+        });
+      } catch (error) {
+        next(error);
+      }
+    },
+
+    async listTrash(request, response, next) {
+      try {
+        const pagination = validateTrashList(request.query);
+        const result = await service.listTrash(
+          getAuthenticatedUserId(request),
+          pagination,
+        );
+        sendCollection(response, result.notes, {
+          page: pagination.page,
+          limit: pagination.limit,
           total: result.total,
         });
       } catch (error) {
@@ -56,6 +74,30 @@ export function createNotesController({ service }) {
           getAuthenticatedUserId(request),
           validateNoteId(request.params.noteId),
           validateUpdateNote(request.body),
+        );
+        sendData(response, note);
+      } catch (error) {
+        next(error);
+      }
+    },
+
+    async trash(request, response, next) {
+      try {
+        const note = await service.trash(
+          getAuthenticatedUserId(request),
+          validateNoteId(request.params.noteId),
+        );
+        sendData(response, note);
+      } catch (error) {
+        next(error);
+      }
+    },
+
+    async restore(request, response, next) {
+      try {
+        const note = await service.restore(
+          getAuthenticatedUserId(request),
+          validateNoteId(request.params.noteId),
         );
         sendData(response, note);
       } catch (error) {

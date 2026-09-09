@@ -46,4 +46,14 @@ test('authenticated user can create, edit, and reload a note', async ({
   await expect(page.getByLabel('Note content')).toHaveText(
     'Created through the authenticated UI.',
   );
+
+  page.on('dialog', (dialog) => dialog.accept());
+  await page.getByRole('button', { name: 'Move to Trash' }).click();
+  await page.getByRole('button', { name: 'Trash' }).click();
+  await expect(
+    page.getByText('Browser journey', { exact: true }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Restore' }).click();
+  await expect(page.getByRole('heading', { name: 'Notes' })).toBeVisible();
+  await expect(page.getByLabel('Note title')).toHaveValue('Browser journey');
 });
