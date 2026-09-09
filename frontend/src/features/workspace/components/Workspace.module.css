@@ -2,40 +2,76 @@
   min-height: 100vh;
   background: var(--color-bg);
 }
+.loading,
+.editorEmpty {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  color: var(--color-text-muted);
+}
 .topbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px clamp(20px, 5vw, 72px);
+  min-height: 72px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-sidebar);
+}
+.topbarActions,
+.collectionHeader,
+.editorHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.email,
+.eyebrow,
+.saveStatus {
+  color: var(--color-text-muted);
+  font:
+    11px 'JetBrains Mono',
+    monospace;
+}
+.layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) 1fr;
+  min-height: calc(100vh - 72px);
+}
+.collection {
+  border-right: 1px solid var(--color-border);
+  background: var(--color-sidebar);
+}
+.collectionHeader {
+  align-items: flex-end;
+  padding: 24px;
   border-bottom: 1px solid var(--color-border);
 }
-.content {
-  width: min(920px, calc(100% - 40px));
-  margin: 0 auto;
-  padding: 90px 0;
-}
-.content h1 {
-  max-width: 620px;
-  margin: 12px 0;
-  color: var(--color-text);
-  font-size: clamp(2.5rem, 7vw, 5.5rem);
-  line-height: 0.95;
-  letter-spacing: -0.06em;
-}
 .eyebrow {
-  margin: 0;
+  margin: 0 0 6px;
   color: var(--color-interaction);
-  font:
-    600 11px 'JetBrains Mono',
-    monospace;
-  letter-spacing: 0.12em;
   text-transform: uppercase;
+  letter-spacing: 0.12em;
 }
-.email {
-  color: var(--color-text-muted);
+h1 {
+  margin: 0;
+  font-size: 26px;
+  letter-spacing: -0.04em;
+}
+.primaryButton,
+.saveButton {
+  padding: 10px 14px;
+  border: 1px solid var(--color-primary);
+  color: var(--color-bg);
+  background: var(--color-primary);
   font:
     12px 'JetBrains Mono',
     monospace;
+}
+.primaryButton:hover,
+.saveButton:hover {
+  background: var(--color-primary-hover);
 }
 .secondaryButton {
   padding: 9px 13px;
@@ -50,35 +86,114 @@
   color: var(--color-text);
   border-color: var(--color-interaction);
 }
+.noteList {
+  display: grid;
+}
+.noteRow {
+  display: grid;
+  gap: 7px;
+  padding: 18px 24px;
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  background: transparent;
+  text-align: left;
+}
+.noteRow:hover,
+.selected {
+  background: var(--color-surface);
+}
+.noteRow strong {
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.noteRow span {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .empty {
-  margin-top: 70px;
-  padding: 48px 24px;
+  margin: 32px 24px;
+  padding: 28px 18px;
   border: 1px dashed var(--color-border);
   color: var(--color-text-muted);
-  text-align: center;
-}
-.emptyIcon {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  margin: 0 auto 18px;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
-  color: var(--color-primary);
-  font-size: 25px;
 }
 .empty h2 {
   margin: 0 0 8px;
   color: var(--color-text);
-  font-size: 18px;
+  font-size: 16px;
 }
 .empty p {
   margin: 0;
   font-size: 12px;
+  line-height: 1.6;
+}
+.editor {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 28px clamp(24px, 6vw, 88px);
+}
+.editorHeader {
+  justify-content: flex-end;
+  min-height: 34px;
+}
+.saveStatus {
+  margin-right: auto;
+}
+.titleInput,
+.contentInput {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  color: var(--color-text);
+  background: transparent;
+}
+.titleInput {
+  margin: 64px 0 28px;
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 600;
+  letter-spacing: -0.05em;
+}
+.contentInput {
+  flex: 1;
+  min-height: 360px;
+  resize: none;
+  font-size: 17px;
+  line-height: 1.8;
+}
+.titleInput::placeholder,
+.contentInput::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.7;
 }
 
 @media (max-width: 760px) {
-  .content {
-    padding: 60px 0;
+  .topbar {
+    padding: 14px 16px;
+  }
+  .email {
+    display: none;
+  }
+  .layout {
+    display: block;
+    min-height: 0;
+  }
+  .collection {
+    border-right: 0;
+  }
+  .editor {
+    min-height: calc(100vh - 72px);
+    padding: 20px 16px;
+  }
+  .titleInput {
+    margin: 38px 0 20px;
+  }
+  .contentInput {
+    min-height: 300px;
   }
 }

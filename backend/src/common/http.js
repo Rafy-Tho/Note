@@ -2,6 +2,10 @@ export function sendData(response, data, status = 200) {
   return response.status(status).json({ data });
 }
 
+export function sendCollection(response, data, pagination, status = 200) {
+  return response.status(status).json({ data, pagination });
+}
+
 export function sendError(response, error) {
   const body = {
     error: {

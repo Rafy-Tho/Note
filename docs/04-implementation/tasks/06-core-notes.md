@@ -2,7 +2,7 @@
 
 ## Status
 
-Not Started
+Complete
 
 ## Objective
 
@@ -16,26 +16,26 @@ Implement the core notes vertical slice, including create, view, list, edit, its
 
 ## Backend
 
-- [ ] Create blank and populated notes.
-- [ ] View individual notes.
-- [ ] List owned notes.
-- [ ] Edit title and content.
-- [ ] Store creation and modification timestamps.
-- [ ] Implement Active, Archived, and Trashed state values.
-- [ ] Add note API endpoints.
+- [x] Create blank and populated notes.
+- [x] View individual notes.
+- [x] List owned notes.
+- [x] Edit title and content.
+- [x] Store creation and modification timestamps.
+- [x] Implement Active, Archived, and Trashed state values.
+- [x] Add note API endpoints.
 
 ## Frontend
 
-- [ ] Add the notes list and empty state.
-- [ ] Add the note detail view.
-- [ ] Add the create-note flow and initial editor shell.
-- [ ] Add title and content editing.
-- [ ] Handle loading, success, and failure states.
+- [x] Add the notes list and empty state.
+- [x] Add the note detail view.
+- [x] Add the create-note flow and initial editor shell.
+- [x] Add title and content editing.
+- [x] Handle loading, success, and failure states.
 
 ## Integration and Tests
 
-- [ ] Connect the list, detail, create, and edit UI to the note API.
-- [ ] Add API, component, and end-to-end tests for the slice.
+- [x] Connect the list, detail, create, and edit UI to the note API.
+- [x] Add API, frontend behavior, and end-to-end tests for the slice.
 
 ## Tests and Evidence
 

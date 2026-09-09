@@ -28,6 +28,16 @@ export function createAuthApi() {
   let csrfToken = null;
 
   return {
+    async request(path, options = {}) {
+      const method = options.method ?? 'GET';
+      const headers = {
+        ...options.headers,
+        ...(method !== 'GET' && method !== 'HEAD' && csrfToken
+          ? { 'x-csrf-token': csrfToken }
+          : {}),
+      };
+      return request(path, { ...options, headers });
+    },
     async getSession() {
       const session = await request('/auth/session');
       csrfToken = session.csrfToken;
@@ -48,9 +58,8 @@ export function createAuthApi() {
       return session;
     },
     async logout() {
-      await request('/auth/logout', {
+      await this.request('/auth/logout', {
         method: 'POST',
-        headers: { 'x-csrf-token': csrfToken ?? '' },
       });
       csrfToken = null;
     },
