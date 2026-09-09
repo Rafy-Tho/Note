@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { checkDatabase } from '../../db/pool.js';
+import { AppError } from '../../common/errors.js';
+import { sendData, sendError } from '../../common/http.js';
 
 export function createHealthRouter({ databaseCheck = checkDatabase } = {}) {
   const router = Router();
@@ -7,14 +9,16 @@ export function createHealthRouter({ databaseCheck = checkDatabase } = {}) {
   router.get('/', async (_request, response) => {
     try {
       await databaseCheck();
-      response.json({ data: { status: 'ok', database: 'ok' } });
+      sendData(response, { status: 'ok', database: 'ok' });
     } catch {
-      response.status(503).json({
-        error: {
-          code: 'SERVICE_UNAVAILABLE',
-          message: 'The service is temporarily unavailable.',
-        },
-      });
+      sendError(
+        response,
+        new AppError(
+          503,
+          'SERVICE_UNAVAILABLE',
+          'The service is temporarily unavailable.',
+        ),
+      );
     }
   });
 

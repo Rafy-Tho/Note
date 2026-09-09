@@ -1,5 +1,5 @@
 import { getConfig } from './config/env.js';
-import { pool } from './db/pool.js';
+import { closeDatabase } from './db/pool.js';
 import { createApp } from './app.js';
 
 const { port } = getConfig();
@@ -10,7 +10,7 @@ const server = app.listen(port, () => {
 
 function shutdown() {
   server.close(() => {
-    pool.end().finally(() => process.exit(0));
+    closeDatabase().finally(() => process.exit(0));
   });
 }
 

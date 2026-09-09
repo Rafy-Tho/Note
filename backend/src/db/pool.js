@@ -11,3 +11,7 @@ export const pool = new Pool({
 export async function checkDatabase() {
   await pool.query('SELECT 1');
 }
+
+export async function closeDatabase() {
+  await pool.end();
+}

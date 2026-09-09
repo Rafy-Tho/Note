@@ -24,7 +24,7 @@
 | 0 | Confirm tools | Complete | Technical choices recorded. | Baseline, dependency choices, and installed dependency license review are recorded. |
 | 1 | Bootstrap project | Complete | Frontend, backend, database, and tests run locally. | Frontend build/dev server, backend startup, lint, format, API tests, unit tests, and local PostgreSQL connection pass. |
 | 2 | Database foundation | Complete | Clean migrations succeed. | Migrations, rollback/reapply, seed, indexes, constraints, and integration test pass against local PostgreSQL. |
-| 3 | Backend foundation | Not Started | API responses and errors are consistent. | |
+| 3 | Backend foundation | Complete | API responses and errors are consistent. | Express middleware, configuration validation, safe logging, data-access query/transaction helpers, standard errors, health/error API tests, unit tests, lint, formatting, and database integration tests pass. |
 | 4 | Authentication | Not Started | Registration, sign-in, sign-out, and sessions work securely. | |
 | 5 | Authorization | Not Started | Cross-user access is denied. | |
 | 6 | Core notes | Not Started | Users can create, view, and edit their own notes. | |
