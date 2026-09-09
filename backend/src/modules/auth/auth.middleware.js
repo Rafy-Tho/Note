@@ -1,4 +1,6 @@
 import { authenticationRequiredError } from '../../common/errors.js';
+import { Router } from 'express';
+import { createCsrfMiddleware } from './auth.csrf.js';
 
 function readCookie(request, name) {
   const header = request.get('cookie') ?? '';
@@ -39,6 +41,14 @@ export function requireAuthentication(request, _response, next) {
     return;
   }
   next();
+}
+
+export function createProtectedRouter({ authService, cookieName, csrfSecret }) {
+  const router = Router();
+  router.use(createSessionMiddleware({ authService, cookieName }));
+  router.use(requireAuthentication);
+  router.use(createCsrfMiddleware({ authService, csrfSecret }));
+  return router;
 }
 
 export function getSessionToken(request, cookieName) {

@@ -2,7 +2,7 @@
 
 ## Status
 
-Not Started
+In Progress
 
 ## Objective
 
@@ -16,26 +16,26 @@ Build the server-side authorization foundation used by every vertical feature sl
 
 ## Backend Foundation
 
-- [ ] Create authenticated user context middleware.
-- [ ] Scope protected queries by user ID.
-- [ ] Protect notes, notebooks, tags, sessions, and relationships.
-- [ ] Enforce allowed note-state transitions.
-- [ ] Add safe not-found behavior.
-- [ ] Reject cross-user relationships.
+- [x] Create authenticated user context middleware.
+- [x] Scope protected queries by user ID.
+- [ ] Protect notes, notebooks, tags, sessions, and relationships in their feature slices.
+- [x] Enforce allowed note-state transitions.
+- [x] Add safe not-found behavior.
+- [x] Reject cross-user relationships.
 
 ## Slice Integration
 
-- [ ] Provide reusable ownership checks to feature services and routes.
-- [ ] Require every protected slice to use authenticated user context.
+- [x] Provide reusable ownership checks to feature services and routes.
+- [x] Require every protected slice to use authenticated user context.
 - [ ] Verify authorization behavior through the frontend-backed API flows.
 
 ## Tests and Evidence
 
-- User A cannot read User B data.
-- User A cannot modify User B data.
-- Unauthenticated requests are denied.
-- Missing and unauthorized resources do not leak information.
+- [x] User A cannot read User B data.
+- [x] User A cannot modify User B data.
+- [x] Unauthenticated requests are denied.
+- [x] Missing and unauthorized resources do not leak information.
 
 ## Completion Gate
 
-Every protected operation has server-side ownership enforcement.
+The reusable authorization foundation is implemented and verified with protected API fixtures. Resource-specific notes, notebooks, tags, and frontend-backed flows must use this foundation as their feature slices are built.
