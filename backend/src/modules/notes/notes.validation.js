@@ -128,12 +128,20 @@ export function validateNoteList(query) {
     query.favorite !== 'false'
   )
     fields.favorite = 'Must be true or false.';
+  if (query.notebookId !== undefined) {
+    try {
+      assertUuid(query.notebookId, 'notebookId');
+    } catch (error) {
+      fields.notebookId = error.fields?.notebookId ?? 'Must be a valid UUID.';
+    }
+  }
 
   if (Object.keys(fields).length > 0) throw validationError(fields);
   return {
     ...pagination,
     state,
     favorite: query.favorite === undefined ? null : query.favorite === 'true',
+    notebookId: query.notebookId ?? null,
   };
 }
 

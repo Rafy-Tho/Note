@@ -7,6 +7,7 @@ import {
   validateTrashList,
   validateUpdateNote,
 } from './notes.validation.js';
+import { validateNotebookAssignment } from '../notebooks/notebooks.validation.js';
 
 export function createNotesController({ service }) {
   return {
@@ -37,6 +38,22 @@ export function createNotesController({ service }) {
         sendCollection(response, result.notes, {
           page: pagination.page,
           limit: pagination.limit,
+          total: result.total,
+        });
+      } catch (error) {
+        next(error);
+      }
+    },
+
+    async listFavorites(request, response, next) {
+      try {
+        const pagination = validateTrashList(request.query);
+        const result = await service.listFavorites(
+          getAuthenticatedUserId(request),
+          pagination,
+        );
+        sendCollection(response, result.notes, {
+          ...pagination,
           total: result.total,
         });
       } catch (error) {
@@ -98,6 +115,81 @@ export function createNotesController({ service }) {
         const note = await service.restore(
           getAuthenticatedUserId(request),
           validateNoteId(request.params.noteId),
+        );
+        sendData(response, note);
+      } catch (error) {
+        next(error);
+      }
+    },
+
+    async archive(request, response, next) {
+      try {
+        const note = await service.archive(
+          getAuthenticatedUserId(request),
+          validateNoteId(request.params.noteId),
+        );
+        sendData(response, note);
+      } catch (error) {
+        next(error);
+      }
+    },
+
+    async unarchive(request, response, next) {
+      try {
+        const note = await service.unarchive(
+          getAuthenticatedUserId(request),
+          validateNoteId(request.params.noteId),
+        );
+        sendData(response, note);
+      } catch (error) {
+        next(error);
+      }
+    },
+
+    async favorite(request, response, next) {
+      try {
+        const note = await service.favorite(
+          getAuthenticatedUserId(request),
+          validateNoteId(request.params.noteId),
+          true,
+        );
+        sendData(response, note);
+      } catch (error) {
+        next(error);
+      }
+    },
+
+    async unfavorite(request, response, next) {
+      try {
+        const note = await service.favorite(
+          getAuthenticatedUserId(request),
+          validateNoteId(request.params.noteId),
+          false,
+        );
+        sendData(response, note);
+      } catch (error) {
+        next(error);
+      }
+    },
+
+    async permanentDelete(request, response, next) {
+      try {
+        await service.permanentlyDelete(
+          getAuthenticatedUserId(request),
+          validateNoteId(request.params.noteId),
+        );
+        response.status(204).send();
+      } catch (error) {
+        next(error);
+      }
+    },
+
+    async assignNotebook(request, response, next) {
+      try {
+        const note = await service.assignNotebook(
+          getAuthenticatedUserId(request),
+          validateNoteId(request.params.noteId),
+          validateNotebookAssignment(request.body).notebookId,
         );
         sendData(response, note);
       } catch (error) {

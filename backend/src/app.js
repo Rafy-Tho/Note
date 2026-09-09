@@ -13,6 +13,7 @@ import { createAuthRouter } from './modules/auth/auth.routes.js';
 import {
   createNotesRouter,
   createTrashRouter,
+  createFavoritesRouter,
 } from './modules/notes/notes.routes.js';
 import {
   createNoteTagsRouter,
@@ -21,6 +22,9 @@ import {
 import { createTagsRepository } from './modules/tags/tags.repository.js';
 import { createTagsService } from './modules/tags/tags.service.js';
 import { createSearchRouter } from './modules/search/search.routes.js';
+import { createNotebooksRouter } from './modules/notebooks/notebooks.routes.js';
+import { createNotebooksRepository } from './modules/notebooks/notebooks.repository.js';
+import { createNotebooksService } from './modules/notebooks/notebooks.service.js';
 
 export function createApp({
   databaseCheck,
@@ -31,10 +35,14 @@ export function createApp({
   notesService,
   tagsService,
   searchService,
+  notebooksService,
 } = {}) {
   const app = express();
   const resolvedTagsService =
     tagsService ?? createTagsService({ repository: createTagsRepository() });
+  const resolvedNotebooksService =
+    notebooksService ??
+    createNotebooksService({ repository: createNotebooksRepository() });
 
   app.disable('x-powered-by');
   app.use(requestContext);
@@ -55,6 +63,18 @@ export function createApp({
   app.use(
     '/api/v1/trash',
     createTrashRouter({ authService, config, service: notesService }),
+  );
+  app.use(
+    '/api/v1/favorites',
+    createFavoritesRouter({ authService, config, service: notesService }),
+  );
+  app.use(
+    '/api/v1/notebooks',
+    createNotebooksRouter({
+      authService,
+      config,
+      service: resolvedNotebooksService,
+    }),
   );
   app.use(
     '/api/v1/tags',

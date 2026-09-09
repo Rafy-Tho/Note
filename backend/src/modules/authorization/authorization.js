@@ -1,6 +1,11 @@
-import { authenticationRequiredError, notFoundError, AppError } from '../../common/errors.js';
+import {
+  authenticationRequiredError,
+  notFoundError,
+  AppError,
+} from '../../common/errors.js';
 
-const INVALID_STATE_MESSAGE = 'The resource is not available for this operation.';
+const INVALID_STATE_MESSAGE =
+  'The resource is not available for this operation.';
 
 export const NOTE_OPERATION_STATES = Object.freeze({
   archive: ['active'],
@@ -8,6 +13,7 @@ export const NOTE_OPERATION_STATES = Object.freeze({
   trash: ['active', 'archived'],
   restore: ['trashed'],
   permanentDelete: ['trashed'],
+  favorite: ['active', 'archived'],
   edit: ['active', 'archived'],
 });
 
@@ -41,7 +47,12 @@ export function assertAllowedState(state, allowedStates) {
 
 export function assertNoteState(operation, state) {
   const allowedStates = NOTE_OPERATION_STATES[operation];
-  if (!allowedStates) throw new AppError(500, 'INTERNAL_SERVER_ERROR', 'An unexpected error occurred.');
+  if (!allowedStates)
+    throw new AppError(
+      500,
+      'INTERNAL_SERVER_ERROR',
+      'An unexpected error occurred.',
+    );
   assertAllowedState(state, allowedStates);
 }
 

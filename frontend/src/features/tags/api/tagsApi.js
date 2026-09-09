@@ -24,4 +24,7 @@ export const tagsApi = {
       method: 'DELETE',
     });
   },
+  listNotes(tagId) {
+    return authApi.request(`/tags/${tagId}/notes`);
+  },
 };

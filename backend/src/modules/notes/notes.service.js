@@ -20,6 +20,10 @@ export function createNotesService({
       });
     },
 
+    async listFavorites(userId, pagination) {
+      return repository.listFavorites(userId, pagination);
+    },
+
     async get(userId, noteId) {
       const note = await repository.findById(userId, noteId);
       if (!note) throw notFoundError();
@@ -86,6 +90,78 @@ export function createNotesService({
       return result.updated;
     },
 
+    async archive(userId, noteId) {
+      return changeState(
+        repository,
+        transaction,
+        userId,
+        noteId,
+        'archive',
+        'archived',
+      );
+    },
+
+    async unarchive(userId, noteId) {
+      return changeState(
+        repository,
+        transaction,
+        userId,
+        noteId,
+        'unarchive',
+        'active',
+      );
+    },
+
+    async favorite(userId, noteId, isFavorite) {
+      const result = await transaction(async (client) => {
+        const note = await repository.findById(userId, noteId, client);
+        if (!note) return { note: null, updated: null };
+        assertNoteState('favorite', note.state);
+        return {
+          note,
+          updated: await repository.setFavorite(
+            client,
+            userId,
+            noteId,
+            isFavorite,
+          ),
+        };
+      });
+      if (!result.note) throw notFoundError();
+      return result.updated;
+    },
+
+    async assignNotebook(userId, noteId, notebookId) {
+      const result = await transaction(async (client) => {
+        const note = await repository.findById(userId, noteId, client);
+        if (!note) return { note: null, updated: null };
+        assertNoteState('edit', note.state);
+        if (
+          notebookId &&
+          !(await repository.findOwnedNotebook(client, userId, notebookId))
+        )
+          throw notFoundError();
+        return {
+          note,
+          updated: await repository.assignNotebook(
+            client,
+            userId,
+            noteId,
+            notebookId,
+          ),
+        };
+      });
+      if (!result.note) throw notFoundError();
+      return result.updated;
+    },
+
+    async permanentlyDelete(userId, noteId) {
+      const deleted = await transaction((client) =>
+        repository.permanentlyDelete(client, userId, noteId),
+      );
+      if (!deleted) throw notFoundError();
+    },
+
     async restore(userId, noteId) {
       const result = await transaction(async (client) => {
         const note = await repository.findById(userId, noteId, client);
@@ -116,4 +192,25 @@ export function createNotesService({
       return result.updated;
     },
   };
+}
+
+async function changeState(
+  repository,
+  transaction,
+  userId,
+  noteId,
+  operation,
+  state,
+) {
+  const result = await transaction(async (client) => {
+    const note = await repository.findById(userId, noteId, client);
+    if (!note) return { note: null, updated: null };
+    assertNoteState(operation, note.state);
+    return {
+      note,
+      updated: await repository.setState(client, userId, noteId, state),
+    };
+  });
+  if (!result.note) throw notFoundError();
+  return result.updated;
 }

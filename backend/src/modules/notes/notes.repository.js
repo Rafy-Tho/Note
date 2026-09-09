@@ -42,12 +42,16 @@ function toNote(row) {
 
 export function createNotesRepository(database = { query }) {
   return {
-    async list(userId, { state, favorite, page, limit }) {
+    async list(userId, { state, favorite, notebookId = null, page, limit }) {
       const values = [userId, state];
       const filters = ['user_id = $1', 'state = $2'];
       if (favorite !== null) {
         values.push(favorite);
         filters.push(`is_favorite = $${values.length}`);
+      }
+      if (notebookId !== null) {
+        values.push(notebookId);
+        filters.push(`notebook_id = $${values.length}`);
       }
       const count = await database.query(
         `SELECT COUNT(*)::integer AS total FROM notes WHERE ${filters.join(' AND ')}`,
@@ -60,6 +64,22 @@ export function createNotesRepository(database = { query }) {
          WHERE ${filters.join(' AND ')}
          ORDER BY updated_at DESC, id DESC
          LIMIT $${values.length - 1} OFFSET $${values.length}`,
+        values,
+      );
+      return { notes: result.rows.map(toNote), total: count.rows[0].total };
+    },
+
+    async listFavorites(userId, { page, limit }) {
+      const values = [userId, limit, (page - 1) * limit];
+      const count = await database.query(
+        `SELECT COUNT(*)::integer AS total FROM notes
+         WHERE user_id = $1 AND is_favorite = TRUE AND state IN ('active', 'archived')`,
+        [userId],
+      );
+      const result = await database.query(
+        `SELECT ${NOTE_COLUMNS} FROM notes
+         WHERE user_id = $1 AND is_favorite = TRUE AND state IN ('active', 'archived')
+         ORDER BY updated_at DESC, id DESC LIMIT $2 OFFSET $3`,
         values,
       );
       return { notes: result.rows.map(toNote), total: count.rows[0].total };
@@ -175,6 +195,41 @@ export function createNotesRepository(database = { query }) {
         [noteId, userId],
       );
       return toNote(result.rows[0]);
+    },
+
+    async setState(client, userId, noteId, state) {
+      const result = await client.query(
+        `UPDATE notes SET state = $3, updated_at = NOW()
+         WHERE id = $1 AND user_id = $2 RETURNING ${NOTE_COLUMNS}`,
+        [noteId, userId, state],
+      );
+      return toNote(result.rows[0]);
+    },
+
+    async setFavorite(client, userId, noteId, isFavorite) {
+      const result = await client.query(
+        `UPDATE notes SET is_favorite = $3, updated_at = NOW()
+         WHERE id = $1 AND user_id = $2 RETURNING ${NOTE_COLUMNS}`,
+        [noteId, userId, isFavorite],
+      );
+      return toNote(result.rows[0]);
+    },
+
+    async assignNotebook(client, userId, noteId, notebookId) {
+      const result = await client.query(
+        `UPDATE notes SET notebook_id = $3, updated_at = NOW()
+         WHERE id = $1 AND user_id = $2 RETURNING ${NOTE_COLUMNS}`,
+        [noteId, userId, notebookId],
+      );
+      return toNote(result.rows[0]);
+    },
+
+    async permanentlyDelete(client, userId, noteId) {
+      const result = await client.query(
+        `DELETE FROM notes WHERE id = $1 AND user_id = $2 AND state = 'trashed' RETURNING id`,
+        [noteId, userId],
+      );
+      return result.rows[0] ?? null;
     },
 
     async findOwnedNotebook(client, userId, notebookId) {

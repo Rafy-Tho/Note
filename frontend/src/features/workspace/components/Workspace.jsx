@@ -6,6 +6,8 @@ import { notesApi } from '../../notes/api/notesApi.js';
 import { documentText } from '../../notes/noteDocument.js';
 import { TagControls } from '../../tags/components/TagControls.jsx';
 import { searchApi } from '../../search/api/searchApi.js';
+import { tagsApi } from '../../tags/api/tagsApi.js';
+import { notebooksApi } from '../../notebooks/api/notebooksApi.js';
 import { NoteEditor } from './NoteEditor.jsx';
 import styles from './Workspace.module.css';
 
@@ -18,6 +20,13 @@ function draftSignature(note) {
 export function Workspace({ session, onSignOut }) {
   const [notes, setNotes] = useState([]);
   const [trashNotes, setTrashNotes] = useState([]);
+  const [favoriteNotes, setFavoriteNotes] = useState([]);
+  const [archiveNotes, setArchiveNotes] = useState([]);
+  const [tagNotes, setTagNotes] = useState([]);
+  const [notebooks, setNotebooks] = useState([]);
+  const [availableTags, setAvailableTags] = useState([]);
+  const [selectedTagId, setSelectedTagId] = useState('');
+  const [collectionStatus, setCollectionStatus] = useState('ready');
   const [view, setView] = useState('notes');
   const [trashStatus, setTrashStatus] = useState('ready');
   const [searchQuery, setSearchQuery] = useState('');
@@ -39,11 +48,12 @@ export function Workspace({ session, onSignOut }) {
   const saveTimerRef = useRef(null);
 
   useEffect(() => {
-    notesApi
-      .list()
-      .then((data) => {
-        setNotes(data);
-        setSelected(data[0] ?? null);
+    Promise.all([notesApi.list(), notebooksApi.list(), tagsApi.list()])
+      .then(([noteData, notebookData, tagData]) => {
+        setNotes(noteData);
+        setNotebooks(notebookData);
+        setAvailableTags(tagData);
+        setSelected(noteData[0] ?? null);
         setStatus('ready');
       })
       .catch((requestError) => {
@@ -66,6 +76,30 @@ export function Workspace({ session, onSignOut }) {
         setTrashStatus('ready');
       });
   }, [view]);
+
+  useEffect(() => {
+    if (view === 'notes' || view === 'trash' || view === 'search') return;
+    setCollectionStatus('loading');
+    const request =
+      view === 'favorites'
+        ? notesApi.listFavorites()
+        : view === 'archive'
+          ? notesApi.list({ state: 'archived' })
+          : selectedTagId
+            ? tagsApi.listNotes(selectedTagId)
+            : Promise.resolve([]);
+    request
+      .then((data) => {
+        if (view === 'favorites') setFavoriteNotes(data);
+        if (view === 'archive') setArchiveNotes(data);
+        if (view === 'tags') setTagNotes(data);
+        setCollectionStatus('ready');
+      })
+      .catch((requestError) => {
+        setError(requestError.message);
+        setCollectionStatus('ready');
+      });
+  }, [view, selectedTagId]);
 
   useEffect(() => {
     setDraft(selected);
@@ -275,6 +309,139 @@ export function Workspace({ session, onSignOut }) {
     }
   }
 
+  async function setNoteFavorite(note, isFavorite) {
+    setBusy(true);
+    setError(null);
+    try {
+      const updated = isFavorite
+        ? await notesApi.favorite(note.id)
+        : await notesApi.unfavorite(note.id);
+      setNotes((current) =>
+        current.map((item) => (item.id === updated.id ? updated : item)),
+      );
+      latestDraftRef.current = updated;
+      setDraft((current) => (current?.id === updated.id ? updated : current));
+      setSelected((current) =>
+        current?.id === updated.id ? updated : current,
+      );
+      setFavoriteNotes((current) =>
+        isFavorite
+          ? [updated, ...current.filter((item) => item.id !== updated.id)]
+          : current.filter((item) => item.id !== updated.id),
+      );
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function changeArchive(note) {
+    setBusy(true);
+    setError(null);
+    try {
+      const updated =
+        note.state === 'archived'
+          ? await notesApi.unarchive(note.id)
+          : await notesApi.archive(note.id);
+      setNotes((current) =>
+        updated.state === 'active'
+          ? [updated, ...current.filter((item) => item.id !== updated.id)]
+          : current.filter((item) => item.id !== updated.id),
+      );
+      setArchiveNotes((current) =>
+        updated.state === 'archived'
+          ? [updated, ...current.filter((item) => item.id !== updated.id)]
+          : current.filter((item) => item.id !== updated.id),
+      );
+      latestDraftRef.current = updated;
+      setSelected(updated.state === 'active' ? updated : null);
+      setDraft(updated.state === 'active' ? updated : null);
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function assignNotebook(notebookId) {
+    if (!draft) return;
+    setBusy(true);
+    try {
+      const updated = await notesApi.assignNotebook(
+        draft.id,
+        notebookId || null,
+      );
+      latestDraftRef.current = updated;
+      setDraft(updated);
+      setSelected(updated);
+      setNotes((current) =>
+        current.map((item) => (item.id === updated.id ? updated : item)),
+      );
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function createNotebook(event) {
+    event.preventDefault();
+    const name = event.currentTarget.elements.notebookName.value;
+    try {
+      const notebook = await notebooksApi.create(name);
+      setNotebooks((current) => [...current, notebook]);
+      event.currentTarget.reset();
+    } catch (requestError) {
+      setError(requestError.message);
+    }
+  }
+
+  async function renameNotebook(notebook) {
+    const name = window.prompt('Rename notebook', notebook.name);
+    if (!name || name === notebook.name) return;
+    try {
+      const updated = await notebooksApi.rename(notebook.id, name);
+      setNotebooks((current) =>
+        current.map((item) => (item.id === updated.id ? updated : item)),
+      );
+    } catch (requestError) {
+      setError(requestError.message);
+    }
+  }
+
+  async function deleteNotebook(notebook) {
+    if (
+      !window.confirm(
+        `Delete notebook "${notebook.name}"? Notes will be unassigned.`,
+      )
+    )
+      return;
+    try {
+      await notebooksApi.remove(notebook.id);
+      setNotebooks((current) =>
+        current.filter((item) => item.id !== notebook.id),
+      );
+      if (draft?.notebookId === notebook.id) await assignNotebook('');
+    } catch (requestError) {
+      setError(requestError.message);
+    }
+  }
+
+  async function permanentlyDelete(note) {
+    if (!window.confirm('Permanently delete this note? This cannot be undone.'))
+      return;
+    setBusy(true);
+    try {
+      await notesApi.permanentlyDelete(note.id);
+      setTrashNotes((current) => current.filter((item) => item.id !== note.id));
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function reloadServerCopy() {
     if (!draft) return;
     try {
@@ -336,6 +503,27 @@ export function Workspace({ session, onSignOut }) {
           </button>
           <button
             className={styles.secondaryButton}
+            onClick={() => switchView('favorites')}
+            aria-pressed={view === 'favorites'}
+          >
+            Favorites
+          </button>
+          <button
+            className={styles.secondaryButton}
+            onClick={() => switchView('archive')}
+            aria-pressed={view === 'archive'}
+          >
+            Archive
+          </button>
+          <button
+            className={styles.secondaryButton}
+            onClick={() => switchView('tags')}
+            aria-pressed={view === 'tags'}
+          >
+            Tags
+          </button>
+          <button
+            className={styles.secondaryButton}
             onClick={() => switchView('search')}
             aria-pressed={view === 'search'}
           >
@@ -361,9 +549,15 @@ export function Workspace({ session, onSignOut }) {
               <h1 id="workspace-title">
                 {view === 'trash'
                   ? 'Trash'
-                  : view === 'search'
-                    ? 'Search'
-                    : 'Notes'}
+                  : view === 'favorites'
+                    ? 'Favorites'
+                    : view === 'archive'
+                      ? 'Archive'
+                      : view === 'tags'
+                        ? 'Tags'
+                        : view === 'search'
+                          ? 'Search'
+                          : 'Notes'}
               </h1>
             </div>
             {view === 'notes' && (
@@ -469,9 +663,68 @@ export function Workspace({ session, onSignOut }) {
                   >
                     Restore
                   </button>
+                  <button
+                    className={styles.dangerButton}
+                    onClick={() => permanentlyDelete(note)}
+                    disabled={busy}
+                  >
+                    Delete permanently
+                  </button>
                 </div>
               ))}
             </div>
+          ) : ['favorites', 'archive', 'tags'].includes(view) ? (
+            collectionStatus === 'loading' ? (
+              <div className={styles.empty} aria-live="polite">
+                Loading {view}...
+              </div>
+            ) : view === 'tags' && !selectedTagId ? (
+              <div className={styles.tagBrowse}>
+                <label htmlFor="browse-tag">Browse notes by tag</label>
+                <select
+                  id="browse-tag"
+                  value={selectedTagId}
+                  onChange={(event) => setSelectedTagId(event.target.value)}
+                >
+                  <option value="">Choose a tag</option>
+                  {availableTags.map((tag) => (
+                    <option value={tag.id} key={tag.id}>
+                      {tag.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (view === 'favorites'
+                ? favoriteNotes
+                : view === 'archive'
+                  ? archiveNotes
+                  : tagNotes
+              ).length === 0 ? (
+              <div className={styles.empty}>
+                <h2>No notes here.</h2>
+                <p>Notes matching this view will appear here.</p>
+              </div>
+            ) : (
+              <div className={styles.noteList} aria-label={`${view} notes`}>
+                {(view === 'favorites'
+                  ? favoriteNotes
+                  : view === 'archive'
+                    ? archiveNotes
+                    : tagNotes
+                ).map((note) => (
+                  <button
+                    className={styles.noteRow}
+                    key={note.id}
+                    onClick={() => openSearchResult(note)}
+                  >
+                    <strong>{note.title || 'Untitled note'}</strong>
+                    <span>
+                      {note.state} {note.isFavorite ? '· favorite' : ''}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )
           ) : notes.length === 0 ? (
             <div className={styles.empty}>
               <h2>Your workspace is clear.</h2>
@@ -524,6 +777,20 @@ export function Workspace({ session, onSignOut }) {
                 >
                   Move to Trash
                 </button>
+                <button
+                  className={styles.secondaryButton}
+                  onClick={() => void setNoteFavorite(draft, !draft.isFavorite)}
+                  disabled={busy}
+                >
+                  {draft.isFavorite ? 'Unfavorite' : 'Favorite'}
+                </button>
+                <button
+                  className={styles.secondaryButton}
+                  onClick={() => void changeArchive(draft)}
+                  disabled={busy}
+                >
+                  {draft.state === 'archived' ? 'Unarchive' : 'Archive'}
+                </button>
               </div>
               <input
                 className={styles.titleInput}
@@ -539,6 +806,51 @@ export function Workspace({ session, onSignOut }) {
                 onTagsChange={updateTags}
                 disabled={busy || saveStatus === 'Saving'}
               />
+              <div className={styles.notebookControls}>
+                <label htmlFor="note-notebook">Notebook</label>
+                <select
+                  id="note-notebook"
+                  value={draft.notebookId ?? ''}
+                  onChange={(event) => void assignNotebook(event.target.value)}
+                  disabled={busy}
+                >
+                  <option value="">No notebook</option>
+                  {notebooks.map((notebook) => (
+                    <option value={notebook.id} key={notebook.id}>
+                      {notebook.name}
+                    </option>
+                  ))}
+                </select>
+                <form onSubmit={createNotebook} className={styles.newTagForm}>
+                  <input
+                    name="notebookName"
+                    aria-label="New notebook name"
+                    placeholder="New notebook"
+                  />
+                  <button className={styles.secondaryButton} type="submit">
+                    Create
+                  </button>
+                </form>
+                {notebooks.map((notebook) => (
+                  <span className={styles.notebookItem} key={notebook.id}>
+                    {notebook.name}
+                    <button
+                      type="button"
+                      className={styles.textButton}
+                      onClick={() => void renameNotebook(notebook)}
+                    >
+                      Rename
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.textButton}
+                      onClick={() => void deleteNotebook(notebook)}
+                    >
+                      Delete
+                    </button>
+                  </span>
+                ))}
+              </div>
               <div onBlur={() => void saveDraft()}>
                 <NoteEditor
                   content={draft.contentJson}

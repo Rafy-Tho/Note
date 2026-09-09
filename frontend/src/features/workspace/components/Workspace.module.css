@@ -255,6 +255,48 @@ h1 {
   border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
 }
+.notebookControls,
+.tagBrowse {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+  padding: 12px 0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+.notebookControls select,
+.tagBrowse select {
+  min-height: 36px;
+  padding: 7px 9px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  background: var(--color-surface);
+  font-size: 12px;
+}
+.notebookControls form {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+.notebookItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+.textButton {
+  padding: 0;
+  border: 0;
+  color: var(--color-interaction);
+  background: transparent;
+  font-size: 11px;
+}
 .tagHeader,
 .tagActions,
 .newTagForm {

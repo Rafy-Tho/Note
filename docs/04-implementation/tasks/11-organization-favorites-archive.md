@@ -2,7 +2,7 @@
 
 ## Status
 
-Not Started
+In Progress
 
 ## Objective
 
@@ -17,33 +17,33 @@ Implement the remaining P1 organization, Favorites, Archive, and permanent delet
 
 ## Backend
 
-- [ ] Create and rename notebooks.
-- [ ] Delete notebooks and unassign their notes.
-- [ ] Move notes between notebooks.
-- [ ] Favorite and unfavorite notes.
-- [ ] Archive and unarchive notes.
-- [ ] Permanently delete Trashed notes after confirmation.
+- [x] Create and rename notebooks.
+- [x] Delete notebooks and unassign their notes.
+- [x] Move notes between notebooks.
+- [x] Favorite and unfavorite notes.
+- [x] Archive and unarchive notes.
+- [x] Permanently delete Trashed notes after confirmation.
 
 ## Frontend
 
-- [ ] Add notebook creation, rename, deletion, and note-movement controls.
-- [ ] Add full tag browsing.
-- [ ] Add favorite controls and the Favorites view.
-- [ ] Add archive controls and the Archive view.
-- [ ] Add confirmed permanent deletion from Trash.
-- [ ] Handle loading, empty, success, and failure states.
+- [x] Add notebook creation, rename, deletion, and note-movement controls.
+- [x] Add full tag browsing.
+- [x] Add favorite controls and the Favorites view.
+- [x] Add archive controls and the Archive view.
+- [x] Add confirmed permanent deletion from Trash.
+- [x] Handle loading, empty, success, and failure states.
 
 ## Integration and Tests
 
-- [ ] Connect organization, Favorites, Archive, and deletion UI to the API.
+- [x] Connect organization, Favorites, Archive, and deletion UI to the API.
 - [ ] Add API, component, ownership, recovery, data-loss, and end-to-end tests.
 
 ## Tests and Evidence
 
-- Organization operations preserve ownership and content.
-- Favorites and Archive views show only authorized notes.
-- Permanent deletion requires confirmation and removes the note.
+- [x] Organization operations preserve ownership and content.
+- [x] Favorites and Archive views show only authorized notes.
+- [x] Permanent deletion requires confirmation and removes the note.
 
 ## Completion Gate
 
-All P1 organization and recovery behavior works without unintended data loss.
+Backend and workspace behavior is implemented. Component/browser verification remains pending.
