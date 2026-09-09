@@ -1,25 +1,13 @@
 import express from 'express';
-import { checkDatabase } from './db.js';
+import { createHealthRouter } from './modules/health/health.routes.js';
 
-export function createApp({ databaseCheck = checkDatabase } = {}) {
+export function createApp({ databaseCheck } = {}) {
   const app = express();
 
   app.disable('x-powered-by');
   app.use(express.json({ limit: '1mb' }));
 
-  app.get('/api/v1/health', async (_request, response) => {
-    try {
-      await databaseCheck();
-      response.json({ data: { status: 'ok', database: 'ok' } });
-    } catch {
-      response.status(503).json({
-        error: {
-          code: 'SERVICE_UNAVAILABLE',
-          message: 'The service is temporarily unavailable.',
-        },
-      });
-    }
-  });
+  app.use('/api/v1/health', createHealthRouter({ databaseCheck }));
 
   return app;
 }

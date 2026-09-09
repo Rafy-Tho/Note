@@ -1,5 +1,5 @@
-import { getConfig } from './config.js';
-import { pool } from './db.js';
+import { getConfig } from './config/env.js';
+import { pool } from './db/pool.js';
 import { createApp } from './app.js';
 
 const { port } = getConfig();
