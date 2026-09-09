@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>Note App</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "surface": "#101319", "on-primary": "#00363e", "surface-bright": "#36393f", "error": "#ffb4ab", "surface-container-high": "#272a30", "secondary-container": "#00bd85", "outline": "#859397", "secondary": "#45dfa4", "inverse-primary": "#006877", "error-container": "#93000a", "surface-container-highest": "#32353b", "on-primary-container": "#005763", "primary-container": "#22d3ee", "on-secondary-container": "#00452e", "surface-container": "#1d2025", "secondary-fixed-dim": "#45dfa4", "tertiary-container": "#b7c2cf", "surface-variant": "#32353b", "primary-fixed": "#a2eeff", "on-tertiary-fixed-variant": "#3e4853", "primary-fixed-dim": "#2fd9f4", "secondary-fixed": "#68fcbf", "outline-variant": "#3c494c", "tertiary-fixed": "#d9e3f1", "on-tertiary-container": "#46505b", "on-background": "#e1e2ea", "background": "#101319", "on-surface-variant": "#bbc9cd", "surface-dim": "#101319", "on-surface": "#e1e2ea", "surface-container-low": "#191c21", "inverse-surface": "#e1e2ea", "tertiary": "#d3deec", "on-primary-fixed": "#001f25", "primary": "#8aebff", "on-secondary": "#003825", "surface-tint": "#2fd9f4", "surface-container-lowest": "#0b0e13", "on-tertiary-fixed": "#121c26", "inverse-on-surface": "#2d3036", "on-error-container": "#ffdad6", "on-secondary-fixed": "#002114", "on-error": "#690005", "tertiary-fixed-dim": "#bdc7d5", "on-tertiary": "#27313c", "on-primary-fixed-variant": "#004e5a", "on-secondary-fixed-variant": "#005137" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "xs": "4px", "sidebar-width-collapsed": "48px", "gutter": "16px", "sm": "8px", "none": "0px", "2xs": "2px", "lg": "24px", "3xl": "64px", "sidebar-width-expanded": "280px", "editor-max-width": "760px", "2xl": "48px", "xl": "32px", "md": "12px", "base": "16px" }, "fontFamily": { "headline-md": ["JetBrains Mono"], "body-md": ["Geist"], "headline-lg": ["JetBrains Mono"], "code-inline": ["JetBrains Mono"], "body-sm": ["Geist"], "label-md": ["JetBrains Mono"], "code-block": ["JetBrains Mono"], "display": ["JetBrains Mono"], "display-mobile": ["JetBrains Mono"], "label-sm": ["JetBrains Mono"], "headline-sm": ["JetBrains Mono"], "body-lg": ["Geist"] }, "fontSize": { "headline-md": ["18px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "500" }], "body-md": ["14px", { "lineHeight": "22px", "letterSpacing": "0em", "fontWeight": "400" }], "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "code-inline": ["13px", { "lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400" }], "body-sm": ["13px", { "lineHeight": "20px", "letterSpacing": "0.005em", "fontWeight": "400" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "500" }], "code-block": ["13px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" }], "display": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "display-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.06em", "fontWeight": "500" }], "headline-sm": ["15px", { "lineHeight": "22px", "letterSpacing": "0em", "fontWeight": "500" }], "body-lg": ["16px", { "lineHeight": "26px", "letterSpacing": "0em", "fontWeight": "400" }] } } } };</script></head><body class="bg-surface-container-lowest text-on-surface font-body-md text-body-md antialiased min-h-screen selection:bg-secondary-container selection:text-on-secondary-container"><aside class="fixed left-0 top-0 bottom-0 w-[230px] bg-surface-container-low border-r border-outline-variant/30 flex flex-col z-50 select-none"><div class="h-14 px-sm flex items-center justify-between border-b border-outline-variant/20 bg-surface-container-low"><div class="flex items-center gap-xs overflow-hidden"><img alt="Note App Brand Mark" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1W4GZr3mq2DEDI9DvMEAqtftFTj3ayAjzQG6AaJytBy-DlM8U-rQYxXCNTNOChUkFvvPBFUAXT99GCmIPW0Nm4Av2xzFajae5G-h04CYJ0XjJK8mATPWgVQ45XmBlS58uVyhsM06xNTljH2g8OLkPAGxqSQ6guWE5Yp1FguzMiGW-2zX6vFUL7g6741ZucWzeBTum1wY-rXGbQAnbu72iLbNa735azKYveYmV9RHLIsJ5phL1Rj8F-NC84"/><span class="font-headline-sm text-headline-sm tracking-tight text-on-surface truncate">Note App</span></div><div class="flex items-center"><span class="inline-block w-2xs h-2xs rounded-full bg-secondary" title="Encrypted sync active"></span></div></div><div class="p-sm pb-none flex flex-col gap-xs"><button class="w-full flex items-center justify-between bg-secondary-container text-on-secondary-container font-label-md text-label-md px-md py-xs rounded-none transition-all active:translate-x-2xs active:translate-y-2xs" type="button"><div class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px]">add</span><span>New Note</span></div><kbd class="font-code-inline text-[10px] text-on-secondary-container/80 tracking-normal">⌘N</kbd></button><button class="w-full flex items-center justify-between bg-surface-container-lowest border border-outline-variant/30 text-on-surface-variant hover:text-on-surface hover:border-outline px-sm py-xs text-left transition-colors" type="button"><div class="flex items-center gap-xs"><span class="material-symbols-outlined text-[15px]">search</span><span class="font-body-sm text-body-sm">Search notes...</span></div><kbd class="font-code-inline text-[10px] text-on-surface-variant/70 border border-outline-variant/40 px-2xs">⌘K</kbd></button></div><div class="flex-1 overflow-y-auto px-xs py-sm flex flex-col gap-md"><nav class="flex flex-col gap-2xs" data-active-classes="bg-surface-container-highest text-on-surface border-l-2 border-secondary font-medium"><a class="flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" data-path="all-notes" href="#"><span class="material-symbols-outlined text-[18px]">notes</span><span class="font-body-sm text-body-sm">Notes</span></a><a class="flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" data-path="favorites" href="#"><span class="material-symbols-outlined text-[18px]">star</span><span class="font-body-sm text-body-sm">Favorites</span></a><a class="flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" data-path="archive" href="#"><span class="material-symbols-outlined text-[18px]">archive</span><span class="font-body-sm text-body-sm">Archive</span></a><a aria-current="page" class="flex items-center gap-sm px-sm py-xs transition-colors bg-surface-container-highest text-on-surface border-l-2 border-secondary font-medium" data-path="trash" href="#"><span class="material-symbols-outlined text-[18px]">delete</span><span class="font-body-sm text-body-sm">Trash</span></a></nav><div class="flex flex-col gap-2xs"><div class="flex items-center justify-between px-sm py-2xs text-on-surface-variant/70"><span class="font-label-sm text-label-sm uppercase tracking-widest">Notebooks</span><button class="hover:text-on-surface text-on-surface-variant transition-colors" title="Create Notebook" type="button"><span class="material-symbols-outlined text-[14px]">add</span></button></div><nav class="flex flex-col gap-2xs" data-active-classes="bg-surface-container-highest text-on-surface border-l-2 border-secondary font-medium"><a class="flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" data-path="engineering-architecture" href="#"><span class="material-symbols-outlined text-[16px]">folder</span><span class="font-body-sm text-body-sm truncate">Engineering Architecture</span></a><a class="flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" data-path="personal-journal" href="#"><span class="material-symbols-outlined text-[16px]">folder</span><span class="font-body-sm text-body-sm truncate">Personal Journal</span></a><a class="flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" data-path="product-strategy" href="#"><span class="material-symbols-outlined text-[16px]">folder</span><span class="font-body-sm text-body-sm truncate">Product Strategy</span></a></nav></div><div class="flex flex-col gap-2xs"><div class="px-sm py-2xs text-on-surface-variant/70"><span class="font-label-sm text-label-sm uppercase tracking-widest">Tags</span></div><div class="px-sm flex flex-wrap gap-xs"><a class="font-code-inline text-[11px] text-on-surface-variant bg-surface-container border border-outline-variant/30 px-xs py-2xs hover:text-secondary hover:border-secondary transition-colors" data-path="tag-design" href="#">#design</a><a class="font-code-inline text-[11px] text-on-surface-variant bg-surface-container border border-outline-variant/30 px-xs py-2xs hover:text-secondary hover:border-secondary transition-colors" data-path="tag-ideas" href="#">#ideas</a><a class="font-code-inline text-[11px] text-on-surface-variant bg-surface-container border border-outline-variant/30 px-xs py-2xs hover:text-secondary hover:border-secondary transition-colors" data-path="tag-v1-release" href="#">#v1-release</a><a class="font-code-inline text-[11px] text-on-surface-variant bg-surface-container border border-outline-variant/30 px-xs py-2xs hover:text-secondary hover:border-secondary transition-colors" data-path="tag-security" href="#">#security</a></div></div></div><div class="p-sm border-t border-outline-variant/20 bg-surface-container-low"><a class="w-full flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:text-error hover:bg-surface-container transition-colors" data-path="sign-out" href="#"><span class="material-symbols-outlined text-[18px]">logout</span><span class="font-body-sm text-body-sm">Sign Out</span></a></div></aside><div class="pl-[230px] min-h-screen bg-surface"><header class="fixed top-0 left-[230px] right-0 h-14 bg-surface/90 backdrop-blur-md border-b border-outline-variant/20 z-40 flex items-center justify-between px-lg"><div class="flex items-center gap-md"><img alt="Note App Brand Mark" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1W4GZr3mq2DEDI9DvMEAqtftFTj3ayAjzQG6AaJytBy-DlM8U-rQYxXCNTNOChUkFvvPBFUAXT99GCmIPW0Nm4Av2xzFajae5G-h04CYJ0XjJK8mATPWgVQ45XmBlS58uVyhsM06xNTljH2g8OLkPAGxqSQ6guWE5Yp1FguzMiGW-2zX6vFUL7g6741ZucWzeBTum1wY-rXGbQAnbu72iLbNa735azKYveYmV9RHLIsJ5phL1Rj8F-NC84"/><nav class="hidden md:flex items-center gap-md" data-active-classes="text-on-surface font-medium"><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="all-notes" href="#">Notes</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="favorites" href="#">Favorites</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="archive" href="#">Archive</a><a aria-current="page" class="transition-colors text-on-surface font-medium" data-path="trash" href="#">Trash</a></nav></div><div class="flex items-center gap-md"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></header><main class="w-full pt-14 bg-surface min-h-screen"><div class="flex flex-col w-full">
+<!-- Interactive Workspace Layout (Trash Management Split Screen) -->
+<div class="relative flex flex-col lg:flex-row w-full h-[calc(100vh-3.5rem)] overflow-hidden bg-surface">
+<!-- LEFT PANEL: Collection Panel (320px) -->
+<aside class="w-full lg:w-80 lg:min-w-[320px] lg:max-w-[320px] bg-surface-container-low flex flex-col h-auto lg:h-full z-10">
+<!-- Panel Header -->
+<div class="p-base bg-surface-container flex flex-col gap-xs">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-xs">
+<span aria-hidden="true" class="material-symbols-outlined text-error text-[20px]">delete</span>
+<h1 class="font-headline-md text-headline-md text-on-surface tracking-tight">Trash</h1>
+</div>
+<span class="font-label-sm text-label-sm px-xs py-2xs bg-surface-container-highest text-on-surface-variant font-medium">
+            3 notes
+          </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Archived records pending disk purge</p>
+</div>
+<!-- Informational Alert Banner -->
+<div class="m-sm p-sm bg-surface-container-highest flex items-start gap-xs">
+<span aria-hidden="true" class="material-symbols-outlined text-outline text-[18px] shrink-0">info</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-tight">
+          Notes in Trash are stored locally. Permanent deletion cannot be undone.
+        </p>
+</div>
+<!-- Quick Filter / Batch Bar -->
+<div class="px-base py-xs flex items-center justify-between bg-surface-container-low">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Deleted Records</span>
+<button class="font-label-sm text-label-sm text-error hover:text-on-surface hover:underline transition-colors" onclick="openDeleteModal('all')" type="button">
+          Empty Trash
+        </button>
+</div>
+<!-- Note Items List -->
+<div aria-label="Trashed notes list" class="flex-1 overflow-y-auto px-xs flex flex-col gap-2xs" role="listbox">
+<!-- Note Item 1: SELECTED -->
+<div aria-selected="true" class="group relative p-sm bg-surface-container-high transition-all cursor-pointer" role="option" tabindex="0">
+<!-- Active Indicator Pill -->
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+<div class="flex items-center justify-between mb-xs">
+<span class="font-label-sm text-label-sm text-primary font-medium tracking-wide">Trashed 2 days ago</span>
+<span class="font-code-inline text-[11px] text-on-surface-variant bg-surface-container-lowest px-2xs">RFC-084</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold truncate mb-2xs">
+            Legacy Architecture RFC (Draft)
+          </h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2 leading-relaxed">
+            Consolidated overview of monolithic micro-dispatchers and deprecation schedules for the sync-v1 cluster endpoints...
+          </p>
+<div class="mt-xs flex items-center gap-xs">
+<span class="font-code-inline text-[10px] text-on-surface-variant bg-surface px-xs py-none">#engineering</span>
+<span class="font-code-inline text-[10px] text-on-surface-variant bg-surface px-xs py-none">#rfc</span>
+</div>
+</div>
+<!-- Note Item 2 -->
+<div aria-selected="false" class="p-sm bg-surface-container-lowest hover:bg-surface-container transition-all cursor-pointer" role="option" tabindex="0">
+<div class="flex items-center justify-between mb-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Trashed 5 days ago</span>
+<span class="font-code-inline text-[11px] text-on-surface-variant">4.2 KB</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface truncate mb-2xs">
+            Weekly Sync: Q3 Infra Budget
+          </h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2 leading-relaxed">
+            Estimates for object storage instances, regional replication costs, and redundant cold backup tiers for client telemetry...
+          </p>
+<div class="mt-xs flex items-center gap-xs">
+<span class="font-code-inline text-[10px] text-on-surface-variant bg-surface-container px-xs py-none">#finance</span>
+</div>
+</div>
+<!-- Note Item 3 -->
+<div aria-selected="false" class="p-sm bg-surface-container-lowest hover:bg-surface-container transition-all cursor-pointer" role="option" tabindex="0">
+<div class="flex items-center justify-between mb-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Trashed 12 days ago</span>
+<span class="font-code-inline text-[11px] text-on-surface-variant">1.8 KB</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface truncate mb-2xs">
+            Auth Token Re-encryption Spec
+          </h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2 leading-relaxed">
+            Deprecated approach using asymmetric RSA handshakes prior to Argon2id key derivation overhaul...
+          </p>
+<div class="mt-xs flex items-center gap-xs">
+<span class="font-code-inline text-[10px] text-on-surface-variant bg-surface-container px-xs py-none">#security</span>
+</div>
+</div>
+</div>
+<!-- Bottom Panel Status Footprint -->
+<div class="p-sm bg-surface-container flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm">
+<span class="flex items-center gap-xs">
+<span aria-hidden="true" class="w-1.5 h-1.5 bg-outline rounded-full"></span>
+          Vault Local Sync
+        </span>
+<span class="font-code-inline text-[10px]">DISK: 12.8 KB</span>
+</div>
+</aside>
+<!-- RIGHT PANEL: Main View / Note Inspection View -->
+<main aria-label="Trash note preview" class="flex-1 bg-surface flex flex-col h-full overflow-hidden relative">
+<!-- Top Action Control Bar -->
+<div class="h-14 bg-surface-container px-base flex items-center justify-between z-20 shrink-0">
+<!-- Breadcrumb / Origin Metadata -->
+<div class="flex items-center gap-xs overflow-hidden">
+<span aria-hidden="true" class="material-symbols-outlined text-outline text-[16px]">folder_open</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate">
+            Origin: <span class="text-on-surface font-medium">Engineering Architecture</span>
+</span>
+<span class="font-code-inline text-[10px] text-on-surface-variant bg-surface-container-highest px-xs py-2xs">READ-ONLY</span>
+</div>
+<!-- Primary Inspection Actions -->
+<div class="flex items-center gap-sm">
+<!-- Restore Note Button with Tooltip Wrapper -->
+<div class="relative group">
+<button class="flex items-center gap-xs bg-surface-container-highest hover:bg-secondary-container hover:text-on-secondary-container text-secondary font-label-md text-label-md px-md py-xs transition-colors focus:outline-none focus:ring-2 focus:ring-secondary" onclick="triggerRestoreFeedback()" type="button">
+<span aria-hidden="true" class="material-symbols-outlined text-[16px]">settings_backup_restore</span>
+<span>Restore Note</span>
+</button>
+<!-- Tooltip -->
+<div class="absolute right-0 top-full mt-xs hidden group-hover:flex flex-col w-64 p-xs bg-surface-container-highest text-on-surface text-label-sm font-label-sm z-30 shadow-lg pointer-events-none" role="tooltip">
+<span class="text-secondary font-semibold">Restore Destination</span>
+<span class="text-on-surface-variant">Returns note directly to "Engineering Architecture" notebook.</span>
+</div>
+</div>
+<!-- Permanently Delete Button -->
+<button class="flex items-center gap-xs bg-error-container hover:bg-error text-error hover:text-on-error font-label-md text-label-md px-md py-xs transition-colors focus:outline-none focus:ring-2 focus:ring-error" onclick="openDeleteModal('Legacy Architecture RFC (Draft)')" type="button">
+<span aria-hidden="true" class="material-symbols-outlined text-[16px]">delete_forever</span>
+<span>Permanently Delete</span>
+</button>
+</div>
+</div>
+<!-- Warning Bar for Read-Only Trashed State -->
+<div class="bg-error-container/40 px-base py-xs flex items-center justify-between z-10">
+<div class="flex items-center gap-xs text-error">
+<span aria-hidden="true" class="material-symbols-outlined text-[16px]">lock</span>
+<span class="font-label-sm text-label-sm font-medium tracking-wide uppercase">Inspection Mode — Trashed Object</span>
+</div>
+<span class="font-code-inline text-[11px] text-error">Marked for purge (Auto-expires in 28 days)</span>
+</div>
+<!-- Note Canvas Area -->
+<div class="flex-1 overflow-y-auto relative p-base lg:p-xl bg-surface select-text">
+<!-- Subtle Diagonal Geometric Watermark -->
+<div aria-hidden="true" class="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden opacity-5">
+<span class="font-display text-[120px] font-bold tracking-widest uppercase -rotate-12 select-none text-on-surface">
+            TRASHED
+          </span>
+</div>
+<!-- Constrained Note Editor Measure (760px) -->
+<article class="max-w-[760px] mx-auto flex flex-col gap-base relative z-10">
+<!-- Note Metadata Strip -->
+<div class="p-sm bg-surface-container-low flex flex-wrap items-center justify-between gap-xs font-code-inline text-[12px] text-on-surface-variant">
+<div class="flex items-center gap-md">
+<span>DOC_ID: <strong class="text-on-surface">RFC-084-LEGACY</strong></span>
+<span>WORDS: <strong class="text-on-surface">1,420</strong></span>
+</div>
+<div>
+<span>LAST MODIFIED: 2024-03-14 11:22:04 UTC</span>
+</div>
+</div>
+<!-- Document Header -->
+<div class="flex flex-col gap-xs pt-xs">
+<h1 class="font-display text-display text-on-surface font-semibold tracking-tight">
+              Legacy Architecture RFC (Draft)
+            </h1>
+<div class="flex items-center gap-xs">
+<span class="font-code-inline text-[11px] bg-surface-container-high text-on-surface-variant px-xs py-2xs">status: deprecated</span>
+<span class="font-code-inline text-[11px] bg-surface-container-high text-on-surface-variant px-xs py-2xs">author: sys-core</span>
+</div>
+</div>
+<!-- Note Content Body (Muted non-editable mode) -->
+<div class="flex flex-col gap-md text-on-surface-variant font-body-lg text-body-lg leading-relaxed">
+<p>
+              This Request for Comments details the retirement sequence of the primary Node v1 routing gateway and associated in-memory queue dispatchers. Components marked for deprecation are currently non-functional under the zero-trust cluster perimeter.
+            </p>
+<div class="p-base bg-surface-container-low flex flex-col gap-xs">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Summary of Decommissioned Services</h3>
+<ul class="list-disc pl-base space-y-2xs font-body-md text-body-md">
+<li><code class="font-code-inline text-code-inline bg-surface-container-highest px-xs text-primary">dispatch-edge-proxy</code>: superseded by Rust wire-guard enclave.</li>
+<li><code class="font-code-inline text-code-inline bg-surface-container-highest px-xs text-primary">redis-pubsub-staging</code>: migrated to internal persistent raft logs.</li>
+<li><code class="font-code-inline text-code-inline bg-surface-container-highest px-xs text-primary">auth-interceptor-v1</code>: discontinued due to non-compliance with mTLS standard.</li>
+</ul>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mt-sm">1. Migration Sequence &amp; Deprecation Timeline</h2>
+<p>
+              Engineers must ensure all active downstream RPC calls route through the unified envelope adapter. Any direct TCP sockets left open after the target cycle will receive an unconditional TCP RST packet from the gateway supervisor.
+            </p>
+<blockquote class="bg-surface-container-low p-base text-on-surface-variant font-body-md text-body-md italic">
+              "Direct connection persistence across node boundaries has been permanently forbidden to eliminate orphaned transactions during multi-region failovers."
+            </blockquote>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mt-sm">2. Payload Verification Spec</h2>
+<div class="bg-surface-container-lowest p-md flex flex-col gap-xs font-code-block text-code-block text-on-surface overflow-x-auto">
+<div class="flex items-center justify-between text-on-surface-variant pb-xs">
+<span class="text-[11px]">envelope-schema.json</span>
+<span class="text-[11px]">JSON STRICT</span>
+</div>
+<pre class="leading-tight text-primary"><code>{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LegacyAdapterEnvelope",
+  "type": "object",
+  "properties": {
+    "node_id": { "type": "string", "format": "uuid" },
+    "quarantine_status": { "type": "boolean", "const": true },
+    "ttl_remaining_ms": { "type": "integer", "maximum": 0 }
+  },
+  "required": ["node_id", "quarantine_status"]
+}</code></pre>
+</div>
+<p class="font-body-md text-body-md">
+              Refer to ticket <code class="font-code-inline text-code-inline bg-surface-container-highest px-xs text-primary">SYS-9941</code> for cryptographic keys used to verify these signatures before wiping the storage tables.
+            </p>
+</div>
+</article>
+</div>
+</main>
+</div>
+<!-- MODAL DIALOG: Permanent Delete Confirmation Modal (Level 4 Elevated surface) -->
+<div aria-describedby="modalDesc" aria-labelledby="modalTitle" aria-modal="true" class="fixed inset-0 z-50 flex items-center justify-center p-base bg-surface-container-lowest/80 backdrop-blur-sm transition-opacity" id="deleteModal" role="dialog">
+<!-- Modal Container: Hard Brutalist Elevation -->
+<div class="w-full max-w-md bg-surface-container-high shadow-2xl p-base flex flex-col gap-base relative animate-in fade-in zoom-in-95 duration-150">
+<!-- Top Title Bar with Rose/Destructive Icon -->
+<div class="flex items-start gap-md">
+<div class="w-10 h-10 bg-error-container flex items-center justify-center shrink-0">
+<span aria-hidden="true" class="material-symbols-outlined text-error text-[24px]">warning</span>
+</div>
+<div class="flex flex-col gap-2xs">
+<h2 class="font-headline-md text-headline-md text-on-surface font-semibold tracking-tight" id="modalTitle">
+            Permanently delete note?
+          </h2>
+<span class="font-code-inline text-[11px] text-error font-medium">IRREVERSIBLE ACTION</span>
+</div>
+</div>
+<!-- Modal Body Content -->
+<div class="flex flex-col gap-sm">
+<p class="font-body-md text-body-md text-on-surface-variant leading-normal" id="modalDesc">
+          Are you sure you want to permanently delete <strong class="text-on-surface font-semibold" id="targetNoteTitle">"Legacy Architecture RFC (Draft)"</strong>? This action cannot be undone and the note will be wiped permanently from your device storage.
+        </p>
+<!-- Technical details note -->
+<div class="p-sm bg-surface-container-lowest flex items-center justify-between font-code-inline text-[11px] text-on-surface-variant">
+<span>TARGET CLUSTER: <strong class="text-on-surface">LOC_INTERNAL</strong></span>
+<span>CIPHER SHRED: <strong class="text-error">ENABLED</strong></span>
+</div>
+</div>
+<!-- Action Button Group -->
+<div class="flex items-center justify-end gap-sm pt-xs bg-surface-container-high">
+<!-- Cancel Action (Secondary Graphite Button) -->
+<button class="px-md py-xs bg-surface-container-highest hover:bg-surface-bright text-on-surface font-label-md text-label-md tracking-wider transition-colors focus:outline-none focus:ring-2 focus:ring-primary" onclick="closeDeleteModal()" type="button">
+          Cancel
+        </button>
+<!-- Solid Destructive Confirm Button -->
+<button class="px-md py-xs bg-error hover:bg-error-container text-on-error font-label-md text-label-md tracking-wider transition-all focus:outline-none focus:ring-2 focus:ring-error shadow-sm" onclick="executePermanentDeletion()" type="button">
+          Delete Permanently
+        </button>
+</div>
+<!-- Close Icon Button Top-Right -->
+<button aria-label="Close dialog" class="absolute top-sm right-sm text-on-surface-variant hover:text-on-surface p-2xs" onclick="closeDeleteModal()" type="button">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+</div>
+<!-- Toast Notification Feedback Component -->
+<div class="fixed bottom-base right-base z-50 hidden bg-secondary-container text-on-secondary-container px-base py-sm shadow-xl items-center gap-sm" id="toastNotification">
+<span aria-hidden="true" class="material-symbols-outlined text-[20px]">check_circle</span>
+<span class="font-body-md text-body-md font-medium" id="toastMessage">Note restored successfully.</span>
+</div>
+<!-- Embedded Vanilla JS for Modal & Preview State Handling -->
+<script>
+    function openDeleteModal(noteTitle) {
+      const modal = document.getElementById('deleteModal');
+      const targetLabel = document.getElementById('targetNoteTitle');
+      if (noteTitle === 'all') {
+        targetLabel.innerText = 'all 3 trashed notes';
+      } else {
+        targetLabel.innerText = `"${noteTitle}"`;
+      }
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeDeleteModal() {
+      const modal = document.getElementById('deleteModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function triggerRestoreFeedback() {
+      const toast = document.getElementById('toastNotification');
+      const msg = document.getElementById('toastMessage');
+      msg.innerText = 'Note restored to "Engineering Architecture" notebook.';
+      toast.classList.remove('hidden');
+      toast.classList.add('flex');
+      setTimeout(() => {
+        toast.classList.add('hidden');
+        toast.classList.remove('flex');
+      }, 3500);
+    }
+
+    function executePermanentDeletion() {
+      closeDeleteModal();
+      const toast = document.getElementById('toastNotification');
+      const msg = document.getElementById('toastMessage');
+      toast.classList.remove('bg-secondary-container', 'text-on-secondary-container');
+      toast.classList.add('bg-error', 'text-on-error');
+      msg.innerText = 'Item permanently destroyed from local encrypted storage.';
+      toast.classList.remove('hidden');
+      toast.classList.add('flex');
+      setTimeout(() => {
+        toast.classList.add('hidden');
+        toast.classList.remove('flex');
+        toast.classList.remove('bg-error', 'text-on-error');
+        toast.classList.add('bg-secondary-container', 'text-on-secondary-container');
+      }, 3500);
+    }
+
+    // Keyboard support: Escape closes modal
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeDeleteModal();
+      }
+    });
+  </script>
+</div></main></div></body></html>

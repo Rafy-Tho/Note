@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — Note App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            mono: ['"JetBrains Mono"', 'monospace'],
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            app: '#080B10',
+            sidebar: '#0C1118',
+            surface: '#111821',
+            elevated: '#17212B',
+            borderDefault: '#24303C',
+            textPrimary: '#F3F7FA',
+            textSecondary: '#91A0AD',
+            accentEmerald: '#34D399',
+            accentCyan: '#22D3EE',
+            destructiveRose: '#FB7185',
+            warningAmber: '#FBBF24',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #080B10;
+      color: #F3F7FA;
+      font-family: 'Inter', sans-serif;
+    }
+    .code-font {
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex antialiased selection:bg-cyan-500/20 selection:text-cyan-300">
+
+  <!-- Desktop Split Screen Container -->
+  <div class="w-full min-h-screen flex flex-col md:flex-row">
+
+    <!-- LEFT PANEL: Auth Form (Sign In & Toggle to Register) -->
+    <div class="w-full md:w-[480px] lg:w-[540px] xl:w-[580px] flex-shrink-0 bg-[#0C1118] border-r border-[#24303C] flex flex-col justify-between p-6 sm:p-10 lg:p-14">
+      
+      <!-- Top Brand Header -->
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-[#111821] border border-[#24303C] flex items-center justify-center p-1.5 shadow-sm">
+            <svg viewBox="0 0 40 40" fill="none" class="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 10H32M8 18H26M8 26H20M8 34H14" stroke="#34D399" stroke-width="3.5" stroke-linecap="round"/>
+              <circle cx="28" cy="27" r="4" fill="#22D3EE"/>
+            </svg>
+          </div>
+          <span class="text-sm font-semibold tracking-wide text-[#F3F7FA] code-font">Note App</span>
+        </div>
+        <div class="text-[11px] code-font text-[#91A0AD] border border-[#24303C] bg-[#111821] px-2.5 py-1 rounded">
+          v2.4.0 <span class="text-[#34D399]">●</span> private
+        </div>
+      </div>
+
+      <!-- Main Form Area -->
+      <div class="my-auto py-8">
+        <!-- Tab Switcher (Sign In / Register) -->
+        <div class="inline-flex p-1 bg-[#111821] border border-[#24303C] rounded-lg mb-8 code-font text-xs">
+          <button id="tab-signin" class="px-4 py-1.5 rounded-md bg-[#17212B] text-[#F3F7FA] border border-[#24303C] shadow-sm font-medium transition-colors">
+            Sign In
+          </button>
+          <button id="tab-register" class="px-4 py-1.5 rounded-md text-[#91A0AD] hover:text-[#F3F7FA] font-medium transition-colors">
+            Create Account
+          </button>
+        </div>
+
+        <div id="auth-heading">
+          <h1 class="text-2xl font-bold tracking-tight text-[#F3F7FA] mb-1.5">Sign in to your vault</h1>
+          <p class="text-xs text-[#91A0AD] leading-relaxed mb-6">
+            Private, client-encrypted personal note workspace.
+          </p>
+        </div>
+
+        <!-- Form Element -->
+        <form class="space-y-4" onsubmit="event.preventDefault();">
+          
+          <!-- Email Field -->
+          <div class="space-y-1.5">
+            <label for="email" class="block text-xs font-medium text-[#91A0AD] code-font flex justify-between items-center">
+              <span>Account Email</span>
+              <span class="text-[11px] text-[#22D3EE] lowercase font-normal hidden" id="email-valid-hint">✓ valid syntax</span>
+            </label>
+            <div class="relative">
+              <input 
+                type="email" 
+                id="email" 
+                value="architect@zeroknowledge.internal"
+                placeholder="name@domain.com" 
+                class="w-full bg-[#111821] border border-[#24303C] focus:border-[#22D3EE] focus:ring-1 focus:ring-[#22D3EE] rounded-md px-3.5 py-2.5 text-sm text-[#F3F7FA] placeholder-[#91A0AD]/40 outline-none code-font transition-all"
+                required
+              />
+            </div>
+          </div>
+
+          <!-- Password Field -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label for="password" class="block text-xs font-medium text-[#91A0AD] code-font">Master Key / Password</label>
+              <button type="button" class="text-[11px] code-font text-[#22D3EE] hover:underline" id="toggle-pw-visibility">Show</button>
+            </div>
+            <div class="relative">
+              <input 
+                type="password" 
+                id="password" 
+                value="••••••••••••••••••••"
+                placeholder="Enter password" 
+                class="w-full bg-[#111821] border border-[#24303C] focus:border-[#22D3EE] focus:ring-1 focus:ring-[#22D3EE] rounded-md px-3.5 py-2.5 text-sm text-[#F3F7FA] placeholder-[#91A0AD]/40 outline-none code-font transition-all"
+                required
+              />
+            </div>
+          </div>
+
+          <!-- Dynamic Registration Requirements (Hidden in sign-in by default, toggled via JS) -->
+          <div id="register-checklist" class="hidden p-3 bg-[#111821] border border-[#24303C] rounded-md space-y-1.5 text-xs code-font">
+            <div class="text-[11px] text-[#91A0AD] uppercase tracking-wider mb-1 font-semibold">Key Constraints</div>
+            <div class="flex items-center gap-2 text-[#34D399] text-[11px]">
+              <span>✓</span> At least 12 characters
+            </div>
+            <div class="flex items-center gap-2 text-[#34D399] text-[11px]">
+              <span>✓</span> Contains uppercase, number & symbol
+            </div>
+            <div class="flex items-center gap-2 text-[#91A0AD] text-[11px]">
+              <span class="text-[#24303C]">○</span> Zero-knowledge password never stored on server
+            </div>
+          </div>
+
+          <!-- Status / Error Feedback Slot (Simulated State) -->
+          <div id="error-banner" class="hidden p-2.5 rounded-md bg-[#FB7185]/10 border border-[#FB7185]/30 text-xs text-[#FB7185] flex items-center gap-2 code-font">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>Authentication token mismatch. Please recheck your key.</span>
+          </div>
+
+          <!-- Submit Button -->
+          <button 
+            type="submit" 
+            id="btn-submit"
+            class="w-full mt-2 bg-[#34D399] hover:bg-[#34D399]/90 active:bg-[#34D399]/80 text-[#080B10] font-semibold text-xs tracking-wide py-2.5 px-4 rounded-md transition-all flex items-center justify-center gap-2 code-font shadow-sm shadow-emerald-500/10"
+          >
+            <span>Unlock Workspace</span>
+            <span class="text-xs">→</span>
+          </button>
+
+          <!-- Alternative Link -->
+          <div class="pt-2 text-center">
+            <button type="button" id="switch-prompt-btn" class="text-xs text-[#91A0AD] hover:text-[#22D3EE] transition-colors code-font">
+              Don't have a vault yet? <span class="text-[#22D3EE] underline underline-offset-2">Create new vault</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Footer Policy & Security Notice -->
+      <div class="pt-4 border-t border-[#24303C]/60 flex items-center justify-between text-[11px] code-font text-[#91A0AD]">
+        <div class="flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-[#34D399]"></span>
+          <span>AES-GCM-256 local derivation</span>
+        </div>
+        <div class="text-[#91A0AD]/70">
+          Strict Zero-Telemetry
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL: Abstract Product Preview & Security Architecture -->
+    <div class="hidden md:flex flex-1 bg-[#080B10] flex-col justify-between p-8 lg:p-14 relative overflow-hidden">
+      
+      <!-- Subtle Ambient Grid Background -->
+      <div class="absolute inset-0 bg-[radial-gradient(#24303C_1px,transparent_1px)] [background-size:24px_24px] opacity-25 pointer-events-none"></div>
+
+      <!-- Top Right Technical Badge -->
+      <div class="relative z-10 flex justify-end items-center gap-3">
+        <div class="px-3 py-1 bg-[#111821] border border-[#24303C] rounded text-xs code-font text-[#91A0AD] flex items-center gap-2">
+          <span class="text-[#22D3EE]">SYS_SPEC</span> 1440px / 3-PANEL WORKSPACE
+        </div>
+      </div>
+
+      <!-- Middle: Realistic Product UI Mockup Preview -->
+      <div class="relative z-10 max-w-2xl mx-auto w-full my-auto">
+        <!-- Mock Window Frame -->
+        <div class="bg-[#0C1118] border border-[#24303C] rounded-xl shadow-2xl overflow-hidden">
+          
+          <!-- Window Header / Titlebar -->
+          <div class="px-4 py-3 bg-[#111821] border-b border-[#24303C] flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-[#FB7185]/60"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-[#FBBF24]/60"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-[#34D399]/60"></span>
+              <span class="ml-2 text-xs code-font text-[#91A0AD]">workspace_root / distributed_sync.md</span>
+            </div>
+            <div class="flex items-center gap-2 text-xs code-font text-[#34D399]">
+              <span class="w-1.5 h-1.5 rounded-full bg-[#34D399] animate-pulse"></span>
+              <span>Saved (Local WAL)</span>
+            </div>
+          </div>
+
+          <!-- Window Inner Layout (Miniature 3-column Preview) -->
+          <div class="grid grid-cols-12 h-80">
+            <!-- Sidebar Mini -->
+            <div class="col-span-3 bg-[#0C1118] border-r border-[#24303C] p-3 space-y-3 text-[11px] code-font">
+              <div class="px-2 py-1 bg-[#34D399]/15 text-[#34D399] rounded font-medium flex items-center gap-1.5">
+                <span>+</span> New Note
+              </div>
+              <div class="space-y-1 text-[#91A0AD]">
+                <div class="px-2 py-1 rounded bg-[#17212B] text-[#F3F7FA] font-medium flex items-center justify-between">
+                  <span>≡ Notes</span>
+                  <span class="text-[9px] bg-[#24303C] px-1 rounded">34</span>
+                </div>
+                <div class="px-2 py-1 rounded hover:bg-[#111821] flex items-center justify-between">
+                  <span>☆ Favorites</span>
+                  <span class="text-[9px] text-[#91A0AD]/60">5</span>
+                </div>
+                <div class="px-2 py-1 rounded hover:bg-[#111821] flex items-center justify-between">
+                  <span>⤓ Archive</span>
+                  <span class="text-[9px] text-[#91A0AD]/60">12</span>
+                </div>
+                <div class="px-2 py-1 rounded hover:bg-[#111821] flex items-center justify-between">
+                  <span>⌸ Trash</span>
+                  <span class="text-[9px] text-[#91A0AD]/60">3</span>
+                </div>
+              </div>
+              <div class="pt-2 border-t border-[#24303C]/60 text-[10px] uppercase text-[#91A0AD]/60 font-semibold tracking-wider">
+                Notebooks
+              </div>
+              <div class="space-y-1 text-[#91A0AD] text-[10px]">
+                <div class="truncate px-1.5 py-0.5">📁 Architecture</div>
+                <div class="truncate px-1.5 py-0.5">📁 Journal</div>
+              </div>
+            </div>
+
+            <!-- Editor Preview Mini (Dominant) -->
+            <div class="col-span-9 bg-[#111821] p-6 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center gap-2 mb-3">
+                  <span class="text-[10px] code-font px-2 py-0.5 rounded bg-[#24303C] text-[#22D3EE]">#distributed-db</span>
+                  <span class="text-[10px] code-font px-2 py-0.5 rounded bg-[#24303C] text-[#34D399]">#security</span>
+                  <span class="text-[10px] code-font text-[#91A0AD] ml-auto">Oct 14, 2024 · 1,420 words</span>
+                </div>
+                <h2 class="text-lg font-bold text-[#F3F7FA] code-font tracking-tight mb-3">
+                  Distributed State Sync & Conflict Resolution
+                </h2>
+                <div class="space-y-2 text-xs text-[#91A0AD] leading-relaxed">
+                  <p>
+                    When syncing notes across partitioned edge clients, deterministic state convergence is non-negotiable. Standard Operational Transformation (OT) requires a centralized coordination authority, which breaks our offline-first and zero-knowledge invariants.
+                  </p>
+                  <div class="p-2.5 rounded bg-[#080B10] border border-[#24303C] code-font text-[11px] text-[#34D399]">
+                    <span class="text-[#22D3EE]">type</span> DocumentState = { id: string; version: number; vectorClock: Map&lt;string, number&gt; }
+                  </div>
+                </div>
+              </div>
+
+              <!-- Editor Footer status -->
+              <div class="pt-3 border-t border-[#24303C] flex items-center justify-between text-[10px] code-font text-[#91A0AD]">
+                <span>LN 42, COL 88 · UTF-8 Markdown</span>
+                <span class="text-[#34D399]">E2EE Verified · AES-256</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Callouts underneath -->
+        <div class="grid grid-cols-3 gap-4 mt-6">
+          <div class="p-3 bg-[#0C1118] border border-[#24303C] rounded-lg">
+            <div class="text-[11px] font-semibold text-[#34D399] code-font mb-0.5">01 // Zero Knowledge</div>
+            <p class="text-[11px] text-[#91A0AD] leading-snug">Private notes are encrypted locally before persistent commit.</p>
+          </div>
+          <div class="p-3 bg-[#0C1118] border border-[#24303C] rounded-lg">
+            <div class="text-[11px] font-semibold text-[#22D3EE] code-font mb-0.5">02 // Writing-First</div>
+            <p class="text-[11px] text-[#91A0AD] leading-snug">Dominant distraction-free editor with instant local autosave.</p>
+          </div>
+          <div class="p-3 bg-[#0C1118] border border-[#24303C] rounded-lg">
+            <div class="text-[11px] font-semibold text-[#F3F7FA] code-font mb-0.5">03 // Fast Tri-Pane</div>
+            <p class="text-[11px] text-[#91A0AD] leading-snug">Seamless organization across Notebooks, Tags, and Full-Text Search.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Info Row -->
+      <div class="relative z-10 flex items-center justify-between text-xs code-font text-[#91A0AD]">
+        <div>Strict Private Storage Protocol</div>
+        <div>No telemetry · No trackers · Single tenant</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Interactive Demo Script to demonstrate Sign In vs Registration toggle -->
+  <script>
+    const tabSignIn = document.getElementById('tab-signin');
+    const tabRegister = document.getElementById('tab-register');
+    const switchPromptBtn = document.getElementById('switch-prompt-btn');
+    const authHeading = document.getElementById('auth-heading');
+    const btnSubmit = document.getElementById('btn-submit');
+    const registerChecklist = document.getElementById('register-checklist');
+    const togglePw = document.getElementById('toggle-pw-visibility');
+    const passwordInput = document.getElementById('password');
+
+    let mode = 'signin';
+
+    function setMode(newMode) {
+      mode = newMode;
+      if (mode === 'signin') {
+        tabSignIn.className = "px-4 py-1.5 rounded-md bg-[#17212B] text-[#F3F7FA] border border-[#24303C] shadow-sm font-medium transition-colors";
+        tabRegister.className = "px-4 py-1.5 rounded-md text-[#91A0AD] hover:text-[#F3F7FA] font-medium transition-colors";
+        authHeading.innerHTML = `
+          <h1 class="text-2xl font-bold tracking-tight text-[#F3F7FA] mb-1.5">Sign in to your vault</h1>
+          <p class="text-xs text-[#91A0AD] leading-relaxed mb-6">
+            Private, client-encrypted personal note workspace.
+          </p>
+        `;
+        btnSubmit.innerHTML = `<span>Unlock Workspace</span><span class="text-xs">→</span>`;
+        switchPromptBtn.innerHTML = `Don't have a vault yet? <span class="text-[#22D3EE] underline underline-offset-2">Create new vault</span>`;
+        registerChecklist.classList.add('hidden');
+      } else {
+        tabRegister.className = "px-4 py-1.5 rounded-md bg-[#17212B] text-[#F3F7FA] border border-[#24303C] shadow-sm font-medium transition-colors";
+        tabSignIn.className = "px-4 py-1.5 rounded-md text-[#91A0AD] hover:text-[#F3F7FA] font-medium transition-colors";
+        authHeading.innerHTML = `
+          <h1 class="text-2xl font-bold tracking-tight text-[#F3F7FA] mb-1.5">Create private vault</h1>
+          <p class="text-xs text-[#91A0AD] leading-relaxed mb-6">
+            Generate your private note storage with zero-knowledge master key.
+          </p>
+        `;
+        btnSubmit.innerHTML = `<span>Create Master Key & Vault</span><span class="text-xs">→</span>`;
+        switchPromptBtn.innerHTML = `Already have a vault? <span class="text-[#22D3EE] underline underline-offset-2">Sign in here</span>`;
+        registerChecklist.classList.remove('hidden');
+      }
+    }
+
+    tabSignIn.addEventListener('click', () => setMode('signin'));
+    tabRegister.addEventListener('click', () => setMode('register'));
+    switchPromptBtn.addEventListener('click', () => setMode(mode === 'signin' ? 'register' : 'signin'));
+
+    togglePw.addEventListener('click', () => {
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        togglePw.innerText = 'Hide';
+      } else {
+        passwordInput.type = 'password';
+        togglePw.innerText = 'Show';
+      }
+    });
+  </script>
+</body>
+</html>

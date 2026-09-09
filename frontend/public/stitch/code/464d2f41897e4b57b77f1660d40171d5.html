@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Authentication (Mobile) - Note App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            app: '#080B10',
+            sidebar: '#0C1118',
+            surface: '#111821',
+            elevated: '#17212B',
+            bordercol: '#24303C',
+            textprimary: '#F3F7FA',
+            textsecondary: '#91A0AD',
+            emeraldaccent: '#34D399',
+            cyanaccent: '#22D3EE',
+            destructive: '#FB7185',
+            warning: '#FBBF24',
+            focuscol: '#67E8F9',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #080B10;
+      color: #F3F7FA;
+      font-family: 'JetBrains Mono', monospace;
+      -webkit-font-smoothing: antialiased;
+    }
+    .custom-ring:focus {
+      outline: none;
+      border-color: #22D3EE;
+      box-shadow: 0 0 0 1px #22D3EE;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-app flex flex-col justify-between p-4 sm:p-6 select-none">
+
+  <!-- Top System Bar -->
+  <header class="w-full flex items-center justify-between pt-2 pb-4 border-b border-bordercol/40">
+    <div class="flex items-center space-x-2.5">
+      <img src="https://lh3.googleusercontent.com/aida/AEtjO1W4GZr3mq2DEDI9DvMEAqtftFTj3ayAjzQG6AaJytBy-DlM8U-rQYxXCNTNOChUkFvvPBFUAXT99GCmIPW0Nm4Av2xzFajae5G-h04CYJ0XjJK8mATPWgVQ45XmBlS58uVyhsM06xNTljH2g8OLkPAGxqSQ6guWE5Yp1FguzMiGW-2zX6vFUL7g6741ZucWzeBTum1wY-rXGbQAnbu72iLbNa735azKYveYmV9RHLIsJ5phL1Rj8F-NC84" alt="Note App Logo" class="w-7 h-7 rounded-md border border-bordercol/60" />
+      <span class="text-sm font-semibold tracking-tight text-textprimary">Note App</span>
+    </div>
+    <div class="flex items-center space-x-1.5 px-2.5 py-1 bg-surface border border-bordercol/60 rounded text-[11px] text-textsecondary">
+      <span class="w-1.5 h-1.5 rounded-full bg-emeraldaccent"></span>
+      <span>v2.4.0 • private</span>
+    </div>
+  </header>
+
+  <!-- Main Centered Auth Container (Mobile View as per Section 20) -->
+  <main class="w-full max-w-sm mx-auto my-auto py-6">
+    
+    <!-- Auth Toggle Switcher -->
+    <div class="flex p-1 bg-surface border border-bordercol rounded-lg mb-6">
+      <button id="tab-signin" onclick="setMode('signin')" class="flex-1 py-2 text-xs font-medium rounded transition-all bg-elevated text-textprimary shadow-sm border border-bordercol/60">
+        Sign In
+      </button>
+      <button id="tab-register" onclick="setMode('register')" class="flex-1 py-2 text-xs font-medium rounded transition-all text-textsecondary hover:text-textprimary">
+        Create Vault
+      </button>
+    </div>
+
+    <!-- Header Section -->
+    <div class="mb-6">
+      <h1 id="auth-title" class="text-xl font-bold text-textprimary tracking-tight">Sign in to your vault</h1>
+      <p id="auth-subtitle" class="text-xs text-textsecondary mt-1.5 leading-relaxed">
+        Private, client-encrypted personal note workspace.
+      </p>
+    </div>
+
+    <!-- Form Section -->
+    <form onsubmit="event.preventDefault(); handleSubmit();" class="space-y-4">
+      <!-- Email Field -->
+      <div>
+        <label for="email" class="block text-xs font-medium text-textsecondary mb-1.5">Account Email</label>
+        <div class="relative">
+          <input 
+            type="email" 
+            id="email" 
+            value="architect@zeroknowledge.internal" 
+            placeholder="name@domain.internal" 
+            required 
+            class="w-full h-11 px-3.5 bg-surface border border-bordercol rounded-lg text-xs text-textprimary placeholder-textsecondary/50 custom-ring transition-colors"
+          />
+        </div>
+      </div>
+
+      <!-- Password / Master Key Field -->
+      <div>
+        <div class="flex justify-between items-center mb-1.5">
+          <label for="password" id="password-label" class="text-xs font-medium text-textsecondary">Master Key / Password</label>
+          <button type="button" onclick="togglePasswordVisibility()" id="toggle-pwd-btn" class="text-[11px] text-cyanaccent hover:underline focus:outline-none">
+            Show
+          </button>
+        </div>
+        <div class="relative">
+          <input 
+            type="password" 
+            id="password" 
+            value="master-key-cipher-2025" 
+            placeholder="••••••••••••••••••••" 
+            required 
+            class="w-full h-11 px-3.5 bg-surface border border-bordercol rounded-lg text-xs text-textprimary placeholder-textsecondary/50 custom-ring transition-colors"
+          />
+        </div>
+      </div>
+
+      <!-- Registration Requirements (Hidden in signin mode) -->
+      <div id="register-requirements" class="hidden p-3 bg-surface/70 border border-bordercol/70 rounded-lg space-y-1.5 text-[11px]">
+        <div class="text-textsecondary font-medium">Master Key Requirements:</div>
+        <div class="flex items-center space-x-1.5 text-textsecondary">
+          <span class="w-1.5 h-1.5 rounded-full bg-emeraldaccent"></span>
+          <span>At least 12 characters minimum</span>
+        </div>
+        <div class="flex items-center space-x-1.5 text-textsecondary">
+          <span class="w-1.5 h-1.5 rounded-full bg-emeraldaccent"></span>
+          <span>Zero-knowledge client-side derivation</span>
+        </div>
+      </div>
+
+      <!-- Error / Validation Notice Slot -->
+      <div id="auth-alert" class="hidden p-2.5 bg-destructive/10 border border-destructive/30 rounded text-destructive text-xs flex items-center space-x-2">
+        <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        <span id="auth-alert-text">Authentication failed. Please verify credentials.</span>
+      </div>
+
+      <!-- Submit Action Button -->
+      <button 
+        type="submit" 
+        id="submit-btn" 
+        class="w-full h-11 mt-2 bg-emeraldaccent hover:bg-emerald-400 active:bg-emerald-500 text-app font-semibold text-xs rounded-lg transition-all flex items-center justify-center space-x-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-emeraldaccent focus:ring-offset-2 focus:ring-offset-app"
+      >
+        <span id="submit-text">Unlock Workspace</span>
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+        </svg>
+      </button>
+
+      <!-- Mode Quick Switch CTA -->
+      <div class="pt-2 text-center text-xs text-textsecondary">
+        <span id="switch-prompt">Don't have a vault yet?</span>
+        <button type="button" id="switch-link" onclick="toggleModeFromFooter()" class="ml-1 text-cyanaccent hover:underline font-medium focus:outline-none">
+          Create new vault
+        </button>
+      </div>
+    </form>
+
+    <!-- Client-Side Security Assurance Pill -->
+    <div class="mt-6 p-3 bg-surface/50 border border-bordercol/50 rounded-lg flex items-center justify-between text-[11px] text-textsecondary">
+      <div class="flex items-center space-x-2">
+        <span class="w-2 h-2 rounded-full bg-emeraldaccent"></span>
+        <span class="text-textprimary font-medium">AES-GCM-256</span>
+      </div>
+      <span>Local Key Derivation</span>
+    </div>
+
+  </main>
+
+  <!-- Mobile Footer / Zero Telemetry Notice -->
+  <footer class="w-full pt-4 pb-2 border-t border-bordercol/40 flex flex-col items-center justify-center space-y-1 text-[11px] text-textsecondary">
+    <div class="flex items-center space-x-3">
+      <span>Zero Telemetry</span>
+      <span class="text-bordercol">•</span>
+      <span>No Trackers</span>
+      <span class="text-bordercol">•</span>
+      <span>Client-Encrypted</span>
+    </div>
+    <div class="text-[10px] text-textsecondary/60">
+      Strict Private Storage Protocol
+    </div>
+  </footer>
+
+  <!-- Interactive script for tabs & password visibility -->
+  <script>
+    let mode = 'signin';
+
+    function setMode(newMode) {
+      mode = newMode;
+      const tabSignIn = document.getElementById('tab-signin');
+      const tabRegister = document.getElementById('tab-register');
+      const title = document.getElementById('auth-title');
+      const subtitle = document.getElementById('auth-subtitle');
+      const submitText = document.getElementById('submit-text');
+      const switchPrompt = document.getElementById('switch-prompt');
+      const switchLink = document.getElementById('switch-link');
+      const reqs = document.getElementById('register-requirements');
+
+      if (mode === 'signin') {
+        tabSignIn.className = "flex-1 py-2 text-xs font-medium rounded transition-all bg-elevated text-textprimary shadow-sm border border-bordercol/60";
+        tabRegister.className = "flex-1 py-2 text-xs font-medium rounded transition-all text-textsecondary hover:text-textprimary";
+        title.textContent = "Sign in to your vault";
+        subtitle.textContent = "Private, client-encrypted personal note workspace.";
+        submitText.textContent = "Unlock Workspace";
+        switchPrompt.textContent = "Don't have a vault yet?";
+        switchLink.textContent = "Create new vault";
+        reqs.classList.add('hidden');
+      } else {
+        tabRegister.className = "flex-1 py-2 text-xs font-medium rounded transition-all bg-elevated text-textprimary shadow-sm border border-bordercol/60";
+        tabSignIn.className = "flex-1 py-2 text-xs font-medium rounded transition-all text-textsecondary hover:text-textprimary";
+        title.textContent = "Create personal vault";
+        subtitle.textContent = "Generate local cryptographic master key & storage.";
+        submitText.textContent = "Create Master Key & Vault";
+        switchPrompt.textContent = "Already have a vault?";
+        switchLink.textContent = "Sign in to vault";
+        reqs.classList.remove('hidden');
+      }
+    }
+
+    function toggleModeFromFooter() {
+      setMode(mode === 'signin' ? 'register' : 'signin');
+    }
+
+    function togglePasswordVisibility() {
+      const pwdInput = document.getElementById('password');
+      const toggleBtn = document.getElementById('toggle-pwd-btn');
+      if (pwdInput.type === 'password') {
+        pwdInput.type = 'text';
+        toggleBtn.textContent = 'Hide';
+      } else {
+        pwdInput.type = 'password';
+        toggleBtn.textContent = 'Show';
+      }
+    }
+
+    function handleSubmit() {
+      const btn = document.getElementById('submit-btn');
+      const submitText = document.getElementById('submit-text');
+      const origText = submitText.textContent;
+      
+      submitText.textContent = mode === 'signin' ? 'Verifying Key...' : 'Deriving Master Key...';
+      btn.disabled = true;
+      btn.classList.add('opacity-75', 'cursor-not-allowed');
+
+      setTimeout(() => {
+        submitText.textContent = origText;
+        btn.disabled = false;
+        btn.classList.remove('opacity-75', 'cursor-not-allowed');
+      }, 900);
+    }
+  </script>
+</body>
+</html>

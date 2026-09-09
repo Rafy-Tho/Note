@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>Note App</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "surface": "#101319", "on-primary": "#00363e", "surface-bright": "#36393f", "error": "#ffb4ab", "surface-container-high": "#272a30", "secondary-container": "#00bd85", "outline": "#859397", "secondary": "#45dfa4", "inverse-primary": "#006877", "error-container": "#93000a", "surface-container-highest": "#32353b", "on-primary-container": "#005763", "primary-container": "#22d3ee", "on-secondary-container": "#00452e", "surface-container": "#1d2025", "secondary-fixed-dim": "#45dfa4", "tertiary-container": "#b7c2cf", "surface-variant": "#32353b", "primary-fixed": "#a2eeff", "on-tertiary-fixed-variant": "#3e4853", "primary-fixed-dim": "#2fd9f4", "secondary-fixed": "#68fcbf", "outline-variant": "#3c494c", "tertiary-fixed": "#d9e3f1", "on-tertiary-container": "#46505b", "on-background": "#e1e2ea", "background": "#101319", "on-surface-variant": "#bbc9cd", "surface-dim": "#101319", "on-surface": "#e1e2ea", "surface-container-low": "#191c21", "inverse-surface": "#e1e2ea", "tertiary": "#d3deec", "on-primary-fixed": "#001f25", "primary": "#8aebff", "on-secondary": "#003825", "surface-tint": "#2fd9f4", "surface-container-lowest": "#0b0e13", "on-tertiary-fixed": "#121c26", "inverse-on-surface": "#2d3036", "on-error-container": "#ffdad6", "on-secondary-fixed": "#002114", "on-error": "#690005", "tertiary-fixed-dim": "#bdc7d5", "on-tertiary": "#27313c", "on-primary-fixed-variant": "#004e5a", "on-secondary-fixed-variant": "#005137" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "xs": "4px", "sidebar-width-collapsed": "48px", "gutter": "16px", "sm": "8px", "none": "0px", "2xs": "2px", "lg": "24px", "3xl": "64px", "sidebar-width-expanded": "280px", "editor-max-width": "760px", "2xl": "48px", "xl": "32px", "md": "12px", "base": "16px" }, "fontFamily": { "headline-md": ["JetBrains Mono"], "body-md": ["Geist"], "headline-lg": ["JetBrains Mono"], "code-inline": ["JetBrains Mono"], "body-sm": ["Geist"], "label-md": ["JetBrains Mono"], "code-block": ["JetBrains Mono"], "display": ["JetBrains Mono"], "display-mobile": ["JetBrains Mono"], "label-sm": ["JetBrains Mono"], "headline-sm": ["JetBrains Mono"], "body-lg": ["Geist"] }, "fontSize": { "headline-md": ["18px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "500" }], "body-md": ["14px", { "lineHeight": "22px", "letterSpacing": "0em", "fontWeight": "400" }], "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "code-inline": ["13px", { "lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400" }], "body-sm": ["13px", { "lineHeight": "20px", "letterSpacing": "0.005em", "fontWeight": "400" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "500" }], "code-block": ["13px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" }], "display": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "display-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.06em", "fontWeight": "500" }], "headline-sm": ["15px", { "lineHeight": "22px", "letterSpacing": "0em", "fontWeight": "500" }], "body-lg": ["16px", { "lineHeight": "26px", "letterSpacing": "0em", "fontWeight": "400" }] } } } };</script></head><body class="bg-surface-container-lowest text-on-surface font-body-md text-body-md antialiased min-h-screen selection:bg-secondary-container selection:text-on-secondary-container"><aside class="fixed left-0 top-0 bottom-0 w-[230px] bg-surface-container-low border-r border-outline-variant/30 flex flex-col z-50 select-none"><div class="h-14 px-sm flex items-center justify-between border-b border-outline-variant/20 bg-surface-container-low"><div class="flex items-center gap-xs overflow-hidden"><img alt="Note App Brand Mark" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1W4GZr3mq2DEDI9DvMEAqtftFTj3ayAjzQG6AaJytBy-DlM8U-rQYxXCNTNOChUkFvvPBFUAXT99GCmIPW0Nm4Av2xzFajae5G-h04CYJ0XjJK8mATPWgVQ45XmBlS58uVyhsM06xNTljH2g8OLkPAGxqSQ6guWE5Yp1FguzMiGW-2zX6vFUL7g6741ZucWzeBTum1wY-rXGbQAnbu72iLbNa735azKYveYmV9RHLIsJ5phL1Rj8F-NC84"/><span class="font-headline-sm text-headline-sm tracking-tight text-on-surface truncate">Note App</span></div><div class="flex items-center"><span class="inline-block w-2xs h-2xs rounded-full bg-secondary" title="Encrypted sync active"></span></div></div><div class="p-sm pb-none flex flex-col gap-xs"><button class="w-full flex items-center justify-between bg-secondary-container text-on-secondary-container font-label-md text-label-md px-md py-xs rounded-none transition-all active:translate-x-2xs active:translate-y-2xs" type="button"><div class="flex items-center gap-xs"><span class="material-symbols-outlined text-[16px]">add</span><span>New Note</span></div><kbd class="font-code-inline text-[10px] text-on-secondary-container/80 tracking-normal">⌘N</kbd></button><button class="w-full flex items-center justify-between bg-surface-container-lowest border border-outline-variant/30 text-on-surface-variant hover:text-on-surface hover:border-outline px-sm py-xs text-left transition-colors" type="button"><div class="flex items-center gap-xs"><span class="material-symbols-outlined text-[15px]">search</span><span class="font-body-sm text-body-sm">Search notes...</span></div><kbd class="font-code-inline text-[10px] text-on-surface-variant/70 border border-outline-variant/40 px-2xs">⌘K</kbd></button></div><div class="flex-1 overflow-y-auto px-xs py-sm flex flex-col gap-md"><nav class="flex flex-col gap-2xs" data-active-classes="bg-surface-container-highest text-on-surface border-l-2 border-secondary font-medium"><a aria-current="page" class="flex items-center gap-sm px-sm py-xs transition-colors bg-surface-container-highest text-on-surface border-l-2 border-secondary font-medium" data-path="all-notes" href="#"><span class="material-symbols-outlined text-[18px]">notes</span><span class="font-body-sm text-body-sm">Notes</span></a><a class="flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" data-path="favorites" href="#"><span class="material-symbols-outlined text-[18px]">star</span><span class="font-body-sm text-body-sm">Favorites</span></a><a class="flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" data-path="archive" href="#"><span class="material-symbols-outlined text-[18px]">archive</span><span class="font-body-sm text-body-sm">Archive</span></a><a class="flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" data-path="trash" href="#"><span class="material-symbols-outlined text-[18px]">delete</span><span class="font-body-sm text-body-sm">Trash</span></a></nav><div class="flex flex-col gap-2xs"><div class="flex items-center justify-between px-sm py-2xs text-on-surface-variant/70"><span class="font-label-sm text-label-sm uppercase tracking-widest">Notebooks</span><button class="hover:text-on-surface text-on-surface-variant transition-colors" title="Create Notebook" type="button"><span class="material-symbols-outlined text-[14px]">add</span></button></div><nav class="flex flex-col gap-2xs" data-active-classes="bg-surface-container-highest text-on-surface border-l-2 border-secondary font-medium"><a class="flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" data-path="engineering-architecture" href="#"><span class="material-symbols-outlined text-[16px]">folder</span><span class="font-body-sm text-body-sm truncate">Engineering Architecture</span></a><a class="flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" data-path="personal-journal" href="#"><span class="material-symbols-outlined text-[16px]">folder</span><span class="font-body-sm text-body-sm truncate">Personal Journal</span></a><a class="flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" data-path="product-strategy" href="#"><span class="material-symbols-outlined text-[16px]">folder</span><span class="font-body-sm text-body-sm truncate">Product Strategy</span></a></nav></div><div class="flex flex-col gap-2xs"><div class="px-sm py-2xs text-on-surface-variant/70"><span class="font-label-sm text-label-sm uppercase tracking-widest">Tags</span></div><div class="px-sm flex flex-wrap gap-xs"><a class="font-code-inline text-[11px] text-on-surface-variant bg-surface-container border border-outline-variant/30 px-xs py-2xs hover:text-secondary hover:border-secondary transition-colors" data-path="tag-design" href="#">#design</a><a class="font-code-inline text-[11px] text-on-surface-variant bg-surface-container border border-outline-variant/30 px-xs py-2xs hover:text-secondary hover:border-secondary transition-colors" data-path="tag-ideas" href="#">#ideas</a><a class="font-code-inline text-[11px] text-on-surface-variant bg-surface-container border border-outline-variant/30 px-xs py-2xs hover:text-secondary hover:border-secondary transition-colors" data-path="tag-v1-release" href="#">#v1-release</a><a class="font-code-inline text-[11px] text-on-surface-variant bg-surface-container border border-outline-variant/30 px-xs py-2xs hover:text-secondary hover:border-secondary transition-colors" data-path="tag-security" href="#">#security</a></div></div></div><div class="p-sm border-t border-outline-variant/20 bg-surface-container-low"><a class="w-full flex items-center gap-sm px-sm py-xs text-on-surface-variant hover:text-error hover:bg-surface-container transition-colors" data-path="sign-out" href="#"><span class="material-symbols-outlined text-[18px]">logout</span><span class="font-body-sm text-body-sm">Sign Out</span></a></div></aside><div class="pl-[230px] min-h-screen bg-surface"><header class="fixed top-0 left-[230px] right-0 h-14 bg-surface/90 backdrop-blur-md border-b border-outline-variant/20 z-40 flex items-center justify-between px-lg"><div class="flex items-center gap-md"><img alt="Note App Brand Mark" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1W4GZr3mq2DEDI9DvMEAqtftFTj3ayAjzQG6AaJytBy-DlM8U-rQYxXCNTNOChUkFvvPBFUAXT99GCmIPW0Nm4Av2xzFajae5G-h04CYJ0XjJK8mATPWgVQ45XmBlS58uVyhsM06xNTljH2g8OLkPAGxqSQ6guWE5Yp1FguzMiGW-2zX6vFUL7g6741ZucWzeBTum1wY-rXGbQAnbu72iLbNa735azKYveYmV9RHLIsJ5phL1Rj8F-NC84"/><nav class="hidden md:flex items-center gap-md" data-active-classes="text-on-surface font-medium"><a aria-current="page" class="transition-colors text-on-surface font-medium" data-path="all-notes" href="#">Notes</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="favorites" href="#">Favorites</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="archive" href="#">Archive</a><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="trash" href="#">Trash</a></nav></div><div class="flex items-center gap-md"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></header><main class="w-full pt-14 bg-surface min-h-screen"><div class="flex flex-col w-full relative min-h-[calc(100vh-3.5rem)] select-none">
+<!-- Muted / Subdued Main Workspace Backdrop -->
+<div class="w-full flex-1 grid grid-cols-12 opacity-30 pointer-events-none filter blur-[1px] transition-all">
+<!-- Workspace Column 1: Sub-Explorer List -->
+<div class="hidden lg:flex lg:col-span-3 bg-surface-container-low flex-col">
+<div class="px-md py-sm flex items-center justify-between bg-surface-container">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Architecture Notes</span>
+<span class="font-code-inline text-label-sm text-outline">18 items</span>
+</div>
+<div class="p-xs space-y-2xs">
+<div class="p-sm bg-surface-container-highest">
+<div class="font-headline-sm text-headline-sm text-on-surface">Zero-knowledge Encryption Notes</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant truncate mt-2xs">Client-side primitives and Argon2 key derivation.</div>
+</div>
+<div class="p-sm bg-surface-container">
+<div class="font-headline-sm text-headline-sm text-on-surface-variant">Distributed State Sync</div>
+<div class="font-body-sm text-body-sm text-outline truncate mt-2xs">CRDT conflict resolution pipelines.</div>
+</div>
+<div class="p-sm bg-surface-container">
+<div class="font-headline-sm text-headline-sm text-on-surface-variant">Postgres Index Partitioning</div>
+<div class="font-body-sm text-body-sm text-outline truncate mt-2xs">Hot-partition storage strategies.</div>
+</div>
+</div>
+</div>
+<!-- Workspace Column 2: Editor Surface Mock -->
+<div class="col-span-12 lg:col-span-6 bg-surface px-xl py-2xl flex flex-col items-center">
+<div class="w-full max-w-[760px] space-y-md">
+<div class="h-6 w-32 bg-surface-container-high"></div>
+<div class="h-10 w-3/4 bg-surface-container-highest"></div>
+<div class="space-y-xs pt-base">
+<div class="h-4 w-full bg-surface-container"></div>
+<div class="h-4 w-11/12 bg-surface-container"></div>
+<div class="h-4 w-4/5 bg-surface-container"></div>
+</div>
+</div>
+</div>
+<!-- Workspace Column 3: Meta Drawer -->
+<div class="hidden lg:flex lg:col-span-3 bg-surface-container-low flex-col p-md space-y-base">
+<div class="font-label-sm text-label-sm uppercase text-outline">Backlinks &amp; Citations</div>
+<div class="p-sm bg-surface-container space-y-xs">
+<div class="font-code-inline text-label-sm text-primary">#sec-baseline</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Referenced in 3 nodes</div>
+</div>
+</div>
+</div>
+<!-- Focused Global Search Overlay / Level 4 Elevated Frame -->
+<div class="absolute inset-0 bg-surface-container-lowest/80 backdrop-blur-sm flex flex-col items-center justify-start pt-lg px-md sm:px-lg z-50" id="search-modal-backdrop">
+<div class="w-full max-w-3xl bg-surface-container flex flex-col shadow-2xl transition-all duration-150 relative">
+<!-- Top Control Bar / Monospace Status Header -->
+<div class="flex items-center justify-between px-md py-xs bg-surface-container-low text-on-surface-variant">
+<div class="flex items-center gap-xs font-label-sm text-label-sm uppercase tracking-widest text-outline">
+<span class="inline-block w-2xs h-2xs bg-primary"></span>
+<span>Index: Local Workspace Indexer</span>
+</div>
+<div class="flex items-center gap-sm">
+<span class="font-code-inline text-label-sm text-secondary flex items-center gap-2xs">
+<span class="inline-block w-2xs h-2xs bg-secondary"></span> 4,129 Vectors
+          </span>
+<button class="p-2xs text-outline hover:text-on-surface hover:bg-surface-container-high transition-colors" id="close-search-btn" title="Close (Esc)">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+</div>
+<!-- Elevated Search Input Block -->
+<div class="p-md bg-surface-container-high flex flex-col gap-sm">
+<div class="flex items-center gap-sm bg-surface-container-lowest px-md py-sm focus-within:bg-surface-dim">
+<span class="material-symbols-outlined text-primary text-[20px]">search</span>
+<input autocomplete="off" class="flex-1 bg-transparent text-on-surface font-headline-sm text-headline-sm focus:outline-none placeholder:text-outline" id="global-search-input" placeholder="Search notes, tags, syntax..." spellcheck="false" type="text" value="encryption"/>
+<button class="text-outline hover:text-on-surface p-2xs" id="clear-search-btn" title="Clear query">
+<span class="material-symbols-outlined text-[18px]">cancel</span>
+</button>
+</div>
+<!-- Scope & Query Metadata -->
+<div class="flex flex-wrap items-center justify-between gap-sm pt-2xs">
+<div class="flex flex-wrap items-center gap-xs">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider mr-xs">Scope:</span>
+<!-- Included Badges -->
+<button class="inline-flex items-center gap-xs bg-surface-container px-xs py-2xs text-secondary font-code-inline text-label-sm hover:bg-surface-container-highest transition-colors">
+<span class="material-symbols-outlined text-[13px]">check_box</span>
+<span>Active Notes</span>
+</button>
+<button class="inline-flex items-center gap-xs bg-surface-container px-xs py-2xs text-secondary font-code-inline text-label-sm hover:bg-surface-container-highest transition-colors">
+<span class="material-symbols-outlined text-[13px]">check_box</span>
+<span>Archived</span>
+</button>
+<!-- Excluded Indicator -->
+<span class="inline-flex items-center gap-xs bg-surface-container-low px-xs py-2xs text-outline font-code-inline text-label-sm opacity-80">
+<span class="material-symbols-outlined text-[13px]">disabled_by_default</span>
+<span>Trash Excluded</span>
+</span>
+</div>
+<!-- Quick Stats -->
+<div class="font-code-inline text-label-sm text-primary font-medium">
+            4 notes found matching <span class="text-on-surface">"encryption"</span>
+</div>
+</div>
+</div>
+<!-- Results Area (Keyboard Navigable) -->
+<div class="flex flex-col max-h-[593px] overflow-y-auto divide-y-0 bg-surface-container" id="search-results-list" tabindex="0">
+<!-- Result Item 1: Focused / Active State -->
+<div class="search-item group cursor-pointer bg-surface-container-highest p-md transition-colors relative" data-index="0">
+<div class="absolute left-0 top-0 bottom-0 w-[3px] bg-primary"></div>
+<div class="flex items-start justify-between gap-md pl-xs">
+<div class="flex-1 min-w-0">
+<!-- Result Metadata Row -->
+<div class="flex items-center gap-xs mb-2xs flex-wrap">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider flex items-center gap-2xs">
+<span class="material-symbols-outlined text-[14px]">folder</span>
+                  Engineering Architecture
+                </span>
+<span class="text-outline-variant font-code-inline text-[11px]">•</span>
+<span class="font-code-inline text-label-sm text-primary bg-surface-container-low px-xs py-2xs">#security</span>
+<span class="font-code-inline text-label-sm text-outline-variant ml-auto">Modified 24m ago</span>
+</div>
+<!-- Result Note Title -->
+<h2 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-sm">
+<span>Zero-knowledge <mark class="bg-primary/20 text-primary-fixed font-medium p-none">Encryption</mark> Notes</span>
+</h2>
+<!-- Matching Context Snippet -->
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs leading-relaxed">
+                ...AES-GCM-256 <mark class="bg-primary/20 text-primary-fixed font-medium p-none">encryption</mark> with client-side keys. Argon2id salt generation handles derivation prior to payload sync to prevent leakage...
+              </p>
+</div>
+<!-- Quick Action Shortcut Hint -->
+<div class="hidden sm:flex flex-col items-end gap-xs self-center flex-shrink-0">
+<kbd class="font-code-inline text-label-sm bg-surface-container-low text-on-surface-variant px-xs py-2xs">↵ Enter</kbd>
+</div>
+</div>
+</div>
+<!-- Result Item 2 -->
+<div class="search-item group cursor-pointer bg-surface-container hover:bg-surface-container-high p-md transition-colors relative" data-index="1">
+<div class="absolute left-0 top-0 bottom-0 w-[3px] bg-transparent group-hover:bg-outline-variant"></div>
+<div class="flex items-start justify-between gap-md pl-xs">
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-xs mb-2xs flex-wrap">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider flex items-center gap-2xs">
+<span class="material-symbols-outlined text-[14px]">folder</span>
+                  Engineering Architecture
+                </span>
+<span class="text-outline-variant font-code-inline text-[11px]">•</span>
+<span class="font-code-inline text-label-sm text-primary bg-surface-container-low px-xs py-2xs">#security</span>
+<span class="text-outline-variant font-code-inline text-[11px]">•</span>
+<span class="font-code-inline text-label-sm text-secondary bg-surface-container-low px-xs py-2xs">#distributed-db</span>
+<span class="font-code-inline text-label-sm text-outline-variant ml-auto">Oct 14, 2024</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">
+                Distributed State Sync &amp; Conflict Resolution
+              </h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs leading-relaxed">
+                ...local-first <mark class="bg-primary/20 text-primary-fixed font-medium p-none">encrypted</mark> storage engine leverages CRDT state trees before delegating delta streams to upstream storage adapters...
+              </p>
+</div>
+<div class="hidden sm:flex flex-col items-end gap-xs self-center flex-shrink-0">
+<span class="material-symbols-outlined text-[18px] text-outline opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+</div>
+</div>
+</div>
+<!-- Result Item 3: Archived Item -->
+<div class="search-item group cursor-pointer bg-surface-container hover:bg-surface-container-high p-md transition-colors relative" data-index="2">
+<div class="absolute left-0 top-0 bottom-0 w-[3px] bg-transparent group-hover:bg-outline-variant"></div>
+<div class="flex items-start justify-between gap-md pl-xs">
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-xs mb-2xs flex-wrap">
+<!-- Archive Scope Badge -->
+<span class="bg-surface-container-highest text-outline font-label-sm text-label-sm px-xs py-2xs uppercase tracking-widest flex items-center gap-2xs">
+<span class="material-symbols-outlined text-[12px]">archive</span>
+                  Archive
+                </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider flex items-center gap-2xs">
+<span class="material-symbols-outlined text-[14px]">book</span>
+                  Personal Journal
+                </span>
+<span class="font-code-inline text-label-sm text-outline-variant ml-auto">Feb 02, 2025</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-xs">
+<span>Personal Backup Keys 2025</span>
+</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs leading-relaxed">
+                Hardware passkey rotation log and primary recovery shard indices for offline storage vaults.
+              </p>
+</div>
+<div class="hidden sm:flex flex-col items-end gap-xs self-center flex-shrink-0">
+<span class="material-symbols-outlined text-[18px] text-outline opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+</div>
+</div>
+</div>
+<!-- Result Item 4 -->
+<div class="search-item group cursor-pointer bg-surface-container hover:bg-surface-container-high p-md transition-colors relative" data-index="3">
+<div class="absolute left-0 top-0 bottom-0 w-[3px] bg-transparent group-hover:bg-outline-variant"></div>
+<div class="flex items-start justify-between gap-md pl-xs">
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-xs mb-2xs flex-wrap">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider flex items-center gap-2xs">
+<span class="material-symbols-outlined text-[14px]">folder</span>
+                  Engineering Architecture
+                </span>
+<span class="text-outline-variant font-code-inline text-[11px]">•</span>
+<span class="font-code-inline text-label-sm text-primary bg-surface-container-low px-xs py-2xs">#database</span>
+<span class="font-code-inline text-label-sm text-outline-variant ml-auto">Jan 11, 2025</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">
+                Database Schema &amp; Field-level Crypto
+              </h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs leading-relaxed">
+                Deterministic envelope payload structures storing symmetric ciphertext chunks alongside HMAC verifiers in indexed columns.
+              </p>
+</div>
+<div class="hidden sm:flex flex-col items-end gap-xs self-center flex-shrink-0">
+<span class="material-symbols-outlined text-[18px] text-outline opacity-0 group-hover:opacity-100 transition-opacity">arrow_forward</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Quick Operational Helper Footer Bar -->
+<div class="px-md py-sm bg-surface-container-low flex flex-wrap items-center justify-between gap-sm text-on-surface-variant">
+<div class="flex items-center gap-md flex-wrap font-label-sm text-label-sm">
+<div class="flex items-center gap-xs">
+<kbd class="font-code-inline text-[10px] bg-surface-container-high text-on-surface px-xs py-2xs">↑</kbd>
+<kbd class="font-code-inline text-[10px] bg-surface-container-high text-on-surface px-xs py-2xs">↓</kbd>
+<span class="text-outline">Navigate</span>
+</div>
+<span class="text-outline-variant">•</span>
+<div class="flex items-center gap-xs">
+<kbd class="font-code-inline text-[10px] bg-surface-container-high text-on-surface px-xs py-2xs">↵</kbd>
+<span class="text-outline">Open</span>
+</div>
+<span class="text-outline-variant">•</span>
+<div class="flex items-center gap-xs">
+<kbd class="font-code-inline text-[10px] bg-surface-container-high text-on-surface px-xs py-2xs">Esc</kbd>
+<span class="text-outline">Close</span>
+</div>
+<span class="text-outline-variant">•</span>
+<div class="flex items-center gap-xs">
+<kbd class="font-code-inline text-[10px] bg-surface-container-high text-on-surface px-xs py-2xs">Tab</kbd>
+<span class="text-outline">Filter Scope</span>
+</div>
+</div>
+<div class="font-code-inline text-label-sm text-outline flex items-center gap-xs">
+<span>Exact Match</span>
+<span class="text-secondary">[L1]</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  (function() {
+    const searchInput = document.getElementById('global-search-input');
+    const clearBtn = document.getElementById('clear-search-btn');
+    const items = Array.from(document.querySelectorAll('.search-item'));
+    let selectedIndex = 0;
+
+    function updateSelection(newIdx) {
+      if (newIdx < 0) newIdx = items.length - 1;
+      if (newIdx >= items.length) newIdx = 0;
+
+      items.forEach((el, idx) => {
+        const bar = el.querySelector('div.absolute');
+        if (idx === newIdx) {
+          el.classList.remove('bg-surface-container');
+          el.classList.add('bg-surface-container-highest');
+          if (bar) {
+            bar.classList.remove('bg-transparent', 'group-hover:bg-outline-variant');
+            bar.classList.add('bg-primary');
+          }
+          el.scrollIntoView({ block: 'nearest' });
+        } else {
+          el.classList.remove('bg-surface-container-highest');
+          el.classList.add('bg-surface-container');
+          if (bar) {
+            bar.classList.remove('bg-primary');
+            bar.classList.add('bg-transparent');
+          }
+        }
+      });
+      selectedIndex = newIdx;
+    }
+
+    if (clearBtn && searchInput) {
+      clearBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        searchInput.focus();
+      });
+    }
+
+    // Interactive Keyboard Nav for search modal list
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        updateSelection(selectedIndex + 1);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        updateSelection(selectedIndex - 1);
+      } else if (e.key === 'Escape') {
+        const backdrop = document.getElementById('search-modal-backdrop');
+        if (backdrop) backdrop.classList.add('hidden');
+      }
+    });
+
+    items.forEach((item, i) => {
+      item.addEventListener('mouseenter', () => updateSelection(i));
+    });
+  })();
+</script></main></div></body></html>

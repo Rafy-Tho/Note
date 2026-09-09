@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-surface-variant": "#bbc9cd", "inverse-primary": "#006877", "tertiary-fixed-dim": "#bdc7d5", "surface-tint": "#2fd9f4", "on-tertiary-container": "#46505b", "on-tertiary-fixed-variant": "#3e4853", "on-primary-fixed": "#001f25", "on-secondary-fixed": "#002114", "primary-fixed-dim": "#2fd9f4", "primary-fixed": "#a2eeff", "primary-container": "#22d3ee", "surface-container-high": "#272a30", "outline": "#859397", "on-background": "#e1e2ea", "error-container": "#93000a", "on-secondary-container": "#00452e", "surface-dim": "#101319", "on-primary-fixed-variant": "#004e5a", "on-primary-container": "#005763", "background": "#101319", "surface-container-highest": "#32353b", "surface-container-low": "#191c21", "surface-container": "#1d2025", "tertiary-fixed": "#d9e3f1", "tertiary-container": "#b7c2cf", "surface": "#101319", "surface-container-lowest": "#0b0e13", "error": "#ffb4ab", "surface-bright": "#36393f", "on-secondary": "#003825", "on-error": "#690005", "on-surface": "#e1e2ea", "tertiary": "#d3deec", "secondary": "#45dfa4", "on-tertiary": "#27313c", "inverse-surface": "#e1e2ea", "on-primary": "#00363e", "secondary-container": "#00bd85", "inverse-on-surface": "#2d3036", "on-error-container": "#ffdad6", "on-secondary-fixed-variant": "#005137", "primary": "#8aebff", "outline-variant": "#3c494c", "secondary-fixed": "#68fcbf", "surface-variant": "#32353b", "secondary-fixed-dim": "#45dfa4", "on-tertiary-fixed": "#121c26" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "sidebar-width-expanded": "280px", "base": "16px", "sm": "8px", "xs": "4px", "editor-max-width": "760px", "2xs": "2px", "2xl": "48px", "gutter": "16px", "3xl": "64px", "md": "12px", "lg": "24px", "sidebar-width-collapsed": "48px", "xl": "32px", "none": "0px" }, "fontFamily": { "code-inline": [ "JetBrains Mono" ], "body-md": [ "Geist" ], "label-md": [ "JetBrains Mono" ], "body-sm": [ "Geist" ], "headline-lg": [ "JetBrains Mono" ], "display-mobile": [ "JetBrains Mono" ], "label-sm": [ "JetBrains Mono" ], "display": [ "JetBrains Mono" ], "body-lg": [ "Geist" ], "headline-sm": [ "JetBrains Mono" ], "code-block": [ "JetBrains Mono" ], "headline-md": [ "JetBrains Mono" ] }, "fontSize": { "code-inline": [ "13px", { "lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400" } ], "body-md": [ "14px", { "lineHeight": "22px", "letterSpacing": "0em", "fontWeight": "400" } ], "label-md": [ "12px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "500" } ], "body-sm": [ "13px", { "lineHeight": "20px", "letterSpacing": "0.005em", "fontWeight": "400" } ], "headline-lg": [ "24px", { "lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600" } ], "display-mobile": [ "24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" } ], "label-sm": [ "11px", { "lineHeight": "14px", "letterSpacing": "0.06em", "fontWeight": "500" } ], "display": [ "32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" } ], "body-lg": [ "16px", { "lineHeight": "26px", "letterSpacing": "0em", "fontWeight": "400" } ], "headline-sm": [ "15px", { "lineHeight": "22px", "letterSpacing": "0em", "fontWeight": "500" } ], "code-block": [ "13px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" } ], "headline-md": [ "18px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "500" } ] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface font-body-md text-body-md flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl"><div class="h-16 px-base flex items-center justify-between"><div class="flex items-center gap-xs"><button aria-label="Back" class="w-11 h-11 flex items-center justify-center text-on-surface hover:text-primary" onclick="history.back()" type="button"><span class="material-symbols-outlined">arrow_back</span></button><img alt="Brand logo. - Primary color: #22d3ee
+- Font: jetbrainsMono
+- Mode: dark
+- Roundness: rounded-lg
+" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1W4GZr3mq2DEDI9DvMEAqtftFTj3ayAjzQG6AaJytBy-DlM8U-rQYxXCNTNOChUkFvvPBFUAXT99GCmIPW0Nm4Av2xzFajae5G-h04CYJ0XjJK8mATPWgVQ45XmBlS58uVyhsM06xNTljH2g8OLkPAGxqSQ6guWE5Yp1FguzMiGW-2zX6vFUL7g6741ZucWzeBTum1wY-rXGbQAnbu72iLbNa735azKYveYmV9RHLIsJ5phL1Rj8F-NC84"/><h1 class="font-headline-sm text-headline-sm text-on-surface tracking-tight truncate max-w-[120px] ml-2xs">Note Editor</h1></div><div class="flex items-center gap-xs"><div class="flex items-center gap-xs px-xs py-2xs bg-surface-container-lowest text-secondary font-label-sm text-label-sm"><span class="inline-block w-2 h-2 rounded-full bg-secondary animate-pulse"></span><span>SAVED</span></div><button aria-label="Document Outline" class="w-11 h-11 flex items-center justify-center text-on-surface-variant hover:text-on-surface" type="button"><span class="material-symbols-outlined">format_list_bulleted</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 bg-surface"><div class="flex flex-col w-full pb-safe select-none">
+<!-- Top Command & Search Bar -->
+<section class="sticky top-0 z-40 bg-surface-container-low px-base py-sm shadow-md">
+<!-- Row 1: Back, Search Field, Clear Button -->
+<div class="flex items-center gap-xs">
+<button aria-label="Return to previous view" class="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-on-surface-variant hover:text-primary active:bg-surface-container-high transition-colors" onclick="history.back()" type="button">
+<span class="material-symbols-outlined text-[22px]">arrow_back</span>
+</button>
+<div class="flex-1 min-w-0 flex items-center bg-surface-dim px-sm py-2xs">
+<span class="material-symbols-outlined text-primary text-[18px] mr-xs shrink-0">search</span>
+<input aria-label="Search all notes" class="w-full bg-transparent font-code-inline text-code-inline text-on-surface focus:outline-none placeholder-on-surface-variant" id="global-search-input" placeholder="Filter notes, tags, metadata..." type="search" value="encryption"/>
+<button aria-label="Clear active query" class="w-8 h-8 flex items-center justify-center text-on-surface-variant hover:text-error active:scale-95 transition-transform" id="clear-query-btn" onclick="document.getElementById('global-search-input').value=''; this.style.display='none'; document.getElementById('global-search-input').focus();" type="button">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+</div>
+<!-- Row 2: Status Metadatum & Index Pill -->
+<div class="flex items-center justify-between mt-xs px-2xs">
+<div class="flex items-center gap-xs">
+<span class="w-1.5 h-1.5 bg-secondary"></span>
+<span class="font-label-sm text-label-sm text-secondary tracking-widest uppercase">WAL INDEX OK</span>
+</div>
+<div class="flex items-center gap-2xs px-xs py-2xs bg-surface-container-lowest text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[12px] text-primary">data_array</span>
+<span>4,129 VECTORS INDEXED</span>
+</div>
+</div>
+</section>
+<!-- Filter Scope Scroller -->
+<section class="bg-surface-container px-base py-sm">
+<div class="flex items-center gap-xs overflow-x-auto no-scrollbar py-2xs">
+<!-- Active Notes (Selected) -->
+<button class="shrink-0 h-8 px-sm bg-primary-container text-on-primary-container font-label-sm text-label-sm flex items-center gap-2xs active:opacity-90" type="button">
+<span class="material-symbols-outlined text-[14px]">check</span>
+<span>Active Notes</span>
+</button>
+<!-- Archived (Selected) -->
+<button class="shrink-0 h-8 px-sm bg-primary-container text-on-primary-container font-label-sm text-label-sm flex items-center gap-2xs active:opacity-90" type="button">
+<span class="material-symbols-outlined text-[14px]">check</span>
+<span>Archived</span>
+</button>
+<!-- Scope: Field Selector (All Fields) -->
+<button class="shrink-0 h-8 px-sm bg-surface-container-high text-primary font-label-sm text-label-sm flex items-center gap-2xs active:bg-surface-container-highest" type="button">
+<span>Scope: All Fields</span>
+<span class="material-symbols-outlined text-[12px]">expand_more</span>
+</button>
+<!-- Content Only -->
+<button class="shrink-0 h-8 px-sm bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm flex items-center gap-2xs active:bg-surface-container-high" type="button">
+<span>Content</span>
+</button>
+<!-- Tags Only -->
+<button class="shrink-0 h-8 px-sm bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm flex items-center gap-2xs active:bg-surface-container-high" type="button">
+<span>Tags</span>
+</button>
+<!-- Strict Exclusion Policy Badge -->
+<div class="shrink-0 h-8 px-sm bg-surface-container-lowest text-on-surface-variant font-label-sm text-label-sm flex items-center gap-2xs opacity-75">
+<span class="material-symbols-outlined text-[13px] text-error">block</span>
+<span>Trash Excluded</span>
+</div>
+</div>
+<!-- Match Summary Row -->
+<div class="flex items-center justify-between pt-xs text-on-surface-variant font-label-sm text-label-sm">
+<div class="flex items-center gap-xs">
+<span class="text-on-surface font-code-inline">4</span>
+<span>notes matching</span>
+<span class="text-primary font-code-inline">'encryption'</span>
+</div>
+<span class="text-on-surface-variant uppercase tracking-wider">FTS5 Exact</span>
+</div>
+</section>
+<!-- Search Results List -->
+<main class="flex flex-col w-full bg-surface-dim">
+<!-- Result Item 1: Focused / Selected State -->
+<article class="relative flex flex-col p-base bg-surface-container-high transition-colors active:bg-surface-container-highest cursor-pointer min-h-[44px]">
+<!-- Active Edge Indicator Accent -->
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+<!-- Item Meta Line -->
+<div class="flex items-center justify-between gap-xs mb-xs">
+<div class="flex items-center gap-xs min-w-0">
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant shrink-0">folder_open</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant truncate">Engineering Architecture</span>
+<span class="text-on-surface-variant font-label-sm">•</span>
+<span class="font-code-inline text-label-sm text-primary shrink-0">#security</span>
+</div>
+<time class="font-label-sm text-label-sm text-on-surface-variant shrink-0">24m ago</time>
+</div>
+<!-- Item Title -->
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-2xs tracking-tight">
+        Zero-knowledge <span class="text-primary bg-primary-container/20 px-2xs">Encryption</span> Notes
+      </h2>
+<!-- Matching Snippet -->
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed line-clamp-2">
+        ...AES-GCM-256 <span class="text-primary bg-primary-container/20 px-2xs font-code-inline">encryption</span> with client-side keys. Argon2id salt generation handles derivation prior to payload sync to prevent leakage...
+      </p>
+<!-- Micro metadata indicators -->
+<div class="flex items-center gap-md mt-sm pt-xs font-label-sm text-label-sm text-on-surface-variant">
+<span class="flex items-center gap-2xs">
+<span class="material-symbols-outlined text-[13px] text-secondary">lock</span>
+<span>E2EE Vault</span>
+</span>
+<span class="font-code-inline">L1-MATCH [Score: 0.99]</span>
+</div>
+</article>
+<!-- Result Item 2 -->
+<article class="flex flex-col p-base bg-surface-container-low transition-colors active:bg-surface-container cursor-pointer min-h-[44px]">
+<div class="flex items-center justify-between gap-xs mb-xs">
+<div class="flex items-center gap-xs min-w-0">
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant shrink-0">folder_open</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant truncate">Engineering Architecture</span>
+<span class="text-on-surface-variant font-label-sm">•</span>
+<span class="font-code-inline text-label-sm text-primary shrink-0">#security</span>
+<span class="font-code-inline text-label-sm text-on-surface-variant shrink-0">#distributed-db</span>
+</div>
+<time class="font-label-sm text-label-sm text-on-surface-variant shrink-0">Oct 14, 2024</time>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-2xs tracking-tight">
+        Distributed State Sync &amp; Conflict Resolution
+      </h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed line-clamp-2">
+        ...local-first <span class="text-primary bg-primary-container/20 px-2xs font-code-inline">encrypted</span> storage engine leverages CRDT state trees before delegating delta streams to upstream storage adapters...
+      </p>
+<div class="flex items-center gap-md mt-sm pt-xs font-label-sm text-label-sm text-on-surface-variant">
+<span class="font-code-inline text-secondary">3 backlinks</span>
+<span class="font-code-inline">L2-STEM [Score: 0.84]</span>
+</div>
+</article>
+<!-- Result Item 3 (Archived Note) -->
+<article class="flex flex-col p-base bg-surface-container-low transition-colors active:bg-surface-container cursor-pointer min-h-[44px]">
+<div class="flex items-center justify-between gap-xs mb-xs">
+<div class="flex items-center gap-xs min-w-0">
+<span class="px-2xs bg-surface-container-highest text-tertiary-fixed font-label-sm text-label-sm uppercase tracking-wider shrink-0">[ARCHIVE]</span>
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant shrink-0">folder_open</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant truncate">Personal Journal</span>
+</div>
+<time class="font-label-sm text-label-sm text-on-surface-variant shrink-0">Feb 02, 2025</time>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-2xs tracking-tight flex items-center gap-xs">
+<span>Personal Backup Keys 2025</span>
+<span class="material-symbols-outlined text-[14px] text-tertiary">inventory_2</span>
+</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed line-clamp-2">
+        Hardware passkey rotation log and primary recovery shard indices for offline storage vaults. PGP payload verification signatures recorded.
+      </p>
+<div class="flex items-center gap-md mt-sm pt-xs font-label-sm text-label-sm text-on-surface-variant">
+<span class="flex items-center gap-2xs">
+<span class="material-symbols-outlined text-[13px] text-on-surface-variant">key</span>
+<span>Cold Storage</span>
+</span>
+<span class="font-code-inline">TAG-MATCH [Score: 0.72]</span>
+</div>
+</article>
+<!-- Result Item 4 -->
+<article class="flex flex-col p-base bg-surface-container-low transition-colors active:bg-surface-container cursor-pointer min-h-[44px]">
+<div class="flex items-center justify-between gap-xs mb-xs">
+<div class="flex items-center gap-xs min-w-0">
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant shrink-0">folder_open</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant truncate">Engineering Architecture</span>
+<span class="text-on-surface-variant font-label-sm">•</span>
+<span class="font-code-inline text-label-sm text-primary shrink-0">#database</span>
+</div>
+<time class="font-label-sm text-label-sm text-on-surface-variant shrink-0">Jan 11, 2025</time>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-2xs tracking-tight">
+        Database Schema &amp; Field-level Crypto
+      </h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed line-clamp-2">
+        Deterministic envelope payload structures storing symmetric ciphertext chunks alongside HMAC verifiers in indexed columns.
+      </p>
+<div class="flex items-center gap-md mt-sm pt-xs font-label-sm text-label-sm text-on-surface-variant">
+<span class="font-code-inline text-on-surface-variant">7 revisions</span>
+<span class="font-code-inline">BODY-MATCH [Score: 0.68]</span>
+</div>
+</article>
+</main>
+<!-- Edge Case / Mobile Engine Footer Status Bar -->
+<aside class="sticky bottom-0 z-30 flex flex-col w-full bg-surface-container-lowest px-base py-xs shadow-lg">
+<div class="flex items-center justify-between gap-xs">
+<div class="flex items-center gap-xs min-w-0">
+<span class="w-1.5 h-1.5 bg-primary animate-ping shrink-0"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-code-inline truncate">
+          Index: Local SQLite FTS-5 • Exact Match [L1]
+        </span>
+</div>
+<div class="font-label-sm text-label-sm text-primary shrink-0 flex items-center gap-2xs">
+<span>OPEN</span>
+<span class="material-symbols-outlined text-[14px]">touch_app</span>
+</div>
+</div>
+<div class="text-[10px] text-outline font-code-inline tracking-tight mt-2xs">
+      Zero cloud dependencies • 100% On-Device Search
+    </div>
+</aside>
+</div>
+<script>
+  // Micro-interactions for Mobile Search Screen
+  document.querySelectorAll('article').forEach(item => {
+    item.addEventListener('click', () => {
+      // Simulate instantaneous note load
+      item.classList.add('bg-surface-container-highest');
+      setTimeout(() => {
+        item.classList.remove('bg-surface-container-highest');
+      }, 150);
+    });
+  });
+</script></main></body></html>

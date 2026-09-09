@@ -21,6 +21,14 @@
 - Treat cross-user access, rich-text sanitization, autosave revision conflicts, and data-loss behavior as required security/test concerns.
 - Keep implementation within the MVP scope and link work to requirement or acceptance IDs; consult `docs/04-implementation/02-development-standards.md`.
 
+## Stitch UI Reference
+
+- The approved visual reference is Stitch project `3170325016723945626` (Minimalist Note App Design).
+- Use the downloaded screenshots in `frontend/public/stitch/screenshots/` and generated HTML/SVG references in `frontend/public/stitch/code/` when implementing UI tasks.
+- Match the Stitch design system's colors, typography, spacing, zero-radius geometry, borders, responsive layouts, and interaction states.
+- Do not use screenshots as production UI. Recreate the interface with accessible React components and application data.
+- Preserve the product behavior and accessibility requirements in `docs/03-design/08-ui-ux.md`; Stitch is the visual reference, not a replacement for those requirements.
+
 ## OpenCode
 
 - `opencode.json` configures the remote Stitch MCP; it requires `STITCH_API_KEY` in the environment when Stitch is used.
