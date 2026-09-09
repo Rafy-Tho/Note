@@ -158,4 +158,87 @@ describe('notes API', () => {
     expect(stale.status).toBe(409);
     expect(stale.body.error.code).toBe('CONFLICT');
   });
+
+  it('accepts the supported rich-text document and rejects unsafe content', async () => {
+    const app = createNotesTestApp();
+    const formatted = await userRequest(app, 'a', 'post', '/api/v1/notes')
+      .set('x-csrf-token', 'test')
+      .send({
+        contentJson: {
+          type: 'doc',
+          content: [
+            {
+              type: 'heading',
+              attrs: { level: 2 },
+              content: [{ type: 'text', text: 'Title' }],
+            },
+            {
+              type: 'paragraph',
+              content: [
+                { type: 'text', text: 'safe', marks: [{ type: 'bold' }] },
+                {
+                  type: 'text',
+                  text: ' link',
+                  marks: [
+                    { type: 'link', attrs: { href: 'https://example.com' } },
+                  ],
+                },
+              ],
+            },
+            {
+              type: 'bulletList',
+              content: [
+                {
+                  type: 'listItem',
+                  content: [
+                    {
+                      type: 'paragraph',
+                      content: [{ type: 'text', text: 'item' }],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              type: 'codeBlock',
+              content: [{ type: 'text', text: 'const value = 1;' }],
+            },
+          ],
+        },
+      });
+    const unsafeLink = await userRequest(app, 'a', 'post', '/api/v1/notes')
+      .set('x-csrf-token', 'test')
+      .send({
+        contentJson: {
+          type: 'doc',
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'text',
+                  text: 'x',
+                  marks: [
+                    { type: 'link', attrs: { href: 'javascript:alert(1)' } },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      });
+    const unsupportedNode = await userRequest(app, 'a', 'post', '/api/v1/notes')
+      .set('x-csrf-token', 'test')
+      .send({
+        contentJson: {
+          type: 'doc',
+          content: [{ type: 'image', attrs: { src: 'x' } }],
+        },
+      });
+
+    expect(formatted.status).toBe(201);
+    expect(unsafeLink.status).toBe(400);
+    expect(unsafeLink.body.error.fields.contentJson).toContain('unsafe');
+    expect(unsupportedNode.status).toBe(400);
+  });
 });

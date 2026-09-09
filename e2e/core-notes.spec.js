@@ -24,7 +24,6 @@ test('authenticated user can create, edit, and reload a note', async ({
   await page
     .getByLabel('Note content')
     .fill('Created through the authenticated UI.');
-  await page.getByRole('button', { name: 'Save' }).click();
 
   await expect(page.getByText('Saved', { exact: true })).toBeVisible();
   await expect(
@@ -44,7 +43,7 @@ test('authenticated user can create, edit, and reload a note', async ({
 
   await page.reload();
   await expect(page.getByLabel('Note title')).toHaveValue('Browser journey');
-  await expect(page.getByLabel('Note content')).toHaveValue(
+  await expect(page.getByLabel('Note content')).toHaveText(
     'Created through the authenticated UI.',
   );
 });

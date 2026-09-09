@@ -39,24 +39,26 @@ export function createNotesService({
     },
 
     async update(userId, noteId, input) {
-      const note = await repository.findById(userId, noteId);
-      if (!note) throw notFoundError();
-      const updated = await transaction((client) =>
-        repository.update(client, userId, noteId, {
+      const result = await transaction(async (client) => {
+        const note = await repository.findById(userId, noteId, client);
+        if (!note) return { note: null, updated: null };
+        const updated = await repository.update(client, userId, noteId, {
           ...input,
           searchableText:
             input.title === undefined && input.contentJson === undefined
               ? undefined
               : `${input.title ?? note.title} ${searchableText(input.contentJson ?? note.contentJson)}`.trim(),
-        }),
-      );
-      if (!updated)
+        });
+        return { note, updated };
+      });
+      if (!result.note) throw notFoundError();
+      if (!result.updated)
         throw new AppError(
           409,
           'CONFLICT',
           'The note changed before your update could be saved.',
         );
-      return updated;
+      return result.updated;
     },
   };
 }

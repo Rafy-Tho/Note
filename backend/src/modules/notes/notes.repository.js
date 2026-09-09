@@ -43,8 +43,8 @@ export function createNotesRepository(database = { query }) {
       return { notes: result.rows.map(toNote), total: count.rows[0].total };
     },
 
-    async findById(userId, noteId) {
-      const result = await database.query(
+    async findById(userId, noteId, connection = database) {
+      const result = await connection.query(
         `SELECT ${NOTE_COLUMNS} FROM notes WHERE id = $1 AND user_id = $2`,
         [noteId, userId],
       );

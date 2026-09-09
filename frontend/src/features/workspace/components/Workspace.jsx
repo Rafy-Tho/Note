@@ -1,12 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert } from '../../../components/Alert/Alert.jsx';
 import { Brand } from '../../../components/Brand/Brand.jsx';
 import { authApi } from '../../auth/api/authApi.js';
 import { notesApi } from '../../notes/api/notesApi.js';
-import { documentFromText, documentText } from '../../notes/noteDocument.js';
+import { documentText } from '../../notes/noteDocument.js';
+import { NoteEditor } from './NoteEditor.jsx';
 import styles from './Workspace.module.css';
 
 const EMPTY_DOCUMENT = { type: 'doc', content: [] };
+
+function draftSignature(note) {
+  return JSON.stringify({ title: note.title, contentJson: note.contentJson });
+}
 
 export function Workspace({ session, onSignOut }) {
   const [notes, setNotes] = useState([]);
@@ -15,7 +20,13 @@ export function Workspace({ session, onSignOut }) {
   const [status, setStatus] = useState('loading');
   const [saveStatus, setSaveStatus] = useState('Saved');
   const [error, setError] = useState(null);
+  const [conflict, setConflict] = useState(false);
   const [busy, setBusy] = useState(false);
+  const latestDraftRef = useRef(null);
+  const dirtyRef = useRef(false);
+  const savingRef = useRef(false);
+  const queuedRef = useRef(false);
+  const saveTimerRef = useRef(null);
 
   useEffect(() => {
     notesApi
@@ -33,15 +44,88 @@ export function Workspace({ session, onSignOut }) {
 
   useEffect(() => {
     setDraft(selected);
+    latestDraftRef.current = selected;
+    dirtyRef.current = false;
+    queuedRef.current = false;
     setSaveStatus('Saved');
+    setConflict(false);
   }, [selected]);
+
+  const saveDraft = useCallback(
+    async (requestedDraft = latestDraftRef.current) => {
+      if (!requestedDraft || !dirtyRef.current) return;
+      if (savingRef.current) {
+        queuedRef.current = true;
+        return;
+      }
+
+      savingRef.current = true;
+      setSaveStatus('Saving');
+      setError(null);
+      setConflict(false);
+      const snapshot = requestedDraft;
+
+      try {
+        const updated = await notesApi.update(snapshot.id, {
+          title: snapshot.title,
+          contentJson: snapshot.contentJson,
+          revision: snapshot.revision,
+        });
+        setNotes((current) =>
+          current.map((note) => (note.id === updated.id ? updated : note)),
+        );
+
+        const latest = latestDraftRef.current;
+        const changedWhileSaving =
+          latest && draftSignature(latest) !== draftSignature(snapshot);
+        const nextDraft = changedWhileSaving
+          ? { ...latest, revision: updated.revision }
+          : updated;
+        latestDraftRef.current = nextDraft;
+        setDraft(nextDraft);
+        dirtyRef.current = Boolean(changedWhileSaving);
+        setSaveStatus(changedWhileSaving ? 'Unsaved Changes' : 'Saved');
+      } catch (requestError) {
+        setError(requestError.message);
+        setConflict(requestError.code === 'CONFLICT');
+        setSaveStatus('Save Failed');
+      } finally {
+        savingRef.current = false;
+        if (dirtyRef.current && queuedRef.current) {
+          queuedRef.current = false;
+          void saveDraft(latestDraftRef.current);
+        }
+      }
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (!draft || !dirtyRef.current) return undefined;
+    window.clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = window.setTimeout(() => {
+      void saveDraft(latestDraftRef.current);
+    }, 800);
+    return () => window.clearTimeout(saveTimerRef.current);
+  }, [draft, saveDraft]);
+
+  function changeDraft(field, value) {
+    const nextDraft = { ...latestDraftRef.current, [field]: value };
+    latestDraftRef.current = nextDraft;
+    dirtyRef.current = true;
+    setDraft(nextDraft);
+    setSaveStatus('Unsaved Changes');
+    setError(null);
+    setConflict(false);
+  }
 
   async function createNote() {
     if (
-      saveStatus === 'Unsaved Changes' &&
+      dirtyRef.current &&
       !window.confirm('You have unsaved changes. Create a new note anyway?')
     )
       return;
+    if (savingRef.current) return;
     setBusy(true);
     setError(null);
     try {
@@ -59,41 +143,35 @@ export function Workspace({ session, onSignOut }) {
   }
 
   function selectNote(note) {
+    if (savingRef.current) return;
     if (
-      saveStatus === 'Unsaved Changes' &&
+      dirtyRef.current &&
       !window.confirm('You have unsaved changes. Switch notes anyway?')
     )
       return;
     setSelected(note);
   }
 
-  function changeDraft(field, value) {
-    setDraft((current) => ({ ...current, [field]: value }));
-    setSaveStatus('Unsaved Changes');
-  }
-
-  async function saveNote() {
-    if (!draft || saveStatus === 'Saved') return;
-    setSaveStatus('Saving');
-    setError(null);
+  async function reloadServerCopy() {
+    if (!draft) return;
     try {
-      const updated = await notesApi.update(draft.id, {
-        title: draft.title,
-        contentJson: draft.contentJson,
-        revision: draft.revision,
-      });
+      const serverNote = await notesApi.get(draft.id);
+      setSelected(serverNote);
       setNotes((current) =>
-        current.map((note) => (note.id === updated.id ? updated : note)),
+        current.map((note) => (note.id === serverNote.id ? serverNote : note)),
       );
-      setSelected(updated);
-      setSaveStatus('Saved');
+      setError(null);
     } catch (requestError) {
       setError(requestError.message);
-      setSaveStatus('Save Failed');
     }
   }
 
   async function signOut() {
+    if (
+      dirtyRef.current &&
+      !window.confirm('You have unsaved changes. Sign out anyway?')
+    )
+      return;
     setBusy(true);
     setError(null);
     try {
@@ -179,31 +257,36 @@ export function Workspace({ session, onSignOut }) {
                 </span>
                 <button
                   className={styles.saveButton}
-                  onClick={saveNote}
-                  disabled={saveStatus === 'Saved'}
+                  onClick={() => void saveDraft()}
+                  disabled={saveStatus === 'Saved' || saveStatus === 'Saving'}
                 >
-                  Save
+                  {saveStatus === 'Save Failed' ? 'Retry save' : 'Save'}
                 </button>
+                {conflict && (
+                  <button
+                    className={styles.secondaryButton}
+                    onClick={reloadServerCopy}
+                  >
+                    Reload server copy
+                  </button>
+                )}
               </div>
               <input
                 className={styles.titleInput}
                 aria-label="Note title"
                 value={draft.title}
                 onChange={(event) => changeDraft('title', event.target.value)}
+                onBlur={() => void saveDraft()}
                 placeholder="Untitled note"
               />
-              <textarea
-                className={styles.contentInput}
-                aria-label="Note content"
-                value={documentText(draft.contentJson)}
-                onChange={(event) =>
-                  changeDraft(
-                    'contentJson',
-                    documentFromText(event.target.value),
-                  )
-                }
-                placeholder="Start writing..."
-              />
+              <div onBlur={() => void saveDraft()}>
+                <NoteEditor
+                  content={draft.contentJson}
+                  onChange={(contentJson) =>
+                    changeDraft('contentJson', contentJson)
+                  }
+                />
+              </div>
             </>
           ) : (
             <div className={styles.editorEmpty}>
