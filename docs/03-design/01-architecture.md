@@ -21,6 +21,38 @@ PostgreSQL
 
 This keeps the MVP simple and maintainable without microservices.
 
+## Repository Structure
+
+Application code lives at the repository root, separate from project documentation:
+
+```text
+frontend/
+  src/
+    app/            Application setup, providers, and routing.
+    components/     Reusable presentation components.
+    features/       Auth, notes, notebooks, tags, search, and note states.
+    hooks/          Shared React hooks.
+    lib/            API client and frontend utilities.
+    styles/         Global and shared styles.
+    test/           Frontend test setup and fixtures.
+
+backend/
+  src/
+    config/         Environment and application configuration.
+    db/             PostgreSQL pool, transactions, and queries.
+    middleware/     Authentication, authorization, validation, and errors.
+    common/         Shared backend errors, validation, logging, and HTTP helpers.
+    modules/        Feature routes, controllers, services, repositories, and schemas.
+    routes/         Versioned route composition.
+  migrations/       Versioned PostgreSQL migrations.
+  test/              Unit, API, integration, security, and fixture support.
+
+e2e/                 Playwright browser journeys and fixtures.
+docs/                Requirements, design, implementation plans, and decisions.
+```
+
+Keep feature behavior close to its feature module. Keep database access in backend data-access code, business rules in backend application services, and presentation concerns in frontend components.
+
 ## Layer Responsibilities
 
 | Layer | Responsibility |
