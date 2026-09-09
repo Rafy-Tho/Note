@@ -1,15 +1,22 @@
 import express from 'express';
+import passport from 'passport';
 import { createLogger } from './common/logger.js';
 import { validationError } from './common/errors.js';
 import { errorHandler, notFoundHandler } from './middleware/errors.js';
 import { requestContext } from './middleware/request-context.js';
 import { requestLogging } from './middleware/logging.js';
 import { createHealthRouter } from './modules/health/health.routes.js';
+import { getConfig } from './config/env.js';
+import { createAuthRepository } from './modules/auth/auth.repository.js';
+import { createAuthService } from './modules/auth/auth.service.js';
+import { createAuthRouter } from './modules/auth/auth.routes.js';
 
 export function createApp({
   databaseCheck,
   logger = createLogger(),
   configureRoutes = () => {},
+  config = getConfig(),
+  authService = createAuthService({ repository: createAuthRepository() }),
 } = {}) {
   const app = express();
 
@@ -17,8 +24,10 @@ export function createApp({
   app.use(requestContext);
   app.use(requestLogging(logger));
   app.use(express.json({ limit: '1mb' }));
+  app.use(passport.initialize());
 
   app.use('/api/v1/health', createHealthRouter({ databaseCheck }));
+  app.use('/api/v1/auth', createAuthRouter({ authService, config }));
   configureRoutes(app);
 
   app.use(notFoundHandler);

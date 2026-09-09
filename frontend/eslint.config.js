@@ -13,7 +13,7 @@ export default [
       ecmaVersion: 'latest',
       sourceType: 'module',
       parserOptions: { ecmaFeatures: { jsx: true } },
-      globals: { document: 'readonly', window: 'readonly' },
+      globals: { document: 'readonly', window: 'readonly', fetch: 'readonly' },
     },
     plugins: { 'react-hooks': reactHooks, 'react-refresh': reactRefresh },
     rules: {

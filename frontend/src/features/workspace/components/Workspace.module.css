@@ -1,0 +1,84 @@
+.workspace {
+  min-height: 100vh;
+  background: var(--color-bg);
+}
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px clamp(20px, 5vw, 72px);
+  border-bottom: 1px solid var(--color-border);
+}
+.content {
+  width: min(920px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 90px 0;
+}
+.content h1 {
+  max-width: 620px;
+  margin: 12px 0;
+  color: var(--color-text);
+  font-size: clamp(2.5rem, 7vw, 5.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+}
+.eyebrow {
+  margin: 0;
+  color: var(--color-interaction);
+  font:
+    600 11px 'JetBrains Mono',
+    monospace;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.email {
+  color: var(--color-text-muted);
+  font:
+    12px 'JetBrains Mono',
+    monospace;
+}
+.secondaryButton {
+  padding: 9px 13px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  font:
+    11px 'JetBrains Mono',
+    monospace;
+}
+.secondaryButton:hover {
+  color: var(--color-text);
+  border-color: var(--color-interaction);
+}
+.empty {
+  margin-top: 70px;
+  padding: 48px 24px;
+  border: 1px dashed var(--color-border);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+.emptyIcon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  margin: 0 auto 18px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 40%, transparent);
+  color: var(--color-primary);
+  font-size: 25px;
+}
+.empty h2 {
+  margin: 0 0 8px;
+  color: var(--color-text);
+  font-size: 18px;
+}
+.empty p {
+  margin: 0;
+  font-size: 12px;
+}
+
+@media (max-width: 760px) {
+  .content {
+    padding: 60px 0;
+  }
+}

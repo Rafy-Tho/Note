@@ -73,7 +73,7 @@ Error messages must not expose SQL, stack traces, secrets, or another user's res
 | POST | `/auth/logout` | Revoke the current session. |
 | GET | `/auth/session` | Return the current authentication state. |
 
-Registration and login validate email and password. Login failures use a generic error response.
+Registration and login validate email and password. Login failures use a generic error response. Authenticated session responses include a short-lived-use CSRF token for state-changing requests; they never include the opaque session token.
 
 ## Note Endpoints
 

@@ -25,9 +25,9 @@
 | 1 | Bootstrap project | Complete | Frontend, backend, database, and tests run locally. | Frontend build/dev server, backend startup, lint, format, API tests, unit tests, and local PostgreSQL connection pass. |
 | 2 | Database foundation | Complete | Clean migrations succeed. | Migrations, rollback/reapply, seed, indexes, constraints, and integration test pass against local PostgreSQL. |
 | 3 | Backend foundation | Complete | API responses and errors are consistent. | Express middleware, configuration validation, safe logging, data-access query/transaction helpers, standard errors, health/error API tests, unit tests, lint, formatting, and database integration tests pass. |
-| 4 | Authentication foundation | Not Started | The API can authenticate users and safely establish and revoke protected sessions. | |
+| 4 | Authentication foundation | Complete | The API can authenticate users and safely establish and revoke protected sessions. | Backend auth services, Argon2id credentials, PostgreSQL-backed opaque sessions, expiry/revocation, HTTP-only cookies, CSRF protection, rate limiting, and API/unit tests pass (`npm run lint --workspace backend`, `npm test --workspace backend`). |
 | 5 | Authorization foundation | Not Started | Every protected API operation enforces server-side ownership. | |
-| 6 | Authentication slice | Not Started | Users can register, sign in, use protected routes, and sign out through the UI. | |
+| 6 | Authentication slice | In Progress | Users can register, sign in, use protected routes, and sign out through the UI. | React auth screens, session-aware routing, API client, CSRF-aware logout, client validation, loading/success/failure states, frontend lint/build/tests pass. Browser journey coverage remains pending. |
 | 7 | Core notes slice | Not Started | Users can create, view, list, and edit only their own notes through the UI. | |
 | 8 | Rich text and autosave slice | Not Started | Rich text is safe and stale saves cannot overwrite newer content. | |
 | 9 | Trash and restore slice | Not Started | Users can recover owned notes without unintended data loss. | |

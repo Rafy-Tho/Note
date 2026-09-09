@@ -2,7 +2,7 @@
 
 ## Status
 
-Not Started
+In Progress
 
 ## Objective
 
@@ -16,33 +16,35 @@ Implement the secure authentication foundation and complete the registration, si
 
 ## Backend
 
-- [ ] Implement registration with normalized unique email.
-- [ ] Hash passwords with Argon2id.
-- [ ] Implement sign-in with generic failure responses.
-- [ ] Create secure HTTP-only session cookies.
-- [ ] Implement expiry and session revocation.
-- [ ] Implement sign-out.
-- [ ] Add CSRF protection.
-- [ ] Add authentication rate limiting.
+- [x] Implement registration with normalized unique email.
+- [x] Hash passwords with Argon2id.
+- [x] Implement sign-in with generic failure responses.
+- [x] Create secure HTTP-only session cookies.
+- [x] Implement expiry and session revocation.
+- [x] Implement sign-out.
+- [x] Add CSRF protection.
+- [x] Add authentication rate limiting.
 
 ## Frontend
 
-- [ ] Add registration and sign-in screens.
-- [ ] Add client-side validation and safe server-error feedback.
-- [ ] Add sign-out behavior and session-aware routing.
-- [ ] Handle loading, success, and failure states.
+- [x] Add registration and sign-in screens.
+- [x] Add client-side validation and safe server-error feedback.
+- [x] Add sign-out behavior and session-aware routing.
+- [x] Handle loading, success, and failure states.
 
 ## Integration and Tests
 
-- [ ] Connect the authentication screens to the API.
-- [ ] Add registration, sign-in, sign-out, and protected-route journeys.
-- [ ] Verify expired and revoked sessions are rejected.
+- [x] Connect the authentication screens to the API.
+- [x] Add registration, sign-in, sign-out, and protected-route API journeys.
+- [x] Verify expired and revoked sessions are rejected at the service boundary.
 
 ## Tests and Evidence
 
-- Registration, sign-in, sign-out, and protected-route tests pass.
+- Backend registration, sign-in, sign-out, CSRF, and protected-route tests pass.
 - Passwords and tokens are not logged or returned.
 - Expired and revoked sessions are rejected.
+- Frontend screens, session-aware routing, API integration, and client validation are implemented.
+- Browser journeys remain pending because no Playwright authentication spec exists yet.
 
 ## Completion Gate
 

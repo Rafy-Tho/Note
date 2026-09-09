@@ -25,6 +25,14 @@ export function notFoundError() {
   );
 }
 
+export function authenticationRequiredError() {
+  return new AppError(
+    401,
+    'AUTHENTICATION_REQUIRED',
+    'Authentication is required.',
+  );
+}
+
 export function normalizeError(error) {
   if (error instanceof AppError) {
     return error;
