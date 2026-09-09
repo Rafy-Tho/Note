@@ -39,15 +39,31 @@ export function Workspace({ session, onSignOut }) {
   const [status, setStatus] = useState('loading');
   const [saveStatus, setSaveStatus] = useState('Saved');
   const [error, setError] = useState(null);
+  const [initialLoadFailed, setInitialLoadFailed] = useState(false);
   const [conflict, setConflict] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobilePane, setMobilePane] = useState('collection');
   const latestDraftRef = useRef(null);
   const dirtyRef = useRef(false);
   const savingRef = useRef(false);
   const queuedRef = useRef(false);
   const saveTimerRef = useRef(null);
+  const closeMenuRef = useRef(null);
 
   useEffect(() => {
+    if (!mobileMenuOpen) return undefined;
+    closeMenuRef.current?.focus();
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') setMobileMenuOpen(false);
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [mobileMenuOpen]);
+
+  const loadWorkspace = useCallback(() => {
+    setStatus('loading');
+    setInitialLoadFailed(false);
     Promise.all([notesApi.list(), notebooksApi.list(), tagsApi.list()])
       .then(([noteData, notebookData, tagData]) => {
         setNotes(noteData);
@@ -55,12 +71,18 @@ export function Workspace({ session, onSignOut }) {
         setAvailableTags(tagData);
         setSelected(noteData[0] ?? null);
         setStatus('ready');
+        setError(null);
       })
       .catch((requestError) => {
         setError(requestError.message);
+        setInitialLoadFailed(true);
         setStatus('ready');
       });
   }, []);
+
+  useEffect(() => {
+    loadWorkspace();
+  }, [loadWorkspace]);
 
   useEffect(() => {
     if (view !== 'trash') return;
@@ -178,6 +200,13 @@ export function Workspace({ session, onSignOut }) {
     setConflict(false);
   }
 
+  function canLeaveDraft() {
+    if (!dirtyRef.current) return true;
+    return window.confirm(
+      'You have unsaved changes. Leave this note without saving?',
+    );
+  }
+
   function updateTags(tags) {
     const nextDraft = { ...latestDraftRef.current, tags };
     latestDraftRef.current = nextDraft;
@@ -205,6 +234,8 @@ export function Workspace({ session, onSignOut }) {
       });
       setNotes((current) => [note, ...current]);
       setSelected(note);
+      setMobilePane('editor');
+      setMobileMenuOpen(false);
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -214,24 +245,22 @@ export function Workspace({ session, onSignOut }) {
 
   function selectNote(note) {
     if (savingRef.current) return;
-    if (
-      dirtyRef.current &&
-      !window.confirm('You have unsaved changes. Switch notes anyway?')
-    )
-      return;
+    if (!canLeaveDraft()) return;
     setSelected(note);
+    setMobilePane('editor');
   }
 
   function switchView(nextView) {
-    if (nextView === view) return;
-    if (savingRef.current) return;
-    if (
-      dirtyRef.current &&
-      !window.confirm('You have unsaved changes. Switch views anyway?')
-    )
+    if (nextView === view) {
+      setMobileMenuOpen(false);
       return;
+    }
+    if (savingRef.current) return;
+    if (!canLeaveDraft()) return;
     setView(nextView);
     setSelected(nextView === 'notes' ? (notes[0] ?? null) : null);
+    setMobilePane('collection');
+    setMobileMenuOpen(false);
   }
 
   async function submitSearch(event, page = 1) {
@@ -256,6 +285,7 @@ export function Workspace({ session, onSignOut }) {
   }
 
   async function openSearchResult(result) {
+    if (savingRef.current || !canLeaveDraft()) return;
     setBusy(true);
     setError(null);
     try {
@@ -267,6 +297,7 @@ export function Workspace({ session, onSignOut }) {
       );
       setView('notes');
       setSelected(note);
+      setMobilePane('editor');
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -284,6 +315,7 @@ export function Workspace({ session, onSignOut }) {
       const remaining = notes.filter((note) => note.id !== draft.id);
       setNotes(remaining);
       setSelected(remaining[0] ?? null);
+      setMobilePane('collection');
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -302,6 +334,7 @@ export function Workspace({ session, onSignOut }) {
       setNotes((current) => [restored, ...current]);
       setView('notes');
       setSelected(restored);
+      setMobilePane('editor');
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -457,11 +490,7 @@ export function Workspace({ session, onSignOut }) {
   }
 
   async function signOut() {
-    if (
-      dirtyRef.current &&
-      !window.confirm('You have unsaved changes. Sign out anyway?')
-    )
-      return;
+    if (!canLeaveDraft()) return;
     setBusy(true);
     setError(null);
     try {
@@ -484,63 +513,79 @@ export function Workspace({ session, onSignOut }) {
   return (
     <main className={styles.workspace} aria-labelledby="workspace-title">
       <header className={styles.topbar}>
-        <Brand />
+        <div className={styles.topbarBrand}>
+          <button
+            className={styles.menuButton}
+            type="button"
+            aria-label="Open navigation"
+            aria-expanded={mobileMenuOpen}
+            onClick={() => setMobileMenuOpen(true)}
+          >
+            Menu
+          </button>
+          <Brand />
+        </div>
         <div className={styles.topbarActions}>
           <span className={styles.email}>{session.user.email}</span>
+        </div>
+      </header>
+      <div className={styles.layout}>
+        {mobileMenuOpen && (
           <button
-            className={styles.secondaryButton}
-            onClick={() => switchView('notes')}
-            aria-pressed={view === 'notes'}
-          >
-            Notes
-          </button>
+            className={styles.drawerBackdrop}
+            type="button"
+            aria-label="Close navigation"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        )}
+        <aside
+          className={`${styles.sidebar} ${mobileMenuOpen ? styles.sidebarOpen : ''}`}
+          aria-label="Workspace navigation"
+        >
+          <div className={styles.sidebarHeader}>
+            <span className={styles.eyebrow}>Workspace</span>
+            <button
+              className={styles.closeMenuButton}
+              type="button"
+              ref={closeMenuRef}
+              aria-label="Close navigation"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Close
+            </button>
+          </div>
+          <nav className={styles.nav}>
+            {[
+              ['notes', 'Notes'],
+              ['favorites', 'Favorites'],
+              ['archive', 'Archive'],
+              ['tags', 'Tags'],
+              ['search', 'Search'],
+              ['trash', 'Trash'],
+            ].map(([navView, label]) => (
+              <button
+                className={styles.navButton}
+                type="button"
+                key={navView}
+                aria-current={view === navView ? 'page' : undefined}
+                onClick={() => switchView(navView)}
+              >
+                <span>{label}</span>
+                {view === navView && <span aria-hidden="true">/</span>}
+              </button>
+            ))}
+          </nav>
           <button
-            className={styles.secondaryButton}
-            onClick={() => switchView('trash')}
-            aria-pressed={view === 'trash'}
-          >
-            Trash
-          </button>
-          <button
-            className={styles.secondaryButton}
-            onClick={() => switchView('favorites')}
-            aria-pressed={view === 'favorites'}
-          >
-            Favorites
-          </button>
-          <button
-            className={styles.secondaryButton}
-            onClick={() => switchView('archive')}
-            aria-pressed={view === 'archive'}
-          >
-            Archive
-          </button>
-          <button
-            className={styles.secondaryButton}
-            onClick={() => switchView('tags')}
-            aria-pressed={view === 'tags'}
-          >
-            Tags
-          </button>
-          <button
-            className={styles.secondaryButton}
-            onClick={() => switchView('search')}
-            aria-pressed={view === 'search'}
-          >
-            Search
-          </button>
-          <button
-            className={styles.secondaryButton}
+            className={styles.signOutButton}
+            type="button"
             onClick={signOut}
             disabled={busy}
           >
             {busy ? 'Signing out...' : 'Sign out'}
           </button>
-        </div>
-      </header>
-      <div className={styles.layout}>
+        </aside>
         <section
-          className={styles.collection}
+          className={`${styles.collection} ${mobilePane === 'editor' ? styles.mobileHidden : ''}`}
           aria-labelledby="workspace-title"
         >
           <div className={styles.collectionHeader}>
@@ -571,6 +616,15 @@ export function Workspace({ session, onSignOut }) {
             )}
           </div>
           {error && <Alert>{error}</Alert>}
+          {initialLoadFailed && (
+            <button
+              className={styles.secondaryButton}
+              type="button"
+              onClick={loadWorkspace}
+            >
+              Retry loading workspace
+            </button>
+          )}
           {view === 'search' ? (
             <>
               <form className={styles.searchForm} onSubmit={submitSearch}>
@@ -748,7 +802,17 @@ export function Workspace({ session, onSignOut }) {
             </div>
           )}
         </section>
-        <section className={styles.editor} aria-label="Note editor">
+        <section
+          className={`${styles.editor} ${mobilePane === 'collection' ? styles.mobileHidden : ''}`}
+          aria-label="Note editor"
+        >
+          <button
+            className={styles.backToCollection}
+            type="button"
+            onClick={() => setMobilePane('collection')}
+          >
+            Back to {view === 'notes' ? 'notes' : view}
+          </button>
           {draft ? (
             <>
               <div className={styles.editorHeader}>

@@ -12,7 +12,7 @@
 | Field | Value |
 | --- | --- |
 | Current phase | Implementation |
-| Current step | Step 12 - P1 Organization Slice |
+| Current step | Step 13 - Cross-Slice UI Integration |
 | Overall status | In Progress |
 | Blocker | None for the completed bootstrap and database gates. |
 | Last updated | 2026-09-09 |
@@ -34,7 +34,7 @@
 | 10 | Minimum tags slice | In Progress | Owned tags can be managed and indexed for Search. | Tag creation, per-user uniqueness, ownership-scoped assignment/removal, note tag metadata, shared searchable projection, 38 backend tests, frontend tests, PostgreSQL repository probe, lint, and build pass. Browser/component verification remains pending. |
 | 11 | P0 Search slice | In Progress | Authorized search results meet the performance target through the UI. | Weighted `tsvector` projection and GIN migration, protected ranked search API, Search workspace view, 40 backend tests, frontend tests, PostgreSQL performance test, lint, and build pass. Browser/component verification remains pending. |
 | 12 | P1 organization slice | In Progress | P1 organization and recovery behavior works without unintended data loss. | Notebook CRUD and note movement, favorites, archive/unarchive, tag browsing, and confirmed permanent deletion implemented. Ownership/data-loss API coverage added in `backend/test/api/organization.test.js`; backend tests (42), frontend tests (4), lint, and frontend build pass. Component/browser verification remains pending. |
-| 13 | Cross-slice UI integration | Not Started | The core workflow works accessibly on supported screen sizes. | |
+| 13 | Cross-slice UI integration | In Progress | The core workflow works accessibly on supported screen sizes. | Responsive three-area workspace shell, mobile navigation drawer, collection/editor switching, visible focus treatment, reduced-motion support, retryable initial loading failure, and centralized unsaved-change navigation guard implemented. Playwright projects and mobile keyboard journey added; browser execution remains blocked because the local Chromium executable is unavailable. |
 | 14 | Testing and hardening | Not Started | No critical security, data-loss, or regression issue remains. | |
 | 15 | Deployment preparation | Not Started | Deployment and recovery procedures work. | |
 

@@ -18,6 +18,16 @@
   border-bottom: 1px solid var(--color-border);
   background: var(--color-sidebar);
 }
+.topbarBrand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.menuButton,
+.closeMenuButton,
+.backToCollection {
+  display: none;
+}
 .topbarActions,
 .collectionHeader,
 .editorHeader {
@@ -36,8 +46,56 @@
 }
 .layout {
   display: grid;
-  grid-template-columns: minmax(280px, 340px) 1fr;
+  grid-template-columns: 220px minmax(280px, 340px) 1fr;
   min-height: calc(100vh - 72px);
+}
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  padding: 24px 16px;
+  border-right: 1px solid var(--color-border);
+  background: var(--color-sidebar);
+}
+.sidebarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px 18px;
+  border-bottom: 1px solid var(--color-border);
+}
+.nav {
+  display: grid;
+  gap: 4px;
+  padding-top: 16px;
+}
+.navButton,
+.signOutButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  padding: 10px 9px;
+  border: 1px solid transparent;
+  color: var(--color-text-muted);
+  background: transparent;
+  text-align: left;
+  font:
+    12px 'JetBrains Mono',
+    monospace;
+}
+.navButton:hover,
+.navButton[aria-current='page'] {
+  border-color: var(--color-border);
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+.signOutButton {
+  margin-top: auto;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-danger);
+}
+.drawerBackdrop {
+  display: none;
 }
 .collection {
   border-right: 1px solid var(--color-border);
@@ -150,6 +208,17 @@ h1 {
   flex-direction: column;
   min-width: 0;
   padding: 28px clamp(24px, 6vw, 88px);
+}
+.backToCollection {
+  align-self: flex-start;
+  margin-bottom: 12px;
+  padding: 8px 0;
+  border: 0;
+  color: var(--color-interaction);
+  background: transparent;
+  font:
+    12px 'JetBrains Mono',
+    monospace;
 }
 .editorHeader {
   justify-content: flex-end;
@@ -413,12 +482,51 @@ h1 {
   .topbar {
     padding: 14px 16px;
   }
+  .menuButton,
+  .closeMenuButton,
+  .backToCollection {
+    display: block;
+  }
+  .menuButton,
+  .closeMenuButton {
+    padding: 8px 0;
+    border: 0;
+    color: var(--color-interaction);
+    background: transparent;
+    font:
+      12px 'JetBrains Mono',
+      monospace;
+  }
+  .topbarActions {
+    min-width: 0;
+  }
   .email {
     display: none;
   }
   .layout {
     display: block;
     min-height: 0;
+  }
+  .sidebar {
+    position: fixed;
+    z-index: 3;
+    inset: 0 auto 0 0;
+    width: min(280px, 86vw);
+    transform: translateX(-100%);
+    transition: transform 160ms ease;
+    box-shadow: 12px 0 28px rgb(0 0 0 / 25%);
+  }
+  .sidebarOpen {
+    transform: translateX(0);
+  }
+  .drawerBackdrop {
+    position: fixed;
+    z-index: 2;
+    inset: 0;
+    display: block;
+    width: 100%;
+    border: 0;
+    background: rgb(0 0 0 / 60%);
   }
   .collection {
     border-right: 0;
@@ -427,10 +535,25 @@ h1 {
     min-height: calc(100vh - 72px);
     padding: 20px 16px;
   }
+  .mobileHidden {
+    display: none;
+  }
   .titleInput {
     margin: 38px 0 20px;
   }
   .editorContent {
     min-height: 300px;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1100px) {
+  .layout {
+    grid-template-columns: 196px minmax(250px, 300px) 1fr;
+  }
+  .topbar {
+    padding-inline: 18px;
+  }
+  .editor {
+    padding-inline: 28px;
   }
 }

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document is the frontend visual contract for Note App. It complements the product behavior defined in `docs/03-design/08-ui-ux.md` and the Stitch reference prompt in `docs/03-design/ui-prompts/01-core-ui-prompt.md`.
+This document is the frontend visual contract for Note App. It complements the product behavior defined in `docs/03-design/08-ui-ux.md` and the Stitch reference prompt in `docs/03-design/ui-prompts/01-core-ui-prompt.md` and design ui `D:\OPENCODE_PROJECT\Note_App\frontend\public\stitch\code`.
 
 The global implementation stylesheet is `frontend/src/app/app.css`, imported by `frontend/src/main.jsx`. Shared visual values belong in its `:root` token block and should be consumed through CSS custom properties.
 
