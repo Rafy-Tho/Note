@@ -58,6 +58,20 @@ test('authenticated user can create, edit, and reload a note', async ({
   await expect(
     page.getByRole('button', { name: 'Remove Project Alpha tag' }),
   ).not.toBeVisible();
+  await page
+    .getByRole('button', { name: 'Search', exact: true })
+    .first()
+    .click();
+  await page.getByLabel('Search notes').fill('Browser journey');
+  await page
+    .locator('form')
+    .getByRole('button', { name: 'Search', exact: true })
+    .click();
+  await expect(
+    page.getByRole('button', { name: /Browser journey/ }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: /Browser journey/ }).click();
+  await expect(page.getByLabel('Note title')).toHaveValue('Browser journey');
 
   page.on('dialog', (dialog) => dialog.accept());
   await page.getByRole('button', { name: 'Move to Trash' }).click();

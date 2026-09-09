@@ -5,6 +5,7 @@ import { authApi } from '../../auth/api/authApi.js';
 import { notesApi } from '../../notes/api/notesApi.js';
 import { documentText } from '../../notes/noteDocument.js';
 import { TagControls } from '../../tags/components/TagControls.jsx';
+import { searchApi } from '../../search/api/searchApi.js';
 import { NoteEditor } from './NoteEditor.jsx';
 import styles from './Workspace.module.css';
 
@@ -19,6 +20,11 @@ export function Workspace({ session, onSignOut }) {
   const [trashNotes, setTrashNotes] = useState([]);
   const [view, setView] = useState('notes');
   const [trashStatus, setTrashStatus] = useState('ready');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchStatus, setSearchStatus] = useState('ready');
+  const [searchPage, setSearchPage] = useState(1);
+  const [searchTotal, setSearchTotal] = useState(0);
   const [selected, setSelected] = useState(null);
   const [draft, setDraft] = useState(null);
   const [status, setStatus] = useState('loading');
@@ -191,7 +197,47 @@ export function Workspace({ session, onSignOut }) {
     )
       return;
     setView(nextView);
-    setSelected(nextView === 'trash' ? null : (notes[0] ?? null));
+    setSelected(nextView === 'notes' ? (notes[0] ?? null) : null);
+  }
+
+  async function submitSearch(event, page = 1) {
+    event?.preventDefault();
+    const query = searchQuery.trim();
+    if (!query) {
+      setError('Enter search text.');
+      return;
+    }
+    setSearchStatus('loading');
+    setError(null);
+    try {
+      const result = await searchApi.search(query, page);
+      setSearchResults(result.data);
+      setSearchTotal(result.pagination.total);
+      setSearchPage(page);
+      setSearchStatus('ready');
+    } catch (requestError) {
+      setError(requestError.message);
+      setSearchStatus('ready');
+    }
+  }
+
+  async function openSearchResult(result) {
+    setBusy(true);
+    setError(null);
+    try {
+      const note = await notesApi.get(result.id);
+      setNotes((current) =>
+        current.some((item) => item.id === note.id)
+          ? current.map((item) => (item.id === note.id ? note : item))
+          : [note, ...current],
+      );
+      setView('notes');
+      setSelected(note);
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function trashCurrentNote() {
@@ -290,6 +336,13 @@ export function Workspace({ session, onSignOut }) {
           </button>
           <button
             className={styles.secondaryButton}
+            onClick={() => switchView('search')}
+            aria-pressed={view === 'search'}
+          >
+            Search
+          </button>
+          <button
+            className={styles.secondaryButton}
             onClick={signOut}
             disabled={busy}
           >
@@ -306,7 +359,11 @@ export function Workspace({ session, onSignOut }) {
             <div>
               <p className={styles.eyebrow}>Private notes</p>
               <h1 id="workspace-title">
-                {view === 'trash' ? 'Trash' : 'Notes'}
+                {view === 'trash'
+                  ? 'Trash'
+                  : view === 'search'
+                    ? 'Search'
+                    : 'Notes'}
               </h1>
             </div>
             {view === 'notes' && (
@@ -320,7 +377,74 @@ export function Workspace({ session, onSignOut }) {
             )}
           </div>
           {error && <Alert>{error}</Alert>}
-          {view === 'trash' && trashStatus === 'loading' ? (
+          {view === 'search' ? (
+            <>
+              <form className={styles.searchForm} onSubmit={submitSearch}>
+                <input
+                  aria-label="Search notes"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="Search title, content, or tags"
+                />
+                <button className={styles.primaryButton} type="submit">
+                  Search
+                </button>
+              </form>
+              {searchStatus === 'loading' ? (
+                <div className={styles.empty} aria-live="polite">
+                  Searching...
+                </div>
+              ) : searchResults.length === 0 ? (
+                <div className={styles.empty}>
+                  <h2>
+                    {searchQuery ? 'No notes found.' : 'Search your notes.'}
+                  </h2>
+                  <p>
+                    Search active and archived notes by title, content, or tag.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div
+                    className={styles.searchResults}
+                    aria-label="Search results"
+                  >
+                    {searchResults.map((result) => (
+                      <button
+                        className={styles.searchResult}
+                        key={result.id}
+                        onClick={() => openSearchResult(result)}
+                      >
+                        <strong>{result.title || 'Untitled note'}</strong>
+                        <span>
+                          {result.state} ·{' '}
+                          {result.tags.map((tag) => tag.name).join(', ') ||
+                            'No tags'}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className={styles.pagination}>
+                    <button
+                      className={styles.secondaryButton}
+                      onClick={() => submitSearch(null, searchPage - 1)}
+                      disabled={searchPage === 1}
+                    >
+                      Previous
+                    </button>
+                    <span>Page {searchPage}</span>
+                    <button
+                      className={styles.secondaryButton}
+                      onClick={() => submitSearch(null, searchPage + 1)}
+                      disabled={searchPage * 20 >= searchTotal}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </>
+              )}
+            </>
+          ) : view === 'trash' && trashStatus === 'loading' ? (
             <div className={styles.empty} aria-live="polite">
               Loading Trash...
             </div>

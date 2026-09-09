@@ -7,7 +7,7 @@ function transaction(work) {
 
 describe('tags service', () => {
   it('updates the searchable projection when assigning a tag', async () => {
-    const updateSearchableText = vi.fn();
+    const updateSearchProjection = vi.fn();
     const repository = {
       findNote: vi.fn(async () => ({
         id: 'note-1',
@@ -23,17 +23,22 @@ describe('tags service', () => {
       findTag: vi.fn(async () => ({ id: 'tag-1', name: 'Work' })),
       assign: vi.fn(),
       listNoteTags: vi.fn(async () => [{ id: 'tag-1', name: 'Work' }]),
-      updateSearchableText,
+      updateSearchProjection,
     };
     const service = createTagsService({ repository, transaction });
 
     await service.assign('user-1', 'note-1', 'tag-1');
 
-    expect(updateSearchableText).toHaveBeenCalledWith(
+    expect(updateSearchProjection).toHaveBeenCalledWith(
       expect.anything(),
       'user-1',
       'note-1',
-      'Planning Roadmap Work',
+      {
+        searchableText: 'Planning Roadmap Work',
+        searchTitle: 'Planning',
+        searchContent: 'Roadmap',
+        searchTags: 'Work',
+      },
     );
   });
 

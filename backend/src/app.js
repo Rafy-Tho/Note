@@ -20,6 +20,7 @@ import {
 } from './modules/tags/tags.routes.js';
 import { createTagsRepository } from './modules/tags/tags.repository.js';
 import { createTagsService } from './modules/tags/tags.service.js';
+import { createSearchRouter } from './modules/search/search.routes.js';
 
 export function createApp({
   databaseCheck,
@@ -29,6 +30,7 @@ export function createApp({
   authService = createAuthService({ repository: createAuthRepository() }),
   notesService,
   tagsService,
+  searchService,
 } = {}) {
   const app = express();
   const resolvedTagsService =
@@ -45,6 +47,10 @@ export function createApp({
   app.use(
     '/api/v1/notes',
     createNotesRouter({ authService, config, service: notesService }),
+  );
+  app.use(
+    '/api/v1/search',
+    createSearchRouter({ authService, config, service: searchService }),
   );
   app.use(
     '/api/v1/trash',

@@ -1,7 +1,7 @@
 import { AppError, notFoundError } from '../../common/errors.js';
 import { withTransaction } from '../../db/transaction.js';
 import { assertNoteState } from '../authorization/authorization.js';
-import { buildSearchableText } from './notes.search.js';
+import { buildSearchProjection } from './notes.search.js';
 
 export function createNotesService({
   repository,
@@ -30,7 +30,7 @@ export function createNotesService({
       return transaction((client) =>
         repository.create(client, userId, {
           ...input,
-          searchableText: buildSearchableText(input.title, input.contentJson),
+          ...buildSearchProjection(input.title, input.contentJson),
         }),
       );
     },
@@ -42,16 +42,17 @@ export function createNotesService({
         const tagNames = repository.tagNames
           ? await repository.tagNames(client, userId, noteId)
           : [];
+        const projection =
+          input.title === undefined && input.contentJson === undefined
+            ? {}
+            : buildSearchProjection(
+                input.title ?? note.title,
+                input.contentJson ?? note.contentJson,
+                tagNames,
+              );
         const updated = await repository.update(client, userId, noteId, {
           ...input,
-          searchableText:
-            input.title === undefined && input.contentJson === undefined
-              ? undefined
-              : buildSearchableText(
-                  input.title ?? note.title,
-                  input.contentJson ?? note.contentJson,
-                  tagNames,
-                ),
+          ...projection,
         });
         return { note, updated };
       });

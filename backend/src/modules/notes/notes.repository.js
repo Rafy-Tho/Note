@@ -16,6 +16,12 @@ const NOTE_COLUMNS = `
   ), '[]'::json) AS tags
 `;
 
+const SEARCH_VECTOR_FROM_CREATE_VALUES = `
+  setweight(to_tsvector('simple', COALESCE($5, '')), 'A') ||
+  setweight(to_tsvector('simple', COALESCE($6, '')), 'C') ||
+  setweight(to_tsvector('simple', COALESCE($7, '')), 'B')
+`;
+
 function toNote(row) {
   if (!row) return null;
   return {
@@ -80,12 +86,34 @@ export function createNotesRepository(database = { query }) {
       return result.rows.map((row) => row.name);
     },
 
-    async create(client, userId, { title, contentJson, searchableText }) {
+    async create(
+      client,
+      userId,
+      {
+        title,
+        contentJson,
+        searchableText,
+        searchTitle,
+        searchContent,
+        searchTags,
+      },
+    ) {
       const result = await client.query(
-        `INSERT INTO notes (user_id, title, content_json, searchable_text)
-         VALUES ($1, $2, $3, $4)
+        `INSERT INTO notes (
+           user_id, title, content_json, searchable_text,
+           search_title, search_content, search_tags, search_vector
+         )
+         VALUES ($1, $2, $3, $4, $5, $6, $7, ${SEARCH_VECTOR_FROM_CREATE_VALUES})
          RETURNING ${NOTE_COLUMNS}`,
-        [userId, title, contentJson, searchableText],
+        [
+          userId,
+          title,
+          contentJson,
+          searchableText,
+          searchTitle,
+          searchContent,
+          searchTags,
+        ],
       );
       return toNote(result.rows[0]);
     },
@@ -94,16 +122,31 @@ export function createNotesRepository(database = { query }) {
       client,
       userId,
       noteId,
-      { title, contentJson, searchableText, revision },
+      {
+        title,
+        contentJson,
+        searchableText,
+        searchTitle,
+        searchContent,
+        searchTags,
+        revision,
+      },
     ) {
       const result = await client.query(
         `UPDATE notes
-         SET title = COALESCE($3, title),
-             content_json = COALESCE($4, content_json),
-             searchable_text = COALESCE($5, searchable_text),
-             revision = revision + 1,
+       SET title = COALESCE($3, title),
+           content_json = COALESCE($4, content_json),
+           searchable_text = COALESCE($5, searchable_text),
+           search_title = COALESCE($6, search_title),
+           search_content = COALESCE($7, search_content),
+           search_tags = COALESCE($8, search_tags),
+           search_vector =
+             setweight(to_tsvector('simple', COALESCE($6, search_title)), 'A') ||
+             setweight(to_tsvector('simple', COALESCE($7, search_content)), 'C') ||
+             setweight(to_tsvector('simple', COALESCE($8, search_tags)), 'B'),
+           revision = revision + 1,
              updated_at = NOW()
-         WHERE id = $1 AND user_id = $2 AND state IN ('active', 'archived') AND revision = $6
+         WHERE id = $1 AND user_id = $2 AND state IN ('active', 'archived') AND revision = $9
          RETURNING ${NOTE_COLUMNS}`,
         [
           noteId,
@@ -111,6 +154,9 @@ export function createNotesRepository(database = { query }) {
           title ?? null,
           contentJson ?? null,
           searchableText ?? null,
+          searchTitle ?? null,
+          searchContent ?? null,
+          searchTags ?? null,
           revision,
         ],
       );

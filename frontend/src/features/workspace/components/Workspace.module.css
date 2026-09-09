@@ -313,6 +313,55 @@ h1 {
 .newTagForm input {
   width: 130px;
 }
+.searchForm {
+  display: flex;
+  gap: 8px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--color-border);
+}
+.searchForm input {
+  min-width: 0;
+  flex: 1;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+.searchResults {
+  display: grid;
+}
+.searchResult {
+  display: grid;
+  gap: 7px;
+  padding: 18px 24px;
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  background: transparent;
+  text-align: left;
+}
+.searchResult:hover {
+  background: var(--color-surface);
+}
+.searchResult strong {
+  color: var(--color-text);
+  font-size: 14px;
+}
+.searchResult span {
+  font-size: 12px;
+  text-transform: capitalize;
+}
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 16px 24px;
+  color: var(--color-text-muted);
+  font:
+    11px 'JetBrains Mono',
+    monospace;
+}
 .titleInput::placeholder {
   color: var(--color-text-muted);
   opacity: 0.7;

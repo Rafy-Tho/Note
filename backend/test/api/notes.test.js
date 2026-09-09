@@ -160,6 +160,37 @@ function createNotesTestApp() {
       return { notes: owned.map(present), total: owned.length };
     },
   };
+  const searchService = {
+    async search(userId, input) {
+      const query = input.q.toLowerCase();
+      const results = [...notes.values()]
+        .filter(
+          (note) =>
+            note.userId === userId &&
+            ['active', 'archived'].includes(note.state) &&
+            `${note.title} ${JSON.stringify(note.contentJson)} ${note.tags
+              .map((tag) => tag.name)
+              .join(' ')}`
+              .toLowerCase()
+              .includes(query),
+        )
+        .map((note) => ({
+          id: note.id,
+          title: note.title,
+          state: note.state,
+          tags: note.tags,
+          updatedAt: note.updatedAt,
+          rank: 1,
+        }));
+      return {
+        results: results.slice(
+          (input.page - 1) * input.limit,
+          input.page * input.limit,
+        ),
+        total: results.length,
+      };
+    },
+  };
   const authService = {
     async authenticateToken(token) {
       const session = sessions.get(token);
@@ -175,6 +206,7 @@ function createNotesTestApp() {
     config,
     notesService: service,
     tagsService,
+    searchService,
     logger: { info() {}, error() {} },
   });
 }
@@ -434,5 +466,57 @@ describe('notes API', () => {
     expect(assigned.body.data.tags).toHaveLength(1);
     expect(crossUser.status).toBe(404);
     expect(removed.body.data.tags).toHaveLength(0);
+  });
+
+  it('searches owned active and archived notes while excluding Trash', async () => {
+    const app = createNotesTestApp();
+    const active = await userRequest(app, 'a', 'post', '/api/v1/notes')
+      .set('x-csrf-token', 'test')
+      .send({ title: 'Search title' });
+    const archived = await userRequest(app, 'a', 'post', '/api/v1/notes')
+      .set('x-csrf-token', 'test')
+      .send({ title: 'Archived search' });
+    const trashed = await userRequest(app, 'a', 'post', '/api/v1/notes')
+      .set('x-csrf-token', 'test')
+      .send({ title: 'Hidden search' });
+    await userRequest(
+      app,
+      'a',
+      'delete',
+      `/api/v1/notes/${trashed.body.data.id}`,
+    ).set('x-csrf-token', 'test');
+    const foreign = await userRequest(app, 'b', 'post', '/api/v1/notes')
+      .set('x-csrf-token', 'test')
+      .send({ title: 'Search title' });
+    const archivedNote = [
+      ...(await userRequest(app, 'a', 'get', '/api/v1/notes')).body.data,
+    ].find((note) => note.id === archived.body.data.id);
+    expect(archivedNote).toBeDefined();
+
+    const result = await userRequest(
+      app,
+      'a',
+      'get',
+      '/api/v1/search?q=search',
+    );
+    const empty = await userRequest(app, 'a', 'get', '/api/v1/search?q=%20');
+    const foreignResult = await userRequest(
+      app,
+      'b',
+      'get',
+      '/api/v1/search?q=search',
+    );
+
+    expect(active.body.data.title).toBe('Search title');
+    expect(foreign.body.data.title).toBe('Search title');
+    expect(result.body.data.map((note) => note.title)).toEqual([
+      'Search title',
+      'Archived search',
+    ]);
+    expect(result.body.data.map((note) => note.title)).not.toContain(
+      'Hidden search',
+    );
+    expect(empty.status).toBe(400);
+    expect(foreignResult.body.data).toHaveLength(1);
   });
 });

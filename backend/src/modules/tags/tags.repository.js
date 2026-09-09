@@ -34,7 +34,7 @@ export function createTagsRepository(database = { query }) {
       );
       values.push(limit, (page - 1) * limit);
       const result = await database.query(
-        `SELECT ${TAG_COLUMNS}
+        `SELECT tags.id, tags.user_id, tags.name, tags.normalized_name, tags.created_at
          FROM tags
          WHERE user_id = $1
          ORDER BY normalized_name, id
@@ -104,17 +104,38 @@ export function createTagsRepository(database = { query }) {
       return result.rows.map((row) => row.name);
     },
 
-    async updateSearchableText(client, userId, noteId, searchableText) {
+    async updateSearchProjection(
+      client,
+      userId,
+      noteId,
+      { searchableText, searchTitle, searchContent, searchTags },
+    ) {
       await client.query(
-        `UPDATE notes SET searchable_text = $3, updated_at = NOW()
+        `UPDATE notes
+         SET searchable_text = $3,
+             search_title = $4,
+             search_content = $5,
+             search_tags = $6,
+             search_vector =
+               setweight(to_tsvector('simple', COALESCE($4, '')), 'A') ||
+               setweight(to_tsvector('simple', COALESCE($5, '')), 'C') ||
+               setweight(to_tsvector('simple', COALESCE($6, '')), 'B'),
+             updated_at = NOW()
          WHERE id = $1 AND user_id = $2`,
-        [noteId, userId, searchableText],
+        [
+          noteId,
+          userId,
+          searchableText,
+          searchTitle,
+          searchContent,
+          searchTags,
+        ],
       );
     },
 
     async listNoteTags(client, userId, noteId) {
       const result = await client.query(
-        `SELECT ${TAG_COLUMNS}
+        `SELECT tags.id, tags.user_id, tags.name, tags.normalized_name, tags.created_at
          FROM tags
          INNER JOIN note_tags ON note_tags.tag_id = tags.id
          INNER JOIN notes ON notes.id = note_tags.note_id

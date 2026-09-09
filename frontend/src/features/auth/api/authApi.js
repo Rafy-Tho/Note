@@ -1,6 +1,6 @@
 const apiBase = import.meta.env.VITE_API_URL ?? '/api/v1';
 
-async function request(path, options = {}) {
+async function request(path, options = {}, includeMetadata = false) {
   const response = await fetch(`${apiBase}${path}`, {
     ...options,
     credentials: 'include',
@@ -21,7 +21,7 @@ async function request(path, options = {}) {
     error.status = response.status;
     throw error;
   }
-  return payload.data;
+  return includeMetadata ? payload : payload.data;
 }
 
 export function createAuthApi() {
@@ -37,6 +37,16 @@ export function createAuthApi() {
           : {}),
       };
       return request(path, { ...options, headers });
+    },
+    async requestCollection(path, options = {}) {
+      const method = options.method ?? 'GET';
+      const headers = {
+        ...options.headers,
+        ...(method !== 'GET' && method !== 'HEAD' && csrfToken
+          ? { 'x-csrf-token': csrfToken }
+          : {}),
+      };
+      return request(path, { ...options, headers }, true);
     },
     async getSession() {
       const session = await request('/auth/session');

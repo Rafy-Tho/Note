@@ -12,7 +12,7 @@
 | Field | Value |
 | --- | --- |
 | Current phase | Implementation |
-| Current step | Step 10 - Minimum Tags Slice |
+| Current step | Step 11 - P0 Search Slice |
 | Overall status | In Progress |
 | Blocker | None for the completed bootstrap and database gates. |
 | Last updated | 2026-09-09 |
@@ -32,7 +32,7 @@
 | 8 | Rich text and autosave slice | In Progress | Rich text is safe and stale saves cannot overwrite newer content. | Tiptap editor, safe document validation, searchable text, queued 800 ms autosave, revision-conflict recovery, API/security tests, frontend tests, lint, and build pass. Playwright verification is pending because Chromium is unavailable locally. |
 | 9 | Trash and restore slice | In Progress | Users can recover owned notes without unintended data loss. | Transactional Trash/restore API, ownership checks, normal-list exclusion, recovery fallback, Trash UI, API/service tests, lint, and build pass. Playwright verification is pending because Chromium is unavailable locally. |
 | 10 | Minimum tags slice | In Progress | Owned tags can be managed and indexed for Search. | Tag creation, per-user uniqueness, ownership-scoped assignment/removal, note tag metadata, shared searchable projection, 38 backend tests, frontend tests, PostgreSQL repository probe, lint, and build pass. Browser/component verification remains pending. |
-| 11 | P0 Search slice | Not Started | Authorized search results meet the performance target through the UI. | |
+| 11 | P0 Search slice | In Progress | Authorized search results meet the performance target through the UI. | Weighted `tsvector` projection and GIN migration, protected ranked search API, Search workspace view, 40 backend tests, frontend tests, PostgreSQL performance test, lint, and build pass. Browser/component verification remains pending. |
 | 12 | P1 organization slice | Not Started | P1 organization and recovery behavior works without unintended data loss. | |
 | 13 | Cross-slice UI integration | Not Started | The core workflow works accessibly on supported screen sizes. | |
 | 14 | Testing and hardening | Not Started | No critical security, data-loss, or regression issue remains. | |

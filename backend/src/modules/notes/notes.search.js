@@ -18,3 +18,14 @@ export function buildSearchableText(title, contentJson, tagNames = []) {
     .join(' ')
     .trim();
 }
+
+export function buildSearchProjection(title, contentJson, tagNames = []) {
+  const content = documentText(contentJson);
+  const tags = tagNames.filter(Boolean).join(' ').trim();
+  return {
+    searchableText: [title, content, tags].filter(Boolean).join(' ').trim(),
+    searchTitle: title ?? '',
+    searchContent: content,
+    searchTags: tags,
+  };
+}

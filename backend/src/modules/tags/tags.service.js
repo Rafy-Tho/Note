@@ -1,7 +1,7 @@
 import { AppError, notFoundError } from '../../common/errors.js';
 import { withTransaction } from '../../db/transaction.js';
 import { assertNoteState } from '../authorization/authorization.js';
-import { buildSearchableText } from '../notes/notes.search.js';
+import { buildSearchProjection } from '../notes/notes.search.js';
 
 export function createTagsService({
   repository,
@@ -37,11 +37,11 @@ export function createTagsService({
         if (!tag) throw notFoundError();
         await repository.assign(client, noteId, tagId);
         const tags = await repository.listNoteTags(client, userId, noteId);
-        await repository.updateSearchableText(
+        await repository.updateSearchProjection(
           client,
           userId,
           noteId,
-          buildSearchableText(
+          buildSearchProjection(
             note.title,
             note.content_json,
             tags.map((item) => item.name),
@@ -60,11 +60,11 @@ export function createTagsService({
         if (!tag) throw notFoundError();
         await repository.remove(client, userId, noteId, tagId);
         const tags = await repository.listNoteTags(client, userId, noteId);
-        await repository.updateSearchableText(
+        await repository.updateSearchProjection(
           client,
           userId,
           noteId,
-          buildSearchableText(
+          buildSearchProjection(
             note.title,
             note.content_json,
             tags.map((item) => item.name),
