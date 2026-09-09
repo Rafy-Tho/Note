@@ -247,6 +247,72 @@ h1 {
   color: var(--color-text);
   background: var(--color-surface);
 }
+.tagControls {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 24px;
+  padding: 12px 0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+.tagHeader,
+.tagActions,
+.newTagForm {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tagLabel {
+  color: var(--color-text);
+  font:
+    12px 'JetBrains Mono',
+    monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.tagMeta {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+.tagList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 28px;
+  align-items: center;
+}
+.tagChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border: 1px solid var(--color-interaction);
+  color: var(--color-text);
+  background: var(--color-surface);
+  font-size: 12px;
+}
+.tagChip button {
+  padding: 0;
+  border: 0;
+  color: var(--color-danger);
+  background: transparent;
+  font:
+    12px 'JetBrains Mono',
+    monospace;
+}
+.tagActions select,
+.newTagForm input {
+  min-height: 36px;
+  padding: 7px 9px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  background: var(--color-surface);
+  font-size: 12px;
+}
+.newTagForm input {
+  width: 130px;
+}
 .titleInput::placeholder {
   color: var(--color-text-muted);
   opacity: 0.7;

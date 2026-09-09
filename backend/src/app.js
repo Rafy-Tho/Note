@@ -14,6 +14,12 @@ import {
   createNotesRouter,
   createTrashRouter,
 } from './modules/notes/notes.routes.js';
+import {
+  createNoteTagsRouter,
+  createTagsRouter,
+} from './modules/tags/tags.routes.js';
+import { createTagsRepository } from './modules/tags/tags.repository.js';
+import { createTagsService } from './modules/tags/tags.service.js';
 
 export function createApp({
   databaseCheck,
@@ -22,8 +28,11 @@ export function createApp({
   config = getConfig(),
   authService = createAuthService({ repository: createAuthRepository() }),
   notesService,
+  tagsService,
 } = {}) {
   const app = express();
+  const resolvedTagsService =
+    tagsService ?? createTagsService({ repository: createTagsRepository() });
 
   app.disable('x-powered-by');
   app.use(requestContext);
@@ -40,6 +49,18 @@ export function createApp({
   app.use(
     '/api/v1/trash',
     createTrashRouter({ authService, config, service: notesService }),
+  );
+  app.use(
+    '/api/v1/tags',
+    createTagsRouter({ authService, config, service: resolvedTagsService }),
+  );
+  app.use(
+    '/api/v1/notes',
+    createNoteTagsRouter({
+      authService,
+      config,
+      service: resolvedTagsService,
+    }),
   );
   configureRoutes(app);
 

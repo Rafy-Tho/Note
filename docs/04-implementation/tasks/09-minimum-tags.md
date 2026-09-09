@@ -2,7 +2,7 @@
 
 ## Status
 
-Not Started
+In Progress
 
 ## Objective
 
@@ -16,30 +16,30 @@ Implement the minimum tag management vertical slice required by P0 Search.
 
 ## Backend
 
-- [ ] Create unique tags per user.
-- [ ] Assign owned tags to owned notes.
-- [ ] Remove tag associations.
-- [ ] Generate searchable tag data.
-- [ ] Update search data when tag associations change.
-- [ ] Enforce ownership on tag operations.
+- [x] Create unique tags per user.
+- [x] Assign owned tags to owned notes.
+- [x] Remove tag associations.
+- [x] Generate searchable tag data.
+- [x] Update search data when tag associations change.
+- [x] Enforce ownership on tag operations.
 
 ## Frontend
 
-- [ ] Add tag creation and assignment controls to the note workflow.
-- [ ] Add tag removal behavior.
-- [ ] Handle loading, success, and failure states.
+- [x] Add tag creation and assignment controls to the note workflow.
+- [x] Add tag removal behavior.
+- [x] Handle loading, success, and failure states.
 
 ## Integration and Tests
 
-- [ ] Connect tag controls to the API.
+- [x] Connect tag controls to the API.
 - [ ] Add API, component, ownership, and end-to-end tests.
 
 ## Tests and Evidence
 
-- Duplicate tag names are rejected.
-- Cross-user tag assignments are rejected.
-- Tag data is available to Search.
+- [x] Duplicate tag names are rejected.
+- [x] Cross-user tag assignments are rejected.
+- [x] Tag data is available to Search.
 
 ## Completion Gate
 
-Notes can be indexed and searched by owned tags.
+Notes can be indexed and searched by owned tags. Browser and component-level verification remains pending.

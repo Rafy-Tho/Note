@@ -4,6 +4,7 @@ import { Brand } from '../../../components/Brand/Brand.jsx';
 import { authApi } from '../../auth/api/authApi.js';
 import { notesApi } from '../../notes/api/notesApi.js';
 import { documentText } from '../../notes/noteDocument.js';
+import { TagControls } from '../../tags/components/TagControls.jsx';
 import { NoteEditor } from './NoteEditor.jsx';
 import styles from './Workspace.module.css';
 
@@ -135,6 +136,17 @@ export function Workspace({ session, onSignOut }) {
     setSaveStatus('Unsaved Changes');
     setError(null);
     setConflict(false);
+  }
+
+  function updateTags(tags) {
+    const nextDraft = { ...latestDraftRef.current, tags };
+    latestDraftRef.current = nextDraft;
+    setDraft(nextDraft);
+    setNotes((current) =>
+      current.map((note) =>
+        note.id === nextDraft.id ? { ...note, tags } : note,
+      ),
+    );
   }
 
   async function createNote() {
@@ -396,6 +408,12 @@ export function Workspace({ session, onSignOut }) {
                 onChange={(event) => changeDraft('title', event.target.value)}
                 onBlur={() => void saveDraft()}
                 placeholder="Untitled note"
+              />
+              <TagControls
+                noteId={draft.id}
+                tags={draft.tags ?? []}
+                onTagsChange={updateTags}
+                disabled={busy || saveStatus === 'Saving'}
               />
               <div onBlur={() => void saveDraft()}>
                 <NoteEditor

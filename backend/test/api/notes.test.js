@@ -15,6 +15,7 @@ function createNotesTestApp() {
     ['session-b', { userId: 'user-b', email: 'b@example.com' }],
   ]);
   const notes = new Map();
+  const tags = new Map();
   let nextId = 1;
   const present = (note) => {
     const copy = { ...note };
@@ -48,6 +49,7 @@ function createNotesTestApp() {
         revision: 0,
         createdAt: '2026-09-09T00:00:00.000Z',
         updatedAt: '2026-09-09T00:00:00.000Z',
+        tags: [],
       };
       notes.set(note.id, note);
       return present(note);
@@ -92,6 +94,72 @@ function createNotesTestApp() {
       return present(note);
     },
   };
+  const tagsService = {
+    async list(userId, pagination) {
+      const owned = [...tags.values()].filter((tag) => tag.userId === userId);
+      return { tags: owned.map(present), total: owned.length, pagination };
+    },
+    async create(userId, input) {
+      if (
+        [...tags.values()].some(
+          (tag) =>
+            tag.userId === userId &&
+            tag.normalizedName === input.normalizedName,
+        )
+      )
+        throw new AppError(
+          409,
+          'DUPLICATE_TAG',
+          'A tag with that name already exists.',
+        );
+      const tag = {
+        id: `22222222-2222-4222-8222-22222222222${tags.size + 1}`,
+        userId,
+        ...input,
+        createdAt: '2026-09-09T00:00:00.000Z',
+      };
+      tags.set(tag.id, tag);
+      return present(tag);
+    },
+    async assign(userId, noteId, tagId) {
+      const note = notes.get(noteId);
+      const tag = tags.get(tagId);
+      if (!note || note.userId !== userId || note.state === 'trashed')
+        throw notFoundError();
+      if (!tag || tag.userId !== userId) throw notFoundError();
+      if (!note.tags.some((item) => item.id === tag.id))
+        note.tags.push(present(tag));
+      note.searchableText =
+        `${note.title} ${note.tags.map((item) => item.name).join(' ')}`.trim();
+      return { tag: present(tag), tags: note.tags };
+    },
+    async remove(userId, noteId, tagId) {
+      const note = notes.get(noteId);
+      const tag = tags.get(tagId);
+      if (!note || note.userId !== userId || !tag || tag.userId !== userId)
+        throw notFoundError();
+      note.tags = note.tags.filter((item) => item.id !== tagId);
+      note.searchableText =
+        `${note.title} ${note.tags.map((item) => item.name).join(' ')}`.trim();
+      return { tag: present(tag), tags: note.tags };
+    },
+    async listNoteTags(userId, noteId) {
+      const note = notes.get(noteId);
+      if (!note || note.userId !== userId) throw notFoundError();
+      return note.tags;
+    },
+    async listNotesByTag(userId, tagId) {
+      const tag = tags.get(tagId);
+      if (!tag || tag.userId !== userId) throw notFoundError();
+      const owned = [...notes.values()].filter(
+        (note) =>
+          note.userId === userId &&
+          note.state !== 'trashed' &&
+          note.tags.some((item) => item.id === tagId),
+      );
+      return { notes: owned.map(present), total: owned.length };
+    },
+  };
   const authService = {
     async authenticateToken(token) {
       const session = sessions.get(token);
@@ -106,6 +174,7 @@ function createNotesTestApp() {
     authService,
     config,
     notesService: service,
+    tagsService,
     logger: { info() {}, error() {} },
   });
 }
@@ -320,5 +389,50 @@ describe('notes API', () => {
       restoreState: null,
       trashedAt: null,
     });
+  });
+
+  it('creates unique owned tags and updates note tag associations', async () => {
+    const app = createNotesTestApp();
+    const created = await userRequest(app, 'a', 'post', '/api/v1/notes')
+      .set('x-csrf-token', 'test')
+      .send({ title: 'Searchable note' });
+    const noteId = created.body.data.id;
+    const tag = await userRequest(app, 'a', 'post', '/api/v1/tags')
+      .set('x-csrf-token', 'test')
+      .send({ name: '  Project   Alpha ' });
+    const duplicate = await userRequest(app, 'a', 'post', '/api/v1/tags')
+      .set('x-csrf-token', 'test')
+      .send({ name: 'project alpha' });
+    const foreignTag = await userRequest(app, 'b', 'post', '/api/v1/tags')
+      .set('x-csrf-token', 'test')
+      .send({ name: 'Private' });
+    const assigned = await userRequest(
+      app,
+      'a',
+      'post',
+      `/api/v1/notes/${noteId}/tags`,
+    )
+      .set('x-csrf-token', 'test')
+      .send({ tagId: tag.body.data.id });
+    const crossUser = await userRequest(
+      app,
+      'a',
+      'post',
+      `/api/v1/notes/${noteId}/tags`,
+    )
+      .set('x-csrf-token', 'test')
+      .send({ tagId: foreignTag.body.data.id });
+    const removed = await userRequest(
+      app,
+      'a',
+      'delete',
+      `/api/v1/notes/${noteId}/tags/${tag.body.data.id}`,
+    ).set('x-csrf-token', 'test');
+
+    expect(tag.body.data.name).toBe('Project Alpha');
+    expect(duplicate.status).toBe(409);
+    expect(assigned.body.data.tags).toHaveLength(1);
+    expect(crossUser.status).toBe(404);
+    expect(removed.body.data.tags).toHaveLength(0);
   });
 });

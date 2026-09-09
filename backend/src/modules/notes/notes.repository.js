@@ -3,7 +3,17 @@ import { query } from '../../db/query.js';
 const NOTE_COLUMNS = `
   id, user_id, notebook_id, title, content_json, state, restore_state,
   is_favorite, revision, trashed_at,
-  created_at, updated_at
+  created_at, updated_at,
+  COALESCE((
+    SELECT json_agg(json_build_object('id', tag_rows.id, 'name', tag_rows.name)
+                   ORDER BY tag_rows.normalized_name)
+    FROM (
+      SELECT tags.id, tags.name, tags.normalized_name
+      FROM tags
+      INNER JOIN note_tags ON note_tags.tag_id = tags.id
+      WHERE note_tags.note_id = notes.id
+    ) AS tag_rows
+  ), '[]'::json) AS tags
 `;
 
 function toNote(row) {
@@ -16,6 +26,7 @@ function toNote(row) {
     state: row.state,
     restoreState: row.restore_state,
     isFavorite: row.is_favorite,
+    tags: row.tags ?? [],
     revision: row.revision,
     trashedAt: row.trashed_at,
     createdAt: row.created_at,
@@ -54,6 +65,19 @@ export function createNotesRepository(database = { query }) {
         [noteId, userId],
       );
       return toNote(result.rows[0]);
+    },
+
+    async tagNames(connection, userId, noteId) {
+      const result = await connection.query(
+        `SELECT tags.name
+         FROM tags
+         INNER JOIN note_tags ON note_tags.tag_id = tags.id
+         INNER JOIN notes ON notes.id = note_tags.note_id
+         WHERE tags.user_id = $1 AND notes.user_id = $1 AND notes.id = $2
+         ORDER BY tags.normalized_name`,
+        [userId, noteId],
+      );
+      return result.rows.map((row) => row.name);
     },
 
     async create(client, userId, { title, contentJson, searchableText }) {

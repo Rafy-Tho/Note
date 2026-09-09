@@ -29,6 +29,11 @@ test('authenticated user can create, edit, and reload a note', async ({
   await expect(
     page.getByRole('button', { name: /Browser journey/ }),
   ).toBeVisible();
+  await page.getByLabel('New tag name').fill('Project Alpha');
+  await page.getByRole('button', { name: 'Create' }).click();
+  await expect(
+    page.getByRole('button', { name: 'Remove Project Alpha tag' }),
+  ).toBeVisible();
 
   const notesResponse = await page.evaluate(() =>
     fetch('/api/v1/notes').then((response) => response.json()),
@@ -46,6 +51,13 @@ test('authenticated user can create, edit, and reload a note', async ({
   await expect(page.getByLabel('Note content')).toHaveText(
     'Created through the authenticated UI.',
   );
+  await expect(
+    page.getByRole('button', { name: 'Remove Project Alpha tag' }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Remove Project Alpha tag' }).click();
+  await expect(
+    page.getByRole('button', { name: 'Remove Project Alpha tag' }),
+  ).not.toBeVisible();
 
   page.on('dialog', (dialog) => dialog.accept());
   await page.getByRole('button', { name: 'Move to Trash' }).click();

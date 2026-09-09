@@ -1,18 +1,7 @@
 import { AppError, notFoundError } from '../../common/errors.js';
 import { withTransaction } from '../../db/transaction.js';
 import { assertNoteState } from '../authorization/authorization.js';
-
-function searchableText(contentJson) {
-  const values = [];
-  function visit(value) {
-    if (!value || typeof value !== 'object') return;
-    if (value.type === 'text' && typeof value.text === 'string')
-      values.push(value.text);
-    if (Array.isArray(value.content)) value.content.forEach(visit);
-  }
-  visit(contentJson);
-  return values.join(' ');
-}
+import { buildSearchableText } from './notes.search.js';
 
 export function createNotesService({
   repository,
@@ -41,8 +30,7 @@ export function createNotesService({
       return transaction((client) =>
         repository.create(client, userId, {
           ...input,
-          searchableText:
-            `${input.title} ${searchableText(input.contentJson)}`.trim(),
+          searchableText: buildSearchableText(input.title, input.contentJson),
         }),
       );
     },
@@ -51,12 +39,19 @@ export function createNotesService({
       const result = await transaction(async (client) => {
         const note = await repository.findById(userId, noteId, client);
         if (!note) return { note: null, updated: null };
+        const tagNames = repository.tagNames
+          ? await repository.tagNames(client, userId, noteId)
+          : [];
         const updated = await repository.update(client, userId, noteId, {
           ...input,
           searchableText:
             input.title === undefined && input.contentJson === undefined
               ? undefined
-              : `${input.title ?? note.title} ${searchableText(input.contentJson ?? note.contentJson)}`.trim(),
+              : buildSearchableText(
+                  input.title ?? note.title,
+                  input.contentJson ?? note.contentJson,
+                  tagNames,
+                ),
         });
         return { note, updated };
       });
