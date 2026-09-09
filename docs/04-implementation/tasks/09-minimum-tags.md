@@ -6,7 +6,7 @@ Not Started
 
 ## Objective
 
-Implement the minimum tag behavior required by P0 Search.
+Implement the minimum tag management vertical slice required by P0 Search.
 
 ## Depends On
 
@@ -14,7 +14,7 @@ Implement the minimum tag behavior required by P0 Search.
 - `02-database-foundation.md`
 - `../../03-design/06-search.md`
 
-## Checklist
+## Backend
 
 - [ ] Create unique tags per user.
 - [ ] Assign owned tags to owned notes.
@@ -22,6 +22,17 @@ Implement the minimum tag behavior required by P0 Search.
 - [ ] Generate searchable tag data.
 - [ ] Update search data when tag associations change.
 - [ ] Enforce ownership on tag operations.
+
+## Frontend
+
+- [ ] Add tag creation and assignment controls to the note workflow.
+- [ ] Add tag removal behavior.
+- [ ] Handle loading, success, and failure states.
+
+## Integration and Tests
+
+- [ ] Connect tag controls to the API.
+- [ ] Add API, component, ownership, and end-to-end tests.
 
 ## Tests and Evidence
 

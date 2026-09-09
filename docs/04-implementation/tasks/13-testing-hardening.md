@@ -17,7 +17,7 @@ Verify the complete MVP and fix release-blocking defects.
 - `08-trash-recovery.md`
 - `10-search.md`
 - `11-organization-favorites-archive.md`
-- `12-ui-completion.md`
+- `12-cross-slice-ui-intergration.md`
 
 ## Checklist
 

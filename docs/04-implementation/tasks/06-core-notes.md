@@ -6,7 +6,7 @@ Not Started
 
 ## Objective
 
-Implement the basic note workflow and note metadata.
+Implement the core notes vertical slice, including create, view, list, edit, its API, and working UI.
 
 ## Depends On
 
@@ -14,7 +14,7 @@ Implement the basic note workflow and note metadata.
 - `../../03-design/02-database.md`
 - `../../03-design/03-api.md`
 
-## Checklist
+## Backend
 
 - [ ] Create blank and populated notes.
 - [ ] View individual notes.
@@ -23,11 +23,23 @@ Implement the basic note workflow and note metadata.
 - [ ] Store creation and modification timestamps.
 - [ ] Implement Active, Archived, and Trashed state values.
 - [ ] Add note API endpoints.
-- [ ] Add the basic notes list and editor shell.
+
+## Frontend
+
+- [ ] Add the notes list and empty state.
+- [ ] Add the note detail view.
+- [ ] Add the create-note flow and initial editor shell.
+- [ ] Add title and content editing.
+- [ ] Handle loading, success, and failure states.
+
+## Integration and Tests
+
+- [ ] Connect the list, detail, create, and edit UI to the note API.
+- [ ] Add API, component, and end-to-end tests for the slice.
 
 ## Tests and Evidence
 
-- Note CRUD tests pass.
+- Note create, view, list, and edit tests pass.
 - Blank notes are supported.
 - Ownership and timestamps are verified.
 

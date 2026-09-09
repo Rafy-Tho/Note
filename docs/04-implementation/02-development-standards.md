@@ -8,6 +8,7 @@ This document defines the minimum standards for implementing and reviewing MVP c
 
 - Keep frontend, API, application, and data-access responsibilities separate.
 - Organize code by feature where this improves ownership and navigation.
+- Implement user-facing work as vertical feature slices: backend behavior, API contract, frontend behavior, integration states, and tests belong to the same slice.
 - Keep business rules in the application or backend layer.
 - Keep database queries out of UI components.
 - Reuse shared validation and error-handling behavior.
@@ -44,6 +45,8 @@ Each feature should include the tests needed for its risk and behavior:
 ## Work and Review Rules
 
 - Keep work limited to one feature or fix where practical.
+- Do not mark a feature complete when only its backend or frontend is complete.
+- Build the backend behavior before the frontend integration within each slice, then verify the complete user workflow.
 - Link implementation work to requirement or acceptance IDs.
 - Review security and data-loss impact before merging.
 - Run formatting, linting, and relevant tests before review.

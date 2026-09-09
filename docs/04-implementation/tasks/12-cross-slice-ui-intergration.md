@@ -1,4 +1,4 @@
-# Task 12 - UI Completion
+# Task 12 - Cross-Slice UI Integration
 
 ## Status
 
@@ -6,7 +6,7 @@ Not Started
 
 ## Objective
 
-Complete the production-ready interface and responsive user journey.
+Integrate and harden the UI delivered by the vertical feature slices into a production-ready responsive user journey. This task does not defer feature frontend work until the end.
 
 ## Depends On
 
@@ -16,15 +16,19 @@ Complete the production-ready interface and responsive user journey.
 - `10-search.md`
 - `11-organization-favorites-archive.md`
 
-## Checklist
+## Shared UI Integration
 
 - [ ] Complete dashboard and navigation.
-- [ ] Complete notes list and editor.
-- [ ] Add loading, empty, success, and error states.
 - [ ] Add responsive desktop, tablet, and mobile layouts.
 - [ ] Add keyboard navigation and focus management.
 - [ ] Add accessible save and error feedback.
-- [ ] Verify the complete user journey.
+- [ ] Verify consistent loading, empty, success, and error states across slices.
+
+## Integration and Tests
+
+- [ ] Verify the complete user journey across all delivered slices.
+- [ ] Run component and end-to-end tests at supported screen sizes.
+- [ ] Run keyboard and accessibility checks for important actions.
 
 ## Tests and Evidence
 

@@ -6,7 +6,7 @@ Not Started
 
 ## Objective
 
-Prevent users from accessing or changing resources they do not own.
+Build the server-side authorization foundation used by every vertical feature slice.
 
 ## Depends On
 
@@ -14,7 +14,7 @@ Prevent users from accessing or changing resources they do not own.
 - `02-database-foundation.md`
 - `../../03-design/05-authorization.md`
 
-## Checklist
+## Backend Foundation
 
 - [ ] Create authenticated user context middleware.
 - [ ] Scope protected queries by user ID.
@@ -22,6 +22,12 @@ Prevent users from accessing or changing resources they do not own.
 - [ ] Enforce allowed note-state transitions.
 - [ ] Add safe not-found behavior.
 - [ ] Reject cross-user relationships.
+
+## Slice Integration
+
+- [ ] Provide reusable ownership checks to feature services and routes.
+- [ ] Require every protected slice to use authenticated user context.
+- [ ] Verify authorization behavior through the frontend-backed API flows.
 
 ## Tests and Evidence
 

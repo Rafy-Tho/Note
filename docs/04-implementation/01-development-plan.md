@@ -36,69 +36,89 @@ Create the Express structure, configuration loading, validation, standard errors
 
 **Gate:** The API returns consistent success and error responses.
 
-## Step 4 - Implement Authentication
+## Step 4 - Build the Authentication Foundation
 
-Implement registration, Argon2id passwords, sign-in, secure sessions, expiry, revocation, sign-out, CSRF protection, and rate limiting.
+Implement registration, Argon2id passwords, sign-in, secure sessions, expiry, revocation, sign-out, CSRF protection, and rate limiting. This step establishes the protected-route foundation; the authentication screens are completed in the Authentication slice.
 
-**Gate:** Users can authenticate and access protected routes safely.
+**Gate:** The API can authenticate users and safely establish and revoke protected sessions.
 
-## Step 5 - Implement Authorization
+## Step 5 - Build the Authorization Foundation
 
-Implement authenticated user context, ownership-scoped queries, protected resources, state checks, safe not-found behavior, and cross-user tests.
+Implement authenticated user context, ownership-scoped data-access helpers, protected resource rules, state checks, safe not-found behavior, and cross-user tests. Every later slice must use this foundation.
 
-**Gate:** User A cannot read or modify User B data.
+**Gate:** User A cannot read or modify User B data through any protected API operation.
 
-## Step 6 - Implement Core Notes
+## Vertical Feature Slices
 
-Implement blank note creation, viewing, listing, editing, metadata, note API endpoints, state values, and the basic notes UI.
+After the shared foundations, build one complete user-facing capability at a time. A slice is not complete when only its API or only its UI is finished.
 
-**Gate:** An authenticated user can create, view, and edit only their own notes.
+For every slice, use this order:
 
-## Step 7 - Implement Rich Text and Autosave
+```text
+Backend behavior
+    -> API contract
+    -> Frontend component or screen
+    -> API integration
+    -> Loading, empty, success, and failure states
+    -> Relevant automated tests
+    -> Acceptance verification and documentation
+```
 
-Implement the approved editor features, safe content handling, searchable plain text, save states, 800 ms debounce, revisions, stale-save prevention, retries, and failure handling.
+## Step 6 - Authentication Slice
 
-**Gate:** Rich text is safe and newer content cannot be overwritten by an older save.
+Complete registration, sign-in, sign-out, session-aware routing, authentication forms, validation feedback, protected-route behavior, and end-to-end authentication journeys.
 
-## Step 8 - Implement P0 Trash and Restore
+**Gate:** A user can register, sign in, use a protected route, and sign out safely from the supported browsers.
 
-Implement normal deletion to Trash, Trash view, restore to the previous state and notebook when possible, and fallback restoration to Active with no notebook.
+## Step 7 - Core Notes Slice
 
-Permanent deletion is completed later with P1 organization work.
+Implement blank and populated note creation, note metadata, list, detail, and update APIs, ownership checks, timestamps, Active/Archived/Trashed state values, the notes list, empty state, note detail, create flow, and the editor shell.
 
-**Gate:** Trashed notes remain recoverable and are isolated by user.
+**Gate:** An authenticated user can create, view, list, and edit only their own notes through the working UI.
 
-## Step 9 - Implement Minimum Tag Support for Search
+## Step 8 - Rich Text and Autosave Slice
 
-Implement tag creation, uniqueness, assignment, removal, and searchable tag data. Full tag browsing can be completed later.
+Implement the approved editor features, safe content handling, searchable plain text, Unsaved Changes/Saving/Saved/Save Failed states, the 800 ms debounce, revisions, stale-save prevention, retries, and failure handling in both API and UI behavior.
 
-**Gate:** Notes can be indexed and searched by owned tags.
+**Gate:** Rich text is safe, failed saves retain editor state, and newer content cannot be overwritten by an older save.
 
-## Step 10 - Implement P0 Search
+## Step 9 - P0 Trash and Restore Slice
 
-Implement PostgreSQL full-text search, title/content/tag search, ownership filtering, Active/Archived filtering, Trash exclusion, ranking, pagination, and empty-query/result handling.
+Implement normal deletion to Trash, Trash APIs and view, restore to the previous state and notebook when possible, fallback restoration to Active with no notebook, and exclusion from normal lists. Permanent deletion is completed in the organization slice.
 
-**Gate:** Search returns authorized results within the performance target.
+**Gate:** A user can delete and restore only owned notes without unintended data loss.
 
-## Step 11 - Implement P1 Organization and Completion Features
+## Step 10 - Minimum Tags Slice
 
-Implement notebook creation, rename, deletion, note movement, full tag browsing, favorites, Favorites view, archive, Archive view, and confirmed permanent deletion.
+Implement tag creation, per-user uniqueness, assignment, removal, searchable tag data, tag controls, and ownership-aware integration with notes.
 
-**Gate:** All P1 organization and recovery behavior works without unintended data loss.
+**Gate:** A user can manage owned tags on owned notes, and tag data is available to Search.
 
-## Step 12 - Complete the UI/UX
+## Step 11 - P0 Search Slice
 
-Complete the dashboard, navigation, loading/empty/error states, responsive layouts, keyboard behavior, focus management, and accessible feedback.
+Implement PostgreSQL full-text search, title/content/tag search, ownership filtering, Active/Archived filtering, Trash exclusion, ranking, pagination, empty-query handling, empty-result handling, and the search interface.
 
-**Gate:** The core workflow works on supported desktop and mobile browsers.
+**Gate:** Search returns correct authorized results within the performance target through the working UI.
 
-## Step 13 - Test and Harden
+## Step 12 - P1 Organization Slice
+
+Implement notebook creation, rename, deletion, note movement, full tag browsing, favorites, Favorites view, archive, Archive view, confirmed permanent deletion, and their complete UI workflows.
+
+**Gate:** P1 organization and recovery behavior works without unintended data loss.
+
+## Step 13 - Cross-Slice UI Integration
+
+Complete shared dashboard and navigation behavior, responsive desktop/tablet/mobile layouts, keyboard behavior, focus management, accessible feedback, consistent loading/empty/error states, and the complete user journey. This step integrates and hardens UI already delivered by the slices; it is not the first frontend implementation step.
+
+**Gate:** The core workflow is usable and accessible on supported desktop and mobile browsers.
+
+## Step 14 - Test and Harden
 
 Run unit, integration, API, authorization, rich-text security, autosave, end-to-end, accessibility, performance, backup, and recovery tests. Fix critical defects and regressions.
 
 **Gate:** No critical security, data-loss, performance, or regression issue remains.
 
-## Step 14 - Prepare Deployment
+## Step 15 - Prepare Deployment
 
 Configure production, secrets, HTTPS, migrations, logging, monitoring, backups, recovery, deployment, and rollback procedures.
 
@@ -108,12 +128,13 @@ Configure production, secrets, HTTPS, migrations, logging, monitoring, backups, 
 
 ```text
 Review requirements
-      -> Implement database and backend behavior
-      -> Implement API contract
-      -> Implement frontend behavior
-      -> Add tests
+      -> Implement database behavior when needed
+      -> Implement backend behavior and API contract
+      -> Implement the frontend component or screen
+      -> Integrate the API and UI states
+      -> Add relevant tests
       -> Verify acceptance criteria
-      -> Update documentation
+      -> Update documentation and progress
 ```
 
 ## Technical Spikes

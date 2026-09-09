@@ -6,21 +6,32 @@ Not Started
 
 ## Objective
 
-Implement the P0 Trash and restore workflow without unintended data loss.
+Implement the P0 Trash and restore vertical slice without unintended data loss.
 
 ## Depends On
 
 - `06-core-notes.md`
 - `../../03-design/02-database.md`
 
-## Checklist
+## Backend
 
 - [ ] Move Active and Archived notes to Trash.
-- [ ] Add the user's Trash view.
 - [ ] Restore the previous state and notebook when possible.
 - [ ] Restore to Active with no notebook when necessary.
 - [ ] Exclude Trashed notes from normal lists.
 - [ ] Enforce ownership on every operation.
+
+## Frontend
+
+- [ ] Add the Trash view.
+- [ ] Add delete and restore actions with confirmation where required.
+- [ ] Handle loading, empty, success, and failure states.
+- [ ] Keep normal lists free of trashed notes.
+
+## Integration and Tests
+
+- [ ] Connect Trash actions and views to the API.
+- [ ] Add API, component, ownership, recovery, and end-to-end tests.
 
 ## Tests and Evidence
 

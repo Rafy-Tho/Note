@@ -6,7 +6,7 @@ Not Started
 
 ## Objective
 
-Implement the remaining P1 organization, Favorites, Archive, and permanent deletion features.
+Implement the remaining P1 organization, Favorites, Archive, and permanent deletion vertical slice.
 
 ## Depends On
 
@@ -15,17 +15,28 @@ Implement the remaining P1 organization, Favorites, Archive, and permanent delet
 - `09-minimum-tags.md`
 - `10-search.md`
 
-## Checklist
+## Backend
 
 - [ ] Create and rename notebooks.
 - [ ] Delete notebooks and unassign their notes.
 - [ ] Move notes between notebooks.
-- [ ] Add full tag browsing.
 - [ ] Favorite and unfavorite notes.
-- [ ] Add the Favorites view.
 - [ ] Archive and unarchive notes.
-- [ ] Add the Archive view.
 - [ ] Permanently delete Trashed notes after confirmation.
+
+## Frontend
+
+- [ ] Add notebook creation, rename, deletion, and note-movement controls.
+- [ ] Add full tag browsing.
+- [ ] Add favorite controls and the Favorites view.
+- [ ] Add archive controls and the Archive view.
+- [ ] Add confirmed permanent deletion from Trash.
+- [ ] Handle loading, empty, success, and failure states.
+
+## Integration and Tests
+
+- [ ] Connect organization, Favorites, Archive, and deletion UI to the API.
+- [ ] Add API, component, ownership, recovery, data-loss, and end-to-end tests.
 
 ## Tests and Evidence
 

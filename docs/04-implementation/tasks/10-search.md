@@ -6,7 +6,7 @@ Not Started
 
 ## Objective
 
-Implement fast, authorized P0 Search across Active and Archived notes.
+Implement the fast, authorized P0 Search vertical slice across Active and Archived notes.
 
 ## Depends On
 
@@ -15,7 +15,7 @@ Implement fast, authorized P0 Search across Active and Archived notes.
 - `09-minimum-tags.md`
 - `../../03-design/06-search.md`
 
-## Checklist
+## Backend
 
 - [ ] Build the searchable text projection.
 - [ ] Add the PostgreSQL full-text search vector and GIN index.
@@ -25,6 +25,17 @@ Implement fast, authorized P0 Search across Active and Archived notes.
 - [ ] Exclude Trashed notes.
 - [ ] Add ranking and pagination.
 - [ ] Add empty-query and empty-result handling.
+
+## Frontend
+
+- [ ] Add the search input and search results view.
+- [ ] Add filters, pagination, and result states.
+- [ ] Handle empty query, no results, loading, and failure states.
+
+## Integration and Tests
+
+- [ ] Connect search controls to the API.
+- [ ] Add API, component, authorization, performance, and end-to-end tests.
 
 ## Tests and Evidence
 
