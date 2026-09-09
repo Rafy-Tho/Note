@@ -97,8 +97,8 @@ The exact script implementation may be finalized with the frontend/backend layou
 
 - Tool choices recorded in this file.
 - Reasons recorded for important dependency choices.
-- No selected dependency has a known blocking security or license issue; verify this when dependencies are selected and before installation.
-- Commands for install, lint, test, and database setup are defined; verify the scripts during bootstrap.
+- Verify the installed dependency tree's licenses and review updates before adoption.
+- Commands for install, lint, test, and database setup are defined in the root package scripts and must be verified during bootstrap.
 
 ## Completion Gate
 

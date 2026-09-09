@@ -12,7 +12,7 @@
 | Field | Value |
 | --- | --- |
 | Current phase | Implementation |
-| Current step | Step 0 - Confirm Tools |
+| Current step | Step 1 - Bootstrap Project |
 | Overall status | In Progress |
 | Blocker | No application source code exists yet. |
 | Last updated | 2026-09-09 |
@@ -21,8 +21,8 @@
 
 | Step | Work package | Status | Gate | Evidence / notes |
 | --- | --- | --- | --- | --- |
-| 0 | Confirm tools | In Progress | Technical choices recorded. | Baseline recorded in `tasks/00-tooling-decisions.md`; dependency/license verification and executable script validation remain for bootstrap. |
-| 1 | Bootstrap project | Not Started | Frontend, backend, database, and tests run locally. | |
+| 0 | Confirm tools | In Progress | Technical choices recorded. | Baseline and dependency choices are recorded; dependency/license review remains open. |
+| 1 | Bootstrap project | In Progress | Frontend, backend, database, and tests run locally. | Frontend build/dev server, backend startup, lint, format, API tests, unit tests, and build pass. Docker is unavailable, so PostgreSQL and database-dependent checks remain blocked. |
 | 2 | Database foundation | Not Started | Clean migrations succeed. | |
 | 3 | Backend foundation | Not Started | API responses and errors are consistent. | |
 | 4 | Authentication | Not Started | Registration, sign-in, sign-out, and sessions work securely. | |

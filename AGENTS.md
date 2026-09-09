@@ -2,8 +2,8 @@
 
 ## Repository State
 
-- This repository is still at implementation Step 0; no application source, package manifest, lockfile, or developer command exists yet.
-- Record package manager, test frameworks, formatter, linter, migration tool, PostgreSQL setup, and environment variables in `docs/04-implementation/tasks/00-tooling-decisions.md` before bootstrapping code.
+- The repository is in implementation Step 1: the React/Vite frontend and Express backend are scaffolded, while database-dependent work remains blocked until PostgreSQL is available locally.
+- Keep package manager, test frameworks, formatter, linter, migration tool, PostgreSQL setup, and environment variables aligned with `docs/04-implementation/tasks/00-tooling-decisions.md`.
 - Follow the ordered gates in `docs/04-implementation/01-development-plan.md`; update status and evidence in `docs/04-implementation/03-progress-tracking.md` as work starts and finishes.
 
 ## Architecture And Security
