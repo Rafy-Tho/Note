@@ -1,4 +1,14 @@
 import { useEffect } from 'react';
+import {
+  Bold,
+  Code,
+  Heading1,
+  Heading2,
+  Italic,
+  Link as LinkIcon,
+  List,
+  ListOrdered,
+} from 'lucide-react';
 import { EditorContent, useEditor } from '@tiptap/react';
 import Link from '@tiptap/extension-link';
 import StarterKit from '@tiptap/starter-kit';
@@ -67,7 +77,7 @@ export function NoteEditor({ content, onChange }) {
             editor.chain().focus().toggleHeading({ level: 1 }).run()
           }
         >
-          H1
+          <Heading1 className="icon" size={16} aria-hidden="true" />
         </ToolbarButton>
         <ToolbarButton
           label="Heading 2"
@@ -76,49 +86,49 @@ export function NoteEditor({ content, onChange }) {
             editor.chain().focus().toggleHeading({ level: 2 }).run()
           }
         >
-          H2
+          <Heading2 className="icon" size={16} aria-hidden="true" />
         </ToolbarButton>
         <ToolbarButton
           label="Bold"
           active={editor.isActive('bold')}
           onClick={() => editor.chain().focus().toggleBold().run()}
         >
-          B
+          <Bold className="icon" size={16} aria-hidden="true" />
         </ToolbarButton>
         <ToolbarButton
           label="Italic"
           active={editor.isActive('italic')}
           onClick={() => editor.chain().focus().toggleItalic().run()}
         >
-          I
+          <Italic className="icon" size={16} aria-hidden="true" />
         </ToolbarButton>
         <ToolbarButton
           label="Bulleted list"
           active={editor.isActive('bulletList')}
           onClick={() => editor.chain().focus().toggleBulletList().run()}
         >
-          List
+          <List className="icon" size={16} aria-hidden="true" />
         </ToolbarButton>
         <ToolbarButton
           label="Numbered list"
           active={editor.isActive('orderedList')}
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
         >
-          1.
+          <ListOrdered className="icon" size={16} aria-hidden="true" />
         </ToolbarButton>
         <ToolbarButton
           label="Code block"
           active={editor.isActive('codeBlock')}
           onClick={() => editor.chain().focus().toggleCodeBlock().run()}
         >
-          Code
+          <Code className="icon" size={16} aria-hidden="true" />
         </ToolbarButton>
         <ToolbarButton
           label="Link"
           active={editor.isActive('link')}
           onClick={setLink}
         >
-          Link
+          <LinkIcon className="icon" size={16} aria-hidden="true" />
         </ToolbarButton>
       </div>
       <EditorContent editor={editor} />

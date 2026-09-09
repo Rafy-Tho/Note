@@ -8,6 +8,7 @@
   margin-bottom: 32px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
 }
 .tab,
 .tabActive {
@@ -26,6 +27,7 @@
   color: var(--color-text);
   background: var(--color-surface-elevated);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
 }
 .heading {
   margin-bottom: 27px;
@@ -78,6 +80,7 @@
   outline: none;
   color: var(--color-text);
   background: var(--color-surface);
+  border-radius: var(--radius-control);
   font:
     13px 'JetBrains Mono',
     monospace;
@@ -99,6 +102,9 @@
     monospace;
 }
 .textButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   padding: 0;
   border: 0;
   color: var(--color-interaction);
@@ -115,6 +121,7 @@
   border: 1px solid var(--color-border);
   color: var(--color-text-muted);
   background: var(--color-surface);
+  border-radius: var(--radius-control);
   font:
     11px 'JetBrains Mono',
     monospace;
@@ -139,6 +146,7 @@
   border: 0;
   color: var(--color-bg);
   background: var(--color-primary);
+  border-radius: var(--radius-control);
   font:
     600 12px 'JetBrains Mono',
     monospace;

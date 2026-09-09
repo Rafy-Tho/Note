@@ -1,4 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  Archive,
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  LogOut,
+  Menu,
+  Plus,
+  RotateCcw,
+  Search,
+  Star,
+  Tags,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { Alert } from '../../../components/Alert/Alert.jsx';
 import { Brand } from '../../../components/Brand/Brand.jsx';
 import { authApi } from '../../auth/api/authApi.js';
@@ -521,7 +537,8 @@ export function Workspace({ session, onSignOut }) {
             aria-expanded={mobileMenuOpen}
             onClick={() => setMobileMenuOpen(true)}
           >
-            Menu
+            <Menu className="icon" size={17} aria-hidden="true" />
+            <span>Menu</span>
           </button>
           <Brand />
         </div>
@@ -551,18 +568,19 @@ export function Workspace({ session, onSignOut }) {
               aria-label="Close navigation"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Close
+              <X className="icon" size={17} aria-hidden="true" />
+              <span>Close</span>
             </button>
           </div>
           <nav className={styles.nav}>
             {[
-              ['notes', 'Notes'],
-              ['favorites', 'Favorites'],
-              ['archive', 'Archive'],
-              ['tags', 'Tags'],
-              ['search', 'Search'],
-              ['trash', 'Trash'],
-            ].map(([navView, label]) => (
+              ['notes', 'Notes', FileText],
+              ['favorites', 'Favorites', Star],
+              ['archive', 'Archive', Archive],
+              ['tags', 'Tags', Tags],
+              ['search', 'Search', Search],
+              ['trash', 'Trash', Trash2],
+            ].map(([navView, label, Icon]) => (
               <button
                 className={styles.navButton}
                 type="button"
@@ -570,7 +588,10 @@ export function Workspace({ session, onSignOut }) {
                 aria-current={view === navView ? 'page' : undefined}
                 onClick={() => switchView(navView)}
               >
-                <span>{label}</span>
+                <span className={styles.navLabel}>
+                  <Icon className="icon" size={16} aria-hidden="true" />
+                  <span>{label}</span>
+                </span>
                 {view === navView && <span aria-hidden="true">/</span>}
               </button>
             ))}
@@ -581,7 +602,8 @@ export function Workspace({ session, onSignOut }) {
             onClick={signOut}
             disabled={busy}
           >
-            {busy ? 'Signing out...' : 'Sign out'}
+            <LogOut className="icon" size={16} aria-hidden="true" />
+            <span>{busy ? 'Signing out...' : 'Sign out'}</span>
           </button>
         </aside>
         <section
@@ -611,7 +633,8 @@ export function Workspace({ session, onSignOut }) {
                 onClick={createNote}
                 disabled={busy}
               >
-                + New note
+                <Plus className="icon" size={16} aria-hidden="true" />
+                <span>New note</span>
               </button>
             )}
           </div>
@@ -622,7 +645,8 @@ export function Workspace({ session, onSignOut }) {
               type="button"
               onClick={loadWorkspace}
             >
-              Retry loading workspace
+              <RotateCcw className="icon" size={15} aria-hidden="true" />
+              <span>Retry loading workspace</span>
             </button>
           )}
           {view === 'search' ? (
@@ -635,7 +659,8 @@ export function Workspace({ session, onSignOut }) {
                   placeholder="Search title, content, or tags"
                 />
                 <button className={styles.primaryButton} type="submit">
-                  Search
+                  <Search className="icon" size={15} aria-hidden="true" />
+                  <span>Search</span>
                 </button>
               </form>
               {searchStatus === 'loading' ? (
@@ -678,7 +703,8 @@ export function Workspace({ session, onSignOut }) {
                       onClick={() => submitSearch(null, searchPage - 1)}
                       disabled={searchPage === 1}
                     >
-                      Previous
+                      <ChevronLeft className="icon" size={15} aria-hidden="true" />
+                      <span>Previous</span>
                     </button>
                     <span>Page {searchPage}</span>
                     <button
@@ -686,7 +712,8 @@ export function Workspace({ session, onSignOut }) {
                       onClick={() => submitSearch(null, searchPage + 1)}
                       disabled={searchPage * 20 >= searchTotal}
                     >
-                      Next
+                      <span>Next</span>
+                      <ChevronRight className="icon" size={15} aria-hidden="true" />
                     </button>
                   </div>
                 </>
@@ -715,14 +742,16 @@ export function Workspace({ session, onSignOut }) {
                     onClick={() => restoreNote(note)}
                     disabled={busy}
                   >
-                    Restore
+                    <RotateCcw className="icon" size={15} aria-hidden="true" />
+                    <span>Restore</span>
                   </button>
                   <button
                     className={styles.dangerButton}
                     onClick={() => permanentlyDelete(note)}
                     disabled={busy}
                   >
-                    Delete permanently
+                    <Trash2 className="icon" size={15} aria-hidden="true" />
+                    <span>Delete permanently</span>
                   </button>
                 </div>
               ))}
@@ -811,7 +840,8 @@ export function Workspace({ session, onSignOut }) {
             type="button"
             onClick={() => setMobilePane('collection')}
           >
-            Back to {view === 'notes' ? 'notes' : view}
+            <ArrowLeft className="icon" size={15} aria-hidden="true" />
+            <span>Back to {view === 'notes' ? 'notes' : view}</span>
           </button>
           {draft ? (
             <>
@@ -824,14 +854,25 @@ export function Workspace({ session, onSignOut }) {
                   onClick={() => void saveDraft()}
                   disabled={saveStatus === 'Saved' || saveStatus === 'Saving'}
                 >
-                  {saveStatus === 'Save Failed' ? 'Retry save' : 'Save'}
+                  {saveStatus === 'Save Failed' ? (
+                    <>
+                      <RotateCcw className="icon" size={15} aria-hidden="true" />
+                      <span>Retry save</span>
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="icon" size={15} aria-hidden="true" />
+                      <span>Save</span>
+                    </>
+                  )}
                 </button>
                 {conflict && (
                   <button
                     className={styles.secondaryButton}
                     onClick={reloadServerCopy}
                   >
-                    Reload server copy
+                    <RotateCcw className="icon" size={15} aria-hidden="true" />
+                    <span>Reload server copy</span>
                   </button>
                 )}
                 <button
@@ -839,21 +880,24 @@ export function Workspace({ session, onSignOut }) {
                   onClick={trashCurrentNote}
                   disabled={busy || saveStatus === 'Saving'}
                 >
-                  Move to Trash
+                  <Trash2 className="icon" size={15} aria-hidden="true" />
+                  <span>Move to Trash</span>
                 </button>
                 <button
                   className={styles.secondaryButton}
                   onClick={() => void setNoteFavorite(draft, !draft.isFavorite)}
                   disabled={busy}
                 >
-                  {draft.isFavorite ? 'Unfavorite' : 'Favorite'}
+                  <Star className="icon" size={15} aria-hidden="true" />
+                  <span>{draft.isFavorite ? 'Unfavorite' : 'Favorite'}</span>
                 </button>
                 <button
                   className={styles.secondaryButton}
                   onClick={() => void changeArchive(draft)}
                   disabled={busy}
                 >
-                  {draft.state === 'archived' ? 'Unarchive' : 'Archive'}
+                  <Archive className="icon" size={15} aria-hidden="true" />
+                  <span>{draft.state === 'archived' ? 'Unarchive' : 'Archive'}</span>
                 </button>
               </div>
               <input

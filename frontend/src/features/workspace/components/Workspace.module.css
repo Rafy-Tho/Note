@@ -13,8 +13,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  min-height: 72px;
-  padding: 16px 24px;
+  min-height: 56px;
+  padding: 12px 20px;
   border-bottom: 1px solid var(--color-border);
   background: var(--color-sidebar);
 }
@@ -47,12 +47,12 @@
 .layout {
   display: grid;
   grid-template-columns: 220px minmax(280px, 340px) 1fr;
-  min-height: calc(100vh - 72px);
+  min-height: calc(100vh - 56px);
 }
 .sidebar {
   display: flex;
   flex-direction: column;
-  padding: 24px 16px;
+  padding: 18px 12px;
   border-right: 1px solid var(--color-border);
   background: var(--color-sidebar);
 }
@@ -73,8 +73,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 44px;
-  padding: 10px 9px;
+  min-height: 40px;
+  padding: 9px 10px;
   border: 1px solid transparent;
   color: var(--color-text-muted);
   background: transparent;
@@ -82,6 +82,11 @@
   font:
     12px 'JetBrains Mono',
     monospace;
+}
+.navLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
 }
 .navButton:hover,
 .navButton[aria-current='page'] {
@@ -100,10 +105,11 @@
 .collection {
   border-right: 1px solid var(--color-border);
   background: var(--color-sidebar);
+  overflow: auto;
 }
 .collectionHeader {
   align-items: flex-end;
-  padding: 24px;
+  padding: 20px;
   border-bottom: 1px solid var(--color-border);
 }
 .eyebrow {
@@ -119,10 +125,15 @@ h1 {
 }
 .primaryButton,
 .saveButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   padding: 10px 14px;
   border: 1px solid var(--color-primary);
   color: var(--color-bg);
   background: var(--color-primary);
+  border-radius: var(--radius-control);
   font:
     12px 'JetBrains Mono',
     monospace;
@@ -132,10 +143,15 @@ h1 {
   background: var(--color-primary-hover);
 }
 .secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   padding: 9px 13px;
   border: 1px solid var(--color-border);
   color: var(--color-text-muted);
   background: var(--color-surface);
+  border-radius: var(--radius-control);
   font:
     11px 'JetBrains Mono',
     monospace;
@@ -145,10 +161,15 @@ h1 {
   border-color: var(--color-interaction);
 }
 .dangerButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   padding: 9px 13px;
   border: 1px solid var(--color-danger);
   color: var(--color-danger);
   background: transparent;
+  border-radius: var(--radius-control);
   font:
     11px 'JetBrains Mono',
     monospace;
@@ -159,20 +180,27 @@ h1 {
 }
 .noteList {
   display: grid;
+  gap: 1px;
+  padding: 8px;
+  background: var(--color-border);
 }
 .noteRow {
   display: grid;
   gap: 7px;
-  padding: 18px 24px;
+  min-width: 0;
+  padding: 15px 16px;
   border: 0;
   border-bottom: 1px solid var(--color-border);
   color: var(--color-text-muted);
-  background: transparent;
+  background: var(--color-sidebar);
   text-align: left;
 }
 .noteRow:hover,
 .selected {
   background: var(--color-surface);
+}
+.selected {
+  box-shadow: inset 3px 0 0 var(--color-interaction);
 }
 .noteRow strong {
   overflow: hidden;
@@ -188,7 +216,7 @@ h1 {
   white-space: nowrap;
 }
 .empty {
-  margin: 32px 24px;
+  margin: 24px 20px;
   padding: 28px 18px;
   border: 1px dashed var(--color-border);
   color: var(--color-text-muted);
@@ -207,7 +235,9 @@ h1 {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  padding: 28px clamp(24px, 6vw, 88px);
+  min-height: calc(100vh - 56px);
+  padding: 24px clamp(24px, 6vw, 88px) 56px;
+  background: var(--color-bg);
 }
 .backToCollection {
   align-self: flex-start;
@@ -222,7 +252,9 @@ h1 {
 }
 .editorHeader {
   justify-content: flex-end;
-  min-height: 34px;
+  min-height: 36px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-border);
 }
 .saveStatus {
   margin-right: auto;
@@ -236,7 +268,7 @@ h1 {
   background: transparent;
 }
 .titleInput {
-  margin: 64px 0 28px;
+  margin: 42px 0 20px;
   font-size: clamp(28px, 4vw, 42px);
   font-weight: 600;
   letter-spacing: -0.05em;
@@ -295,7 +327,7 @@ h1 {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  padding: 10px 0;
+  padding: 9px 0;
   border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
 }
@@ -306,6 +338,7 @@ h1 {
   border: 1px solid var(--color-border);
   color: var(--color-text-muted);
   background: transparent;
+  border-radius: var(--radius-control);
   font:
     12px 'JetBrains Mono',
     monospace;
@@ -319,7 +352,7 @@ h1 {
 .tagControls {
   display: grid;
   gap: 10px;
-  margin-bottom: 24px;
+  margin-bottom: 18px;
   padding: 12px 0;
   border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
@@ -330,7 +363,7 @@ h1 {
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 24px;
+  margin-bottom: 18px;
   padding: 12px 0;
   border-top: 1px solid var(--color-border);
   border-bottom: 1px solid var(--color-border);
@@ -344,6 +377,7 @@ h1 {
   border: 1px solid var(--color-border);
   color: var(--color-text);
   background: var(--color-surface);
+  border-radius: var(--radius-control);
   font-size: 12px;
 }
 .notebookControls form {
@@ -401,6 +435,7 @@ h1 {
   border: 1px solid var(--color-interaction);
   color: var(--color-text);
   background: var(--color-surface);
+  border-radius: var(--radius-control);
   font-size: 12px;
 }
 .tagChip button {
@@ -419,6 +454,7 @@ h1 {
   border: 1px solid var(--color-border);
   color: var(--color-text);
   background: var(--color-surface);
+  border-radius: var(--radius-control);
   font-size: 12px;
 }
 .newTagForm input {
@@ -437,6 +473,7 @@ h1 {
   border: 1px solid var(--color-border);
   color: var(--color-text);
   background: var(--color-surface);
+  border-radius: var(--radius-control);
 }
 .searchResults {
   display: grid;
@@ -485,10 +522,13 @@ h1 {
   .menuButton,
   .closeMenuButton,
   .backToCollection {
-    display: block;
+    display: inline-flex;
   }
   .menuButton,
   .closeMenuButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
     padding: 8px 0;
     border: 0;
     color: var(--color-interaction);
@@ -496,6 +536,10 @@ h1 {
     font:
       12px 'JetBrains Mono',
       monospace;
+  }
+  .backToCollection {
+    align-items: center;
+    gap: 7px;
   }
   .topbarActions {
     min-width: 0;
@@ -532,7 +576,7 @@ h1 {
     border-right: 0;
   }
   .editor {
-    min-height: calc(100vh - 72px);
+    min-height: calc(100vh - 56px);
     padding: 20px 16px;
   }
   .mobileHidden {

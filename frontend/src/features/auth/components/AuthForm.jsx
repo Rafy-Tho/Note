@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { Alert } from '../../../components/Alert/Alert.jsx';
 import { authApi } from '../api/authApi.js';
 import { validateCredentials } from '../authValidation.js';
@@ -79,7 +80,7 @@ export function AuthForm({ onAuthenticated }) {
         <h1 id="auth-title">
           {isRegister ? 'Create your vault' : 'Sign in to your vault'}
         </h1>
-        <p>Private, focused notes for the things worth remembering.</p>
+        <p>Private, client-encrypted personal note workspace.</p>
       </div>
       <form className={styles.form} onSubmit={handleSubmit} noValidate>
         {success && <Alert tone="success">{success}</Alert>}
@@ -110,7 +111,17 @@ export function AuthForm({ onAuthenticated }) {
               type="button"
               onClick={() => setShowPassword(!showPassword)}
             >
-              {showPassword ? 'Hide' : 'Show'}
+              {showPassword ? (
+                <>
+                  <EyeOff className="icon" size={14} aria-hidden="true" />
+                  <span>Hide</span>
+                </>
+              ) : (
+                <>
+                  <Eye className="icon" size={14} aria-hidden="true" />
+                  <span>Show</span>
+                </>
+              )}
             </button>
           </div>
           <input
@@ -144,7 +155,7 @@ export function AuthForm({ onAuthenticated }) {
             : isRegister
               ? 'Create Account'
               : 'Unlock Workspace'}
-          {!busy && <span aria-hidden="true">→</span>}
+          {!busy && <ArrowRight className="icon" size={16} aria-hidden="true" />}
         </button>
         <p className={styles.switchCopy}>
           {isRegister ? 'Already have a vault?' : "Don't have a vault yet?"}{' '}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Plus, X } from 'lucide-react';
 import { Alert } from '../../../components/Alert/Alert.jsx';
 import { tagsApi } from '../api/tagsApi.js';
 import styles from '../../workspace/components/Workspace.module.css';
@@ -85,7 +86,7 @@ export function TagControls({ noteId, tags, onTagsChange, disabled = false }) {
                 onClick={() => remove(tag.id)}
                 disabled={disabled}
               >
-                x
+                <X className="icon" size={13} aria-hidden="true" />
               </button>
             </span>
           ))
@@ -113,7 +114,8 @@ export function TagControls({ noteId, tags, onTagsChange, disabled = false }) {
           onClick={() => assign(selectedTagId)}
           disabled={disabled || !selectedTagId}
         >
-          Add tag
+          <Plus className="icon" size={14} aria-hidden="true" />
+          <span>Add tag</span>
         </button>
         <form className={styles.newTagForm} onSubmit={createAndAssign}>
           <input
@@ -128,7 +130,8 @@ export function TagControls({ noteId, tags, onTagsChange, disabled = false }) {
             type="submit"
             disabled={disabled}
           >
-            Create
+            <Plus className="icon" size={14} aria-hidden="true" />
+            <span>Create</span>
           </button>
         </form>
       </div>
