@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress
+Complete
 
 ## Objective
 
@@ -26,7 +26,7 @@ Create the initial frontend, backend, database connection, scripts, and local de
 
 - Frontend build and local dev-server startup succeed.
 - Backend test suite and local server startup succeed.
-- Database connection is blocked because Docker is unavailable and no local PostgreSQL service is configured.
+- Local PostgreSQL connection and migration commands succeed.
 - Unit/API test commands pass; E2E has no journeys yet and passes with `--pass-with-no-tests`.
 
 ## Completion Gate

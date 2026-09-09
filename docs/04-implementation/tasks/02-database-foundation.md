@@ -2,7 +2,7 @@
 
 ## Status
 
-Not Started
+Complete
 
 ## Objective
 
@@ -15,19 +15,19 @@ Implement the PostgreSQL schema, migrations, constraints, indexes, and developme
 
 ## Checklist
 
-- [ ] Create versioned migrations.
-- [ ] Create users and sessions tables.
-- [ ] Create notes, notebooks, tags, and note-tags tables.
-- [ ] Add foreign keys and unique constraints.
-- [ ] Add note state and revision fields.
-- [ ] Add ownership and search indexes.
-- [ ] Add development and test seed data.
+- [x] Create versioned migrations.
+- [x] Create users and sessions tables.
+- [x] Create notes, notebooks, tags, and note-tags tables.
+- [x] Add foreign keys and unique constraints.
+- [x] Add note state and revision fields.
+- [x] Add ownership and search indexes.
+- [x] Add development and test seed data.
 
 ## Tests and Evidence
 
-- Migrations succeed on a clean database.
-- Rollback or recovery behavior is documented where supported.
-- Constraints reject invalid relationships and duplicate values.
+- Migrations succeeded on the local PostgreSQL database, including rollback and reapply.
+- Development seed data loaded using the local-only `SEED_PASSWORD` environment variable.
+- Integration coverage verified duplicate notebook names and passed against local PostgreSQL.
 
 ## Completion Gate
 

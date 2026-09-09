@@ -12,18 +12,18 @@
 | Field | Value |
 | --- | --- |
 | Current phase | Implementation |
-| Current step | Step 1 - Bootstrap Project |
+| Current step | Step 3 - Backend Foundation |
 | Overall status | In Progress |
-| Blocker | No application source code exists yet. |
+| Blocker | None for the completed bootstrap and database gates. |
 | Last updated | 2026-09-09 |
 
 ## Implementation Progress
 
 | Step | Work package | Status | Gate | Evidence / notes |
 | --- | --- | --- | --- | --- |
-| 0 | Confirm tools | In Progress | Technical choices recorded. | Baseline and dependency choices are recorded; dependency/license review remains open. |
-| 1 | Bootstrap project | In Progress | Frontend, backend, database, and tests run locally. | Frontend build/dev server, backend startup, lint, format, API tests, unit tests, and build pass. Docker is unavailable, so PostgreSQL and database-dependent checks remain blocked. |
-| 2 | Database foundation | Not Started | Clean migrations succeed. | |
+| 0 | Confirm tools | Complete | Technical choices recorded. | Baseline, dependency choices, and installed dependency license review are recorded. |
+| 1 | Bootstrap project | Complete | Frontend, backend, database, and tests run locally. | Frontend build/dev server, backend startup, lint, format, API tests, unit tests, and local PostgreSQL connection pass. |
+| 2 | Database foundation | Complete | Clean migrations succeed. | Migrations, rollback/reapply, seed, indexes, constraints, and integration test pass against local PostgreSQL. |
 | 3 | Backend foundation | Not Started | API responses and errors are consistent. | |
 | 4 | Authentication | Not Started | Registration, sign-in, sign-out, and sessions work securely. | |
 | 5 | Authorization | Not Started | Cross-user access is denied. | |

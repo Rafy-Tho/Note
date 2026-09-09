@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress
+Complete
 
 ## Objective
 
@@ -78,6 +78,8 @@ npm run test:api
 npm run test:e2e
 npm run db:migrate
 npm run db:rollback
+npm run db:seed
+npm run test:db
 ```
 
 The exact script implementation may be finalized with the frontend/backend layout during Step 1. Database commands require the local PostgreSQL Compose service to be running.
@@ -91,13 +93,13 @@ The exact script implementation may be finalized with the frontend/backend layou
 - [x] Define development, test, and production environment variables.
 - [x] Choose formatting and linting tools.
 - [x] Choose the migration tool.
-- [ ] Record dependency and license decisions after the package manifest is created.
+- [x] Record dependency and license decisions after the package manifest is created.
 
 ## Required Evidence
 
 - Tool choices recorded in this file.
 - Reasons recorded for important dependency choices.
-- Verify the installed dependency tree's licenses and review updates before adoption.
+- Installed dependency licenses were reviewed as part of bootstrap; review dependency updates before adoption.
 - Commands for install, lint, test, and database setup are defined in the root package scripts and must be verified during bootstrap.
 
 ## Completion Gate
