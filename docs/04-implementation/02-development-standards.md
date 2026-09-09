@@ -1,0 +1,62 @@
+# Development Standards
+
+## Purpose
+
+This document defines the minimum standards for implementing and reviewing MVP code.
+
+## Code Structure
+
+- Keep frontend, API, application, and data-access responsibilities separate.
+- Organize code by feature where this improves ownership and navigation.
+- Keep business rules in the application or backend layer.
+- Keep database queries out of UI components.
+- Reuse shared validation and error-handling behavior.
+
+## Coding Rules
+
+- Use consistent naming and formatting.
+- Validate all external input on the server.
+- Do not trust client-provided ownership or user identifiers.
+- Do not log passwords, tokens, secrets, or private note content.
+- Keep functions and modules focused.
+- Avoid abstractions that do not solve a current requirement.
+
+## Database and API Rules
+
+- All schema changes use versioned migrations.
+- Destructive migrations require review and a recovery plan.
+- API responses follow the format in `03-api.md`.
+- Protected queries include the authenticated user's ownership condition.
+- Related changes use appropriate transactions.
+- API changes update the API Design document and affected acceptance criteria.
+
+## Testing Rules
+
+Each feature should include the tests needed for its risk and behavior:
+
+- Unit tests for business rules.
+- API or integration tests for persistence and authorization.
+- Component tests for important UI behavior.
+- End-to-end tests for core user journeys.
+- Security tests for ownership and protected routes.
+- Autosave tests for failures, retries, and stale revisions.
+
+## Work and Review Rules
+
+- Keep work limited to one feature or fix where practical.
+- Link implementation work to requirement or acceptance IDs.
+- Review security and data-loss impact before merging.
+- Run formatting, linting, and relevant tests before review.
+- Do not merge code with failing required checks.
+
+## Definition of Done
+
+A feature is complete when:
+
+- Its requirements and acceptance criteria are satisfied.
+- Input validation and server-side authorization are implemented.
+- Success, loading, empty, and failure states are handled.
+- Relevant automated tests pass.
+- Responsive and keyboard behavior is checked where applicable.
+- No known critical security, data-loss, or regression issue remains.
+- Related documentation and traceability are updated.
