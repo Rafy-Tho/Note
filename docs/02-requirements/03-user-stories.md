@@ -17,6 +17,12 @@ User stories describe user outcomes. Each story maps to one or more functional r
 | US-02 | P0 | As a registered user, I want to sign in so that I can access my notes. | FR-02, FR-04 |
 | US-03 | P0 | As an authenticated user, I want to sign out so that my session is no longer usable. | FR-03 |
 | US-04 | P0 | As a user, I want my notes and organization data to remain private. | FR-04, FR-05 |
+| US-41 | P0 | As a new user, I want to verify my email so that my private notes are protected. | FR-46, FR-51 |
+| US-42 | P0 | As a visitor, I want to sign in with Google so that I can access my notes without creating another password. | FR-47 |
+| US-43 | P0 | As a visitor, I want to sign in with Facebook so that I can access my notes without creating another password. | FR-48 |
+| US-44 | P0 | As an authenticated user, I want to link a supported provider so that I can use it for future sign-ins. | FR-49, FR-50 |
+| US-45 | P0 | As a user who forgot my password, I want to request a reset email without exposing whether my account exists. | FR-52, FR-55 |
+| US-46 | P0 | As a user with a valid reset link, I want to choose a new password and invalidate old sessions. | FR-53, FR-54 |
 
 ## Notes and Editing
 
@@ -94,4 +100,4 @@ User stories describe user outcomes. Each story maps to one or more functional r
 
 ## Out of Scope
 
-The MVP has no stories for profile management, general settings, password reset, email verification, account deletion, data export, sharing, collaboration, AI, native mobile applications, or full offline synchronization.
+The MVP has no stories for profile management, general settings, Telegram sign-in or sign-up, account deletion, data export, sharing, collaboration, AI, native mobile applications, or full offline synchronization.

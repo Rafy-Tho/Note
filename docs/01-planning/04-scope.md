@@ -10,6 +10,10 @@ The MVP is a responsive web application for managing private personal notes. It 
 
 - Account registration
 - Sign-in and sign-out
+- Mandatory email verification
+- Password reset through verified email
+- Google and Facebook sign-in
+- Authenticated provider linking
 - Protected private resources
 - Server-side ownership authorization
 
@@ -55,6 +59,7 @@ The MVP is a responsive web application for managing private personal notes. It 
 - Native Android or iOS applications
 - Full offline-first editing and conflict resolution
 - Advanced permission models
+- Telegram sign-in or sign-up
 - Attachments and advanced media support
 - Version history and knowledge graphs
 - Productivity analytics
@@ -73,7 +78,7 @@ The MVP is a responsive web application for managing private personal notes. It 
 The MVP is complete when the following workflow works reliably and securely:
 
 ```text
-Register or sign in
+Register, verify email, reset a password, or sign in with Google/Facebook
         ↓
 Create and edit rich-text note
         ↓

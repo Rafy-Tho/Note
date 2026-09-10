@@ -10,7 +10,7 @@ This document defines the ordered tasks for implementing, testing, and preparing
 - Test each feature as it is built.
 - Complete security and P0 workflows before P1 features.
 - Keep implementation aligned with the approved Design documents.
-- Do not implement out-of-scope features.
+- Do not implement out-of-scope features. Telegram sign-in and sign-up remain deferred.
 
 ## Step 0 - Confirm Tools
 
@@ -66,9 +66,15 @@ Backend behavior
 
 ## Step 6 - Authentication Slice
 
-Complete registration, sign-in, sign-out, session-aware routing, authentication forms, validation feedback, protected-route behavior, and end-to-end authentication journeys.
+Complete registration, mandatory email verification, sign-in, sign-out, session-aware routing, authentication forms, validation feedback, protected-route behavior, and end-to-end authentication journeys.
 
 **Gate:** A user can register, sign in, use a protected route, and sign out safely from the supported browsers.
+
+## Step 6A - Authentication Provider Expansion
+
+Implement Resend-backed email verification and password reset, Google and Facebook authorization-code callbacks, provider identity resolution, authenticated provider linking, collision protection, callback state validation, provider configuration, and restricted access for unverified accounts. Telegram sign-in and sign-up remain future scope.
+
+**Gate:** A user must verify email before accessing private notes; users can safely reset passwords; valid Google and Facebook users can sign in; existing users can link providers without automatic account merging; invalid callbacks and identity collisions are rejected.
 
 ## Step 7 - Core Notes Slice
 
@@ -144,6 +150,8 @@ Resolve these before relying on them in product code:
 - Rich-text editor and serialization
 - Rich-text sanitization
 - Session and CSRF behavior
+- Email verification delivery and token lifecycle
+- Google and Facebook provider callback validation
 - PostgreSQL full-text search
 - Autosave revision conflicts
 

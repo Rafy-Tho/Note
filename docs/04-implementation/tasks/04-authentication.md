@@ -2,11 +2,11 @@
 
 ## Status
 
-In Progress
+Complete for the original password/session foundation. Authentication provider expansion is tracked in `15-authentication-expansion.md`.
 
 ## Objective
 
-Implement the secure authentication foundation and complete the registration, sign-in, session, and sign-out user slice.
+Implement the secure password authentication foundation and complete the registration, sign-in, session, and sign-out user slice.
 
 ## Depends On
 
@@ -49,3 +49,5 @@ Implement the secure authentication foundation and complete the registration, si
 ## Completion Gate
 
 Users can authenticate securely and access protected routes.
+
+Email verification, password reset, and external-provider requirements are not covered by this completed baseline task; they require the expansion task and its separate completion gate.

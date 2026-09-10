@@ -19,6 +19,32 @@ Acceptance criteria define observable conditions for deciding whether MVP behavi
 
 - **Given** an authenticated user selects Sign Out, **when** the operation succeeds, **then** protected resources require authentication again.
 
+### AC-49 - Email Verification
+
+- **Given** a new account has an unverified email, **when** the user requests verification, **then** the system sends a verification message through the configured mail service.
+- **Given** a valid unexpired verification link is opened, **then** the email is marked verified and private note access becomes available.
+- **Given** a token is invalid, expired, or already used, **then** verification fails and private note access remains unavailable.
+- **Given** repeated verification requests exceed the configured limit, **then** the request is rate limited.
+
+### AC-50 - Google and Facebook Sign-In
+
+- **Given** a visitor completes Google or Facebook authentication, **when** the callback is valid and the provider email is verified, **then** the system creates or resolves the account and creates the normal protected session.
+- **Given** the callback state, code, token, issuer, audience, signature, or provider subject is invalid, **then** no session is created.
+- **Given** a provider email matches an existing account but the provider identity is not linked, **then** the system does not merge accounts automatically.
+
+### AC-51 - Provider Linking
+
+- **Given** an authenticated user with a verified email starts linking Google or Facebook, **when** the callback is valid, **then** the provider identity is linked to that user.
+- **Given** the provider identity is already linked to another account, **then** linking is rejected and neither account changes.
+- **Given** an unauthenticated user attempts linking, **then** the operation is rejected.
+
+### AC-52 - Password Reset
+
+- **Given** a visitor submits any email address for password reset, **then** the system returns the same generic response without revealing whether the address is registered.
+- **Given** a registered account has a verified email, **then** a reset message is sent through the configured mail service, subject to rate limits.
+- **Given** a valid unexpired reset link and valid new password, **then** the password is replaced and all existing sessions for that account are revoked.
+- **Given** a reset token is invalid, expired, reused, or over-attempted, **then** the password remains unchanged and no session is created.
+
 ## Notes and Editing
 
 ### AC-04 - Create Note
@@ -204,7 +230,7 @@ Acceptance criteria define observable conditions for deciding whether MVP behavi
 
 | Requirements | Stories | Use cases | Acceptance |
 | --- | --- | --- | --- |
-| FR-01-FR-05 | US-01-US-04 | UC-01-UC-03 | AC-01-AC-03, AC-33, AC-35 |
+| FR-01-FR-05, FR-46-FR-55 | US-01-US-04, US-41-US-46 | UC-01-UC-03, UC-20-UC-23 | AC-01-AC-03, AC-33, AC-35, AC-49-AC-52 |
 | FR-06-FR-08, FR-17-FR-19 | US-05-US-08 | UC-04-UC-06 | AC-04-AC-06 |
 | FR-09-FR-11, FR-13 | US-27-US-29 | UC-15, UC-16 | AC-22-AC-24 |
 | FR-12 | US-30 | UC-17 | AC-25 |

@@ -70,10 +70,19 @@ Error messages must not expose SQL, stack traces, secrets, or another user's res
 | --- | --- | --- |
 | POST | `/auth/register` | Create an account. |
 | POST | `/auth/login` | Create an authenticated session. |
+| GET | `/auth/:provider/start` | Start Google or Facebook authorization. |
+| GET | `/auth/:provider/callback` | Validate the provider callback and create or resolve a session. |
+| POST | `/auth/email/verify` | Consume a verification token and verify the account email. |
+| POST | `/auth/email/verification/resend` | Request a new verification message. |
+| POST | `/auth/password/reset/request` | Request a password-reset message with a generic response. |
+| POST | `/auth/password/reset/confirm` | Consume a valid reset token and set a new password. |
+| GET | `/auth/identities` | List the current user's linked providers. |
+| POST | `/auth/identities/:provider/link` | Start linking Google or Facebook to the current account. |
+| DELETE | `/auth/identities/:provider` | Unlink a provider when another sign-in method remains. |
 | POST | `/auth/logout` | Revoke the current session. |
 | GET | `/auth/session` | Return the current authentication state. |
 
-Registration and login validate email and password. Login failures use a generic error response. Authenticated session responses include a short-lived-use CSRF token for state-changing requests; they never include the opaque session token.
+Registration, password login, and password reset validate their inputs. New accounts remain restricted until email verification succeeds. Password-reset request responses are generic and never disclose account existence. Provider callbacks use server-side state and authorization-code validation. Login failures use generic error responses. Authenticated session responses include a short-lived-use CSRF token for state-changing requests; they never include the opaque session token, provider tokens, or password-reset tokens.
 
 ## Note Endpoints
 

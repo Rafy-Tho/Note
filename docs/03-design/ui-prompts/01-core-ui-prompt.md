@@ -28,7 +28,7 @@ Include only these features:
 - Search by title, content, and tags
 - Responsive desktop, tablet, and mobile browser layouts
 
-Do not include profile pages, general settings, password reset, email verification, AI, sharing, collaboration, team workspaces, attachments, version history, offline synchronization, or native mobile applications.
+Do not include profile pages, general settings, Telegram sign-in or sign-up, AI, sharing, collaboration, team workspaces, attachments, version history, offline synchronization, or native mobile applications. Include email verification, password reset, Google sign-in, and Facebook sign-in states.
 
 VISUAL DIRECTION
 Use a deep-dark, modern SaaS visual style.
@@ -200,7 +200,7 @@ Registration and sign-in must include labeled email and password inputs, passwor
 
 Use a centered form on mobile. On desktop, use a balanced split composition with the form on one side and a restrained product statement or abstract workspace preview on the other. Do not use a marketing hero, stock illustration, or oversized gradient.
 
-Do not add password reset or social login.
+Do not add Telegram sign-in/sign-up. Password reset, Google sign-in, and Facebook sign-in are supported authentication actions.
 
 DASHBOARD
 The dashboard should help users continue writing immediately. Include Recent Notes, New Note, Favorites preview, notebook summary, Search access, Archive access, and Trash access.

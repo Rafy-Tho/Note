@@ -52,6 +52,50 @@ Use cases describe the main interactions between actors and the system. They def
 | Failure | The system does not claim sign-out succeeded while the authenticated state remains active. |
 | References | FR-03, FR-04; US-03 |
 
+### UC-20 - Verify Email Address
+
+| Field | Description |
+| --- | --- |
+| Actor | Unauthenticated visitor or authenticated user |
+| Preconditions | A verification message has been requested for the account. |
+| Main flow | User opens the verification link; system validates the single-use token; system marks the email as verified; private note access becomes available. |
+| Alternatives | User requests a replacement message subject to rate limits. |
+| Failure | Missing, expired, or reused tokens do not verify the email or grant note access. |
+| References | FR-46, FR-51; US-41 |
+
+### UC-21 - Sign In with External Provider
+
+| Field | Description |
+| --- | --- |
+| Actor | Unauthenticated visitor |
+| Preconditions | The selected provider is configured and available. |
+| Main flow | User starts Google or Facebook sign-in; provider authenticates the user; the server validates the callback; the provider identity is resolved to an account; the existing session service creates an authenticated session. |
+| Alternatives | A new account is created only when the provider identity is not linked to another account and the provider supplies a verified email. |
+| Failure | Invalid state, callback, provider response, or unverified email creates no authenticated session. |
+| References | FR-47, FR-48, FR-50; US-42, US-43 |
+
+### UC-22 - Link External Provider
+
+| Field | Description |
+| --- | --- |
+| Actor | Authenticated user |
+| Preconditions | The user has a verified email and an active session. |
+| Main flow | User starts linking Google or Facebook; the server validates the callback and stores the provider subject for the current user. |
+| Alternatives | An already-linked provider is left unchanged. |
+| Failure | A provider identity linked to another account is rejected without changing either account. |
+| References | FR-49, FR-50; US-44 |
+
+### UC-23 - Reset Password
+
+| Field | Description |
+| --- | --- |
+| Actor | Unauthenticated visitor |
+| Preconditions | The password reset flow is available. |
+| Main flow | User submits an email address; system returns a generic response; if appropriate, the system sends a reset message; user opens the link and submits a valid new password; system updates the password and revokes existing sessions. |
+| Alternatives | The user requests another reset message subject to rate limits. |
+| Failure | Invalid, expired, reused, or excessive reset attempts do not change the password or create a session. |
+| References | FR-52-FR-55; US-45, US-46 |
+
 ## Notes and Autosave
 
 ### UC-04 - Create Note

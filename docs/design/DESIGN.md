@@ -89,7 +89,7 @@ Components should provide default, hover, focus, active, disabled, loading, succ
 
 ## Content and Product Boundaries
 
-The frontend supports authentication, private notes, rich-text editing, autosave, notebooks, tags, favorites, archive, trash and restore, permanent deletion, and search. Do not add profile pages, general settings, password reset, social login, sharing, collaboration, attachments, AI, or analytics dashboards to the MVP.
+The frontend supports authentication, mandatory email verification, password reset, Google and Facebook sign-in, private notes, rich-text editing, autosave, notebooks, tags, favorites, archive, trash and restore, permanent deletion, and search. Do not add profile pages, general settings, Telegram sign-in or sign-up, sharing, collaboration, attachments, AI, or analytics dashboards to the MVP.
 
 ## Implementation Rules
 

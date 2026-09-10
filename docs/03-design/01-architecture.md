@@ -69,7 +69,7 @@ The frontend is not a security boundary.
 
 | Module | Responsibility |
 | --- | --- |
-| Authentication | Registration, sign-in, sign-out, and sessions. |
+| Authentication | Registration, email verification, provider adapters, identity linking, sign-in, sign-out, and sessions. |
 | Authorization | Ownership checks for protected operations. |
 | Notes | Note content, metadata, and state transitions. |
 | Notebooks and tags | Organization and relationships. |

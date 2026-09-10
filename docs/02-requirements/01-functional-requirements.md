@@ -11,7 +11,10 @@ Functional requirements define what the MVP must do. Mandatory behavior uses **s
 
 ## MVP Business Rules
 
-- Authentication uses email and password.
+- Password authentication requires a verified email address before private notes are accessible.
+- Google and Facebook sign-in are supported through server-validated provider callbacks.
+- Existing users may link Google or Facebook only from an authenticated session.
+- Users may request a password reset through their verified email address.
 - Blank notes are allowed.
 - A note may have an empty title and empty content when first created.
 - MVP rich text supports headings, bold, italic, lists, links, and code formatting.
@@ -32,6 +35,16 @@ Functional requirements define what the MVP must do. Mandatory behavior uses **s
 | FR-03 | P0 | The system shall allow an authenticated user to sign out and invalidate the authenticated state. |
 | FR-04 | P0 | The system shall require authentication before granting access to private application resources. |
 | FR-05 | P0 | The server shall verify resource ownership for every protected read or write operation. |
+| FR-46 | P0 | The system shall require a user to verify their email address before granting access to private notes. |
+| FR-47 | P0 | The system shall allow a visitor to sign in with a validated Google account. |
+| FR-48 | P0 | The system shall allow a visitor to sign in with a validated Facebook account. |
+| FR-49 | P0 | The system shall allow an authenticated user to link a Google or Facebook identity to their existing account. |
+| FR-50 | P0 | The system shall prevent automatic account merging based only on a matching email address. |
+| FR-51 | P0 | The system shall allow a user to request another email-verification message subject to rate limits. |
+| FR-52 | P0 | The system shall allow a user to request a password reset without revealing whether an email address is registered. |
+| FR-53 | P0 | The system shall allow a user to set a new password using a valid, unexpired, single-use reset token. |
+| FR-54 | P0 | The system shall invalidate all existing authenticated sessions after a successful password reset. |
+| FR-55 | P0 | The system shall rate limit password-reset requests and reset-token attempts. |
 
 ## Notes and Note States
 
@@ -122,7 +135,7 @@ Functional requirements define what the MVP must do. Mandatory behavior uses **s
 
 - Profile viewing or editing
 - General settings
-- Password reset and email verification
+- Telegram sign-in or sign-up
 - Account deletion and data export
 - Sharing and collaboration
 - AI features

@@ -21,9 +21,10 @@ Confirm the development tools and dependencies before creating application sourc
 
 ## Authentication Decision
 
-- Use Passport.js with `passport-local` for email/password authentication only.
-- Keep server-managed opaque sessions backed by PostgreSQL; Passport must not be used to add JWT authentication.
-- Defer social login and other Passport strategies beyond the MVP.
+- Keep application-owned authentication adapters and server-managed opaque sessions backed by PostgreSQL. Provider integrations must not introduce JWT sessions.
+- Use Resend through a backend mail adapter for transactional email verification and password reset messages.
+- Add Google and Facebook authorization-code integrations only after provider validation and callback security decisions are recorded.
+- Telegram sign-in and sign-up remain deferred.
 - Preserve Argon2id password hashing, CSRF protection, login and registration rate limiting, and server-side ownership checks.
 
 ## Tooling Decisions
@@ -42,8 +43,8 @@ Confirm the development tools and dependencies before creating application sourc
 
 ## Planned Dependencies
 
-- Runtime: `express`, `pg`, `passport`, `passport-local`, `argon2`, `csrf-sync`, and `express-rate-limit`.
-- Session handling: implement the application-owned PostgreSQL session middleware; use Passport with `session: false` so Passport does not introduce a second session format or persist raw session identifiers.
+- Runtime: `express`, `pg`, `argon2`, `csrf-sync`, and `express-rate-limit`, plus the selected Google/Facebook provider clients and Resend mail client after the authentication expansion spike.
+- Session handling: implement the application-owned PostgreSQL session middleware; provider adapters must not introduce a second session format or persist raw session identifiers.
 - Frontend: React, React DOM, Vite, and the required Tiptap packages.
 - Development: Vitest, Supertest, Playwright, ESLint, Prettier, and `node-pg-migrate`.
 - Exact versions and license review must be recorded when the package manifest is created; do not install dependencies before that review.
@@ -59,6 +60,11 @@ The bootstrap step must define development, test, and production values for at l
 - `SESSION_COOKIE_NAME`
 - `CSRF_SECRET` or the equivalent CSRF configuration
 - `CORS_ORIGIN` when frontend and API origins differ
+- `RESEND_API_KEY`
+- `MAIL_FROM_ADDRESS`
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_REDIRECT_URI`
+- `FACEBOOK_CLIENT_ID`, `FACEBOOK_CLIENT_SECRET`, and `FACEBOOK_REDIRECT_URI`
+- `AUTH_CALLBACK_BASE_URL`
 
 Secrets must be supplied through the environment or deployment secret manager and must not be committed.
 

@@ -34,7 +34,8 @@ Note --+-- NoteTags -- Tag
 | --- | --- |
 | id | Primary key. |
 | email | Required and unique after normalization. |
-| password_hash | Required; plaintext passwords are never stored. |
+| password_hash | Nullable for external-provider accounts; plaintext passwords are never stored. |
+| email_verified_at | Null until the email is verified. |
 | created_at | Required UTC timestamp. |
 | updated_at | Updated when account data changes. |
 
@@ -51,6 +52,46 @@ Profile fields are outside the MVP.
 | last_used_at | Updated for valid authenticated requests. |
 | expires_at | Required session expiry timestamp. |
 | revoked_at | Set when the session is invalidated. |
+
+### auth_identities
+
+| Field | Rule |
+| --- | --- |
+| id | Primary key. |
+| user_id | Required foreign key to users. |
+| provider | Required value: `google` or `facebook`. |
+| provider_subject | Required stable identifier supplied by the provider. |
+| created_at | Required UTC timestamp. |
+| updated_at | Updated when identity metadata changes. |
+
+The pair `(provider, provider_subject)` is unique. Provider email is not the identity key and is not used for automatic account merging.
+
+### email_verification_tokens
+
+| Field | Rule |
+| --- | --- |
+| id | Primary key. |
+| user_id | Required foreign key to users. |
+| token_hash | Required and unique; raw tokens are never stored. |
+| expires_at | Required expiry timestamp. |
+| consumed_at | Set after successful verification. |
+| created_at | Required UTC timestamp. |
+
+Only an unexpired, unconsumed token can verify an account.
+
+### password_reset_tokens
+
+| Field | Rule |
+| --- | --- |
+| id | Primary key. |
+| user_id | Required foreign key to users. |
+| token_hash | Required and unique; raw tokens are never stored. |
+| expires_at | Required expiry timestamp. |
+| consumed_at | Set after a successful password reset. |
+| attempt_count | Tracks bounded validation attempts. |
+| created_at | Required UTC timestamp. |
+
+Only an unexpired, unconsumed token below the attempt limit can reset a password. Reset consumption, password replacement, and session revocation are one transaction.
 
 ### notes
 
@@ -164,6 +205,11 @@ The Search design will define the PostgreSQL search index and ranking behavior.
 At minimum, provide indexes for:
 
 - `users.email`
+- `auth_identities(provider, provider_subject)`
+- `email_verification_tokens.token_hash`
+- `email_verification_tokens(user_id, expires_at)`
+- `password_reset_tokens.token_hash`
+- `password_reset_tokens(user_id, expires_at)`
 - `notes(user_id, state, updated_at)`
 - `notes(user_id, notebook_id, state)`
 - `notes(user_id, is_favorite, state)`
@@ -179,6 +225,7 @@ At minimum, provide indexes for:
 | --- | --- |
 | User ownership | FR-04, FR-05, FR-17, NFR-09, NFR-10 |
 | Authentication sessions | FR-01-FR-04, NFR-08, NFR-09 |
+| Verification, password reset, and provider identities | FR-46-FR-55, NFR-08, NFR-13, NFR-34 |
 | Note states and recovery | FR-09-FR-15, NFR-19, NFR-21 |
 | Persistent metadata | FR-17-FR-19, NFR-50 |
 | Notebook and tag relationships | FR-20-FR-27, NFR-19, NFR-25 |
