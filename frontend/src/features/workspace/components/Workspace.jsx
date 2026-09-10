@@ -30,6 +30,7 @@ export function Workspace() {
     isDirty: false,
     isSaving: false,
   });
+  const editorStateRef = useRef(editorState);
   const allowBlockedNavigationRef = useRef(false);
   const { isDirty, isSaving } = editorState;
   const blocker = useBlocker(isDirty && !isSaving);
@@ -51,6 +52,7 @@ export function Workspace() {
   }, [blocker]);
 
   const onEditorStateChange = useCallback((nextState) => {
+    editorStateRef.current = nextState;
     setEditorState((current) =>
       current.isDirty === nextState.isDirty &&
       current.isSaving === nextState.isSaving
@@ -61,21 +63,25 @@ export function Workspace() {
 
   const confirmNavigation = useCallback(
     () =>
-      !isDirty ||
+      !editorStateRef.current.isDirty ||
       window.confirm(
         'You have unsaved changes. Leave this note without saving?',
       ),
-    [isDirty],
+    [],
   );
 
   const allowNextNavigation = useCallback(() => {
-    if (isDirty) allowBlockedNavigationRef.current = true;
-  }, [isDirty]);
+    if (editorStateRef.current.isDirty)
+      allowBlockedNavigationRef.current = true;
+  }, []);
+
+  const getEditorState = useCallback(() => editorStateRef.current, []);
 
   const selectNote = useCallback(
     (note) => {
+      const { isSaving: editorIsSaving } = editorStateRef.current;
       if (
-        isSaving ||
+        editorIsSaving ||
         note.id === params.noteId ||
         !confirmNavigation()
       )
@@ -87,7 +93,6 @@ export function Workspace() {
     [
       allowNextNavigation,
       confirmNavigation,
-      isSaving,
       navigate,
       params.noteId,
       selectedTagId,
@@ -97,22 +102,27 @@ export function Workspace() {
 
   const switchView = useCallback(
     (nextView) => {
-      if (isSaving || view === nextView || !confirmNavigation()) return false;
+      if (
+        editorStateRef.current.isSaving ||
+        view === nextView ||
+        !confirmNavigation()
+      )
+        return false;
       allowNextNavigation();
       navigate(collectionPath(nextView));
       return true;
     },
-    [allowNextNavigation, confirmNavigation, isSaving, navigate, view],
+    [allowNextNavigation, confirmNavigation, navigate, view],
   );
 
   const openSearchResult = useCallback(
     (result) => {
-      if (isSaving || !confirmNavigation()) return false;
+      if (editorStateRef.current.isSaving || !confirmNavigation()) return false;
       allowNextNavigation();
       navigate(searchNotePath(result.id, searchParams));
       return true;
     },
-    [allowNextNavigation, confirmNavigation, isSaving, navigate, searchParams],
+    [allowNextNavigation, confirmNavigation, navigate, searchParams],
   );
 
   const goBackToCollection = useCallback(() => {
@@ -124,12 +134,16 @@ export function Workspace() {
 
   const openTag = useCallback(
     (tagId) => {
-      if (isSaving || !confirmNavigation()) return false;
+      if (
+        editorStateRef.current.isSaving ||
+        !confirmNavigation()
+      )
+        return false;
       allowNextNavigation();
       navigate(collectionPath('tags', tagId));
       return true;
     },
-    [allowNextNavigation, confirmNavigation, isSaving, navigate],
+    [allowNextNavigation, confirmNavigation, navigate],
   );
 
   return (
@@ -146,8 +160,7 @@ export function Workspace() {
           mobilePane={mobilePane}
           selectedId={params.noteId}
           selectedTagId={selectedTagId}
-          isDirty={isDirty}
-          isSaving={isSaving}
+          getEditorState={getEditorState}
           allowNextNavigation={allowNextNavigation}
           onSelectNote={selectNote}
           onOpenNote={selectNote}

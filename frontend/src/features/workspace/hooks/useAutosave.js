@@ -20,8 +20,7 @@ export function useAutosave({ note, saveNote, debounceMs = 800, onError }) {
     if (
       note?.id &&
       latestDraftRef.current?.id === note.id &&
-      dirtyRef.current &&
-      draftSignature(latestDraftRef.current) !== draftSignature(note)
+      (dirtyRef.current || savingRef.current)
     ) {
       return;
     }
@@ -59,7 +58,7 @@ export function useAutosave({ note, saveNote, debounceMs = 800, onError }) {
           latest && draftSignature(latest) !== draftSignature(snapshot);
         const nextDraft = changedWhileSaving
           ? { ...latest, revision: updated.revision }
-          : updated;
+          : { ...updated, tags: latest?.tags ?? updated.tags };
 
         latestDraftRef.current = nextDraft;
         setDraft(nextDraft);
@@ -98,7 +97,7 @@ export function useAutosave({ note, saveNote, debounceMs = 800, onError }) {
     setSaveStatus('Save Failed');
   }
 
-  function updateDraft(field, value) {
+  const updateDraft = useCallback((field, value) => {
     const nextDraft = { ...latestDraftRef.current, [field]: value };
     latestDraftRef.current = nextDraft;
     dirtyRef.current = true;
@@ -106,21 +105,32 @@ export function useAutosave({ note, saveNote, debounceMs = 800, onError }) {
     setIsDirty(true);
     setSaveStatus('Unsaved Changes');
     setConflict(false);
-  }
+  }, []);
 
-  function replaceDraft(nextDraft, { dirty = false } = {}) {
+  const replaceDraft = useCallback((nextDraft, { dirty = false } = {}) => {
     latestDraftRef.current = nextDraft;
     dirtyRef.current = dirty;
     setDraft(nextDraft);
     setIsDirty(dirty);
     setSaveStatus(dirty ? 'Unsaved Changes' : 'Saved');
     setConflict(false);
-  }
+  }, []);
+
+  const replaceDraftField = useCallback(
+    (field, value) => {
+      replaceDraft(
+        { ...latestDraftRef.current, [field]: value },
+        { dirty: dirtyRef.current },
+      );
+    },
+    [replaceDraft],
+  );
 
   return {
     draft,
     updateDraft,
     replaceDraft,
+    replaceDraftField,
     save,
     saveStatus,
     isDirty,

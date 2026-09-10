@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { documentFromText, documentText } from './noteDocument.js';
+import {
+  documentFromText,
+  documentText,
+  documentsEqual,
+} from './noteDocument.js';
 
 describe('note document conversion', () => {
   it('round trips blank and multiline editor content', () => {
@@ -19,5 +23,15 @@ describe('note document conversion', () => {
         ],
       }),
     ).toBe('HeadingBody');
+  });
+
+  it('recognizes equivalent documents with different object identities', () => {
+    const localDocument = documentFromText('Saved content');
+    const serverDocument = documentFromText('Saved content');
+
+    expect(documentsEqual(localDocument, serverDocument)).toBe(true);
+    expect(documentsEqual(localDocument, documentFromText('Changed'))).toBe(
+      false,
+    );
   });
 });

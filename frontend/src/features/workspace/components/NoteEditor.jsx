@@ -12,6 +12,7 @@ import {
 import { EditorContent, useEditor } from '@tiptap/react';
 import Link from '@tiptap/extension-link';
 import StarterKit from '@tiptap/starter-kit';
+import { documentsEqual } from '../../notes/noteDocument.js';
 import styles from './Workspace.module.css';
 
 function ToolbarButton({ label, active, onClick, children }) {
@@ -55,7 +56,10 @@ export function NoteEditor({ content, onChange }) {
 
   useEffect(() => {
     if (!editor) return;
-    if (content === localContentRef.current) {
+    if (
+      content === localContentRef.current ||
+      documentsEqual(editor.getJSON(), content)
+    ) {
       localContentRef.current = null;
       return;
     }

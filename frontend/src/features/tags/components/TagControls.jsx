@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Plus, X } from 'lucide-react';
 import { Alert } from '../../../components/common/Alert/Alert.jsx';
 import { tagsApi } from '../services/tagsApi.js';
 import styles from '../../workspace/components/Workspace.module.css';
 
-export function TagControls({
+export const TagControls = memo(function TagControls({
   noteId,
   tags,
   availableTags = [],
@@ -134,4 +134,4 @@ export function TagControls({
       </div>
     </section>
   );
-}
+});

@@ -130,8 +130,7 @@ export const WorkspaceCollection = memo(function WorkspaceCollection({
   mobilePane,
   selectedId,
   selectedTagId,
-  isDirty,
-  isSaving,
+  getEditorState,
   allowNextNavigation,
   onSelectNote,
   onOpenNote,
@@ -168,7 +167,7 @@ export const WorkspaceCollection = memo(function WorkspaceCollection({
   const isInitialLoading = notesQuery.isLoading || tagsQuery.isLoading;
   const initialError =
     (notesQuery.isLoadingError && notesQuery.error) || tagsQuery.error;
-  const busy = creating || isSaving;
+  const busy = creating;
   const notesLoadMoreError = notesQuery.isFetchNextPageError
     ? notesQuery.error
     : null;
@@ -185,6 +184,7 @@ export const WorkspaceCollection = memo(function WorkspaceCollection({
   ]);
 
   async function create() {
+    const { isDirty, isSaving } = getEditorState();
     if (isSaving) return;
     if (
       isDirty &&
@@ -231,7 +231,7 @@ export const WorkspaceCollection = memo(function WorkspaceCollection({
             className={styles.primaryButton}
             type="button"
             onClick={() => void create()}
-            disabled={busy}
+          disabled={creating}
           >
             <Plus className="icon" size={16} aria-hidden="true" />
             <span>New note</span>

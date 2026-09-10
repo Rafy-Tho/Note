@@ -1,7 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Archive, ArrowLeft, FileText, RotateCcw, Star, Trash2 } from 'lucide-react';
+import {
+  Archive,
+  ArrowLeft,
+  FileText,
+  RotateCcw,
+  Star,
+  Trash2,
+} from 'lucide-react';
 import { Alert } from '../../../components/common/Alert/Alert.jsx';
 import { TagControls } from '../../tags/components/TagControls.jsx';
 import { useAutosave } from '../hooks/useAutosave.js';
@@ -15,7 +22,7 @@ import {
 import { NotebookControls } from './NotebookControls.jsx';
 import { NoteEditor } from './NoteEditor.jsx';
 
-export function WorkspaceEditor({
+export const WorkspaceEditor = memo(function WorkspaceEditor({
   styles,
   mobilePane,
   view,
@@ -60,6 +67,7 @@ export function WorkspaceEditor({
     draft,
     updateDraft,
     replaceDraft,
+    replaceDraftField,
     save: saveDraft,
     saveStatus,
     isDirty,
@@ -81,9 +89,10 @@ export function WorkspaceEditor({
     setError(null);
   }
 
-  function updateTags(tags) {
-    if (draft) replaceDraft({ ...draft, tags });
-  }
+  const updateTags = useCallback(
+    (tags) => replaceDraftField('tags', tags),
+    [replaceDraftField],
+  );
 
   function updateFromServer(updated) {
     if (!draft) return;
@@ -118,7 +127,7 @@ export function WorkspaceEditor({
   }
 
   async function setNoteFavorite(isFavorite) {
-    if (!draft || busy) return;
+    if (!draft || isSaving || busy) return;
     setError(null);
     try {
       const updated = await noteMutations.favoriteNote.mutateAsync({
@@ -132,7 +141,7 @@ export function WorkspaceEditor({
   }
 
   async function changeArchive() {
-    if (!draft || busy || !canLeaveDraft()) return;
+    if (!draft || isSaving || busy || !canLeaveDraft()) return;
     setError(null);
     try {
       const updated = await noteMutations.archiveNote.mutateAsync({
@@ -171,7 +180,11 @@ export function WorkspaceEditor({
       className={`${styles.editor} ${mobilePane === 'collection' ? styles.mobileHidden : ''}`}
       aria-label="Note editor"
     >
-      <button className={styles.backToCollection} type="button" onClick={onBack}>
+      <button
+        className={styles.backToCollection}
+        type="button"
+        onClick={onBack}
+      >
         <ArrowLeft className="icon" size={15} aria-hidden="true" />
         <span>Back to {view === 'notes' ? 'notes' : view}</span>
       </button>
@@ -193,17 +206,15 @@ export function WorkspaceEditor({
               type="button"
               onClick={() => void saveDraft()}
               disabled={saveStatus === 'Saved' || saveStatus === 'Saving'}
+              aria-label={
+                saveStatus === 'Save Failed' ? 'Retry save' : 'Save note'
+              }
+              title={saveStatus === 'Save Failed' ? 'Retry save' : 'Save note'}
             >
               {saveStatus === 'Save Failed' ? (
-                <>
-                  <RotateCcw className="icon" size={15} aria-hidden="true" />
-                  <span>Retry save</span>
-                </>
+                <RotateCcw className="icon" size={15} aria-hidden="true" />
               ) : (
-                <>
-                  <FileText className="icon" size={15} aria-hidden="true" />
-                  <span>Save</span>
-                </>
+                <FileText className="icon" size={15} aria-hidden="true" />
               )}
             </button>
             {conflict && (
@@ -211,9 +222,10 @@ export function WorkspaceEditor({
                 className={styles.secondaryButton}
                 type="button"
                 onClick={() => void reloadServerCopy()}
+                aria-label="Reload server copy"
+                title="Reload server copy"
               >
                 <RotateCcw className="icon" size={15} aria-hidden="true" />
-                <span>Reload server copy</span>
               </button>
             )}
             <button
@@ -221,27 +233,32 @@ export function WorkspaceEditor({
               type="button"
               onClick={() => void trashCurrentNote()}
               disabled={busy}
+              aria-label="Move note to Trash"
+              title="Move note to Trash"
             >
               <Trash2 className="icon" size={15} aria-hidden="true" />
-              <span>Move to Trash</span>
             </button>
             <button
               className={styles.secondaryButton}
               type="button"
               onClick={() => void setNoteFavorite(!draft.isFavorite)}
               disabled={busy}
+              aria-label={draft.isFavorite ? 'Unfavorite note' : 'Favorite note'}
+              title={draft.isFavorite ? 'Unfavorite note' : 'Favorite note'}
             >
               <Star className="icon" size={15} aria-hidden="true" />
-              <span>{draft.isFavorite ? 'Unfavorite' : 'Favorite'}</span>
             </button>
             <button
               className={styles.secondaryButton}
               type="button"
               onClick={() => void changeArchive()}
               disabled={busy}
+              aria-label={
+                draft.state === 'archived' ? 'Unarchive note' : 'Archive note'
+              }
+              title={draft.state === 'archived' ? 'Unarchive note' : 'Archive note'}
             >
               <Archive className="icon" size={15} aria-hidden="true" />
-              <span>{draft.state === 'archived' ? 'Unarchive' : 'Archive'}</span>
             </button>
           </div>
           <input
@@ -257,7 +274,7 @@ export function WorkspaceEditor({
             availableTags={availableTags}
             tagsLoading={tagsQuery.isLoading}
             onTagsChange={updateTags}
-            disabled={busy || saveStatus === 'Saving'}
+            disabled={busy}
           />
           <NotebookControls
             styles={styles}
@@ -272,8 +289,10 @@ export function WorkspaceEditor({
           />
         </>
       ) : (
-        <div className={styles.editorEmpty}>Select a note or create a new one.</div>
+        <div className={styles.editorEmpty}>
+          Select a note or create a new one.
+        </div>
       )}
     </section>
   );
-}
+});

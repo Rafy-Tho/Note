@@ -328,8 +328,9 @@ Implementation evidence:
 - Note details use an enabled, abortable query instead of the previous render-triggered `fetchQuery()` effect.
 - Collection responses now use bounded previews without returning full `contentJson`; detail responses remain complete.
 - Workspace feature workflows are delegated to `WorkspaceShell`, account, collection, search, trash, editor, and notebook children with domain-specific query and mutation hooks; `Workspace.jsx` now coordinates routes and draft protection only.
+- Autosave ignores same-note cache echoes while saving, and Tiptap skips equivalent server-document synchronization to prevent save-time editor blinking.
 - React Query cache defaults, logout cache clearing, tag-query reuse, and editor synchronization were updated.
-- Frontend lint passes; frontend Vitest passes with 6 files and 15 tests.
+- Frontend lint passes; frontend Vitest passes with 6 files and 16 tests.
 - Backend lint passes; backend Vitest passes with 19 files and 79 tests.
 - Frontend production build passes with the existing large-bundle warning.
 - Playwright execution was attempted but is blocked because the local Chromium executable is unavailable.
