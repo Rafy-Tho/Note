@@ -60,6 +60,43 @@
   border-right: 1px solid var(--color-border);
   background: var(--color-sidebar);
   overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.sidebar:hover,
+.sidebar:focus-within {
+  scrollbar-color: var(--color-border) transparent;
+}
+.sidebar::-webkit-scrollbar,
+.collection::-webkit-scrollbar {
+  width: 8px;
+}
+.sidebar::-webkit-scrollbar-track,
+.collection::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  background-clip: padding-box;
+}
+.collection::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 0;
+  background: var(--color-border);
+  background-clip: padding-box;
+}
+.sidebar:hover::-webkit-scrollbar-thumb,
+.sidebar:focus-within::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  background-clip: padding-box;
+}
+.sidebar::-webkit-scrollbar-thumb:hover,
+.collection::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+  background-clip: padding-box;
 }
 .sidebarHeader {
   display: flex;
@@ -144,11 +181,18 @@
   border-right: 1px solid var(--color-border);
   background: var(--color-sidebar);
   overflow-y: auto;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
 }
 .collectionHeader {
+  position: sticky;
+  z-index: 1;
+  top: 0;
   align-items: flex-end;
   padding: 20px;
   border-bottom: 1px solid var(--color-border);
+  background: var(--color-sidebar);
 }
 .eyebrow {
   margin: 0 0 6px;
@@ -218,9 +262,8 @@ h1 {
 }
 .noteList {
   display: grid;
-  gap: 1px;
-  padding: 8px;
-  background: var(--color-border);
+  gap: 0;
+  padding: 0;
 }
 .noteRow {
   display: grid;
@@ -313,6 +356,76 @@ h1 {
   flex-wrap: wrap;
   gap: 8px;
   min-width: 0;
+}
+.organizationControls {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.organizationButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.organizationButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 7px 10px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border-radius: 0;
+  font: 11px var(--font-code);
+}
+.organizationButton:hover,
+.organizationButtonActive {
+  border-color: var(--color-interaction);
+  color: var(--color-text);
+  background: var(--color-surface-elevated);
+}
+.organizationCount {
+  min-width: 18px;
+  padding: 2px 5px;
+  color: var(--color-bg);
+  background: var(--color-interaction);
+  font-size: 10px;
+  text-align: center;
+}
+.organizationPanel {
+  position: absolute;
+  z-index: 4;
+  top: calc(100% + 8px);
+  left: 0;
+  display: grid;
+  gap: 10px;
+  width: min(560px, calc(100vw - 48px));
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-elevated);
+  box-shadow: 0 14px 28px rgb(0 0 0 / 28%);
+}
+.organizationPanelHeader {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.organizationPanelHeader .contextLabel {
+  margin-right: auto;
+}
+.organizationForm,
+.organizationTagAssign {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+}
+.organizationForm input,
+.organizationTagAssign .contextSelect {
+  min-width: 0;
+  flex: 1;
 }
 .editorActions {
   display: flex;
@@ -768,6 +881,13 @@ h1 {
   .contextCreateForm {
     flex-basis: 100%;
     min-width: 0;
+  }
+  .organizationControls {
+    width: 100%;
+  }
+  .organizationPanel {
+    position: static;
+    width: 100%;
   }
   .contextCreateForm input,
   .contextCreateForm .secondaryButton {

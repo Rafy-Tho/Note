@@ -12,7 +12,6 @@ import {
 import { Alert } from '../../../components/common/Alert/Alert.jsx';
 import { Dialog } from '../../../components/common/Dialog/Dialog.jsx';
 import { useToast } from '../../../components/common/Toast/Toast.jsx';
-import { TagControls } from '../../tags/components/TagControls.jsx';
 import { useAutosave } from '../hooks/useAutosave.js';
 import { useNoteMutations } from '../hooks/useNoteMutations.js';
 import {
@@ -21,7 +20,7 @@ import {
   useWorkspaceTagsQuery,
   workspaceQueryKeys,
 } from '../hooks/useWorkspaceQueries.js';
-import { NotebookControls } from './NotebookControls.jsx';
+import { NoteOrganizationControls } from './NoteOrganizationControls.jsx';
 import { NoteEditor } from './NoteEditor.jsx';
 
 export const WorkspaceEditor = memo(function WorkspaceEditor({
@@ -206,18 +205,13 @@ export const WorkspaceEditor = memo(function WorkspaceEditor({
               role="group"
               aria-label="Note organization"
             >
-              <NotebookControls
+              <NoteOrganizationControls
                 styles={styles}
                 note={draft}
                 notebooks={notebooks}
-                onNoteUpdated={updateFromServer}
-                disabled={busy}
-              />
-              <TagControls
-                noteId={draft.id}
-                tags={draft.tags ?? []}
                 availableTags={availableTags}
                 tagsLoading={tagsQuery.isLoading}
+                onNoteUpdated={updateFromServer}
                 onTagsChange={updateTags}
                 disabled={busy}
               />

@@ -4,7 +4,7 @@
 
 In Progress
 
-The compact editor organization context bar is implemented. Frontend lint, Vitest (6 files, 16 tests), build, and formatting pass. Browser verification remains pending until the local Playwright Chromium executable is available.
+The compact editor organization control is implemented. The editor now shows only `Notebooks` and `Tags` buttons by default, with the complete workflows available in their panels. Frontend lint, Vitest (7 files, 18 tests), and build pass. Browser verification remains pending until the local Playwright Chromium executable is available.
 
 ## Objective
 
@@ -21,7 +21,8 @@ Make notebook and tag organization available from a clear, compact context bar a
 ## Scope
 
 - Keep the existing notebook and tag APIs, ownership checks, CSRF behavior, and query cache integration.
-- Move notebook selection and tag assignment into the editor header context bar.
+- Show only two organization buttons in the editor header: `Notebooks` and `Tags`.
+- Open notebook and tag workflows in compact panels instead of rendering every control at once.
 - Keep assigned tags visible as removable chips.
 - Add inline `Create new` controls for notebooks and tags.
 - Auto-assign a newly created notebook or tag to the current note after creation succeeds.
@@ -31,7 +32,8 @@ Make notebook and tag organization available from a clear, compact context bar a
 
 ## Frontend Checklist
 
-- [x] Add the editor organization context bar.
+- [x] Add the two-button editor organization control.
+- [x] Move notebook and tag workflows into compact toggle panels.
 - [x] Add notebook selection with a `No notebook` option.
 - [x] Add notebook creation and automatic assignment.
 - [x] Keep notebook rename/delete available through Manage.

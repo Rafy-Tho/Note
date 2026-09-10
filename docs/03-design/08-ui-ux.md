@@ -75,7 +75,7 @@ Autosave behavior is defined in `07-autosave.md`.
 
 ### Editor Organization Context
 
-Notebook and tag controls live in a compact context bar at the top of the note editor, before the title and writing canvas. The context bar shall:
+Notebook and tag controls live behind two compact `Notebooks` and `Tags` buttons at the top of the note editor, before the title and writing canvas. The buttons shall open compact panels containing the related controls. The organization control shall:
 
 - Show a labeled notebook dropdown with a `No notebook` option.
 - Show assigned tags as removable chips.
