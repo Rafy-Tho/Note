@@ -3,6 +3,8 @@ import { Plus, RotateCcw } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Alert } from '../../../components/common/Alert/Alert.jsx';
+import { Dialog } from '../../../components/common/Dialog/Dialog.jsx';
+import { useToast } from '../../../components/common/Toast/Toast.jsx';
 import { documentText } from '../../notes/noteDocument.js';
 import { useNoteMutations } from '../hooks/useNoteMutations.js';
 import {
@@ -150,6 +152,8 @@ export const WorkspaceCollection = memo(function WorkspaceCollection({
   const { createNote } = useNoteMutations();
   const [error, setError] = useState(null);
   const [creating, setCreating] = useState(false);
+  const [createConfirmOpen, setCreateConfirmOpen] = useState(false);
+  const { notify } = useToast();
   const notes = flattenNotesPages(notesQuery.data);
   const availableTags = tagsQuery.data ?? [];
   const collectionNotes =
@@ -186,11 +190,14 @@ export const WorkspaceCollection = memo(function WorkspaceCollection({
   async function create() {
     const { isDirty, isSaving } = getEditorState();
     if (isSaving) return;
-    if (
-      isDirty &&
-      !window.confirm('You have unsaved changes. Create a new note anyway?')
-    )
+    if (isDirty) {
+      setCreateConfirmOpen(true);
       return;
+    }
+    await createNoteNow();
+  }
+
+  async function createNoteNow() {
     setCreating(true);
     setError(null);
     try {
@@ -199,6 +206,7 @@ export const WorkspaceCollection = memo(function WorkspaceCollection({
         contentJson: { type: 'doc', content: [] },
       });
       queryClient.setQueryData(workspaceQueryKeys.note(note.id), note);
+      notify('New note created.');
       allowNextNavigation();
       navigate(`/workspace/notes/${note.id}`);
     } catch (requestError) {
@@ -313,6 +321,30 @@ export const WorkspaceCollection = memo(function WorkspaceCollection({
           loadMoreError={notesLoadMoreError}
           onEndReached={loadMoreNotes}
           onRetryLoadMore={loadMoreNotes}
+        />
+      )}
+      {createConfirmOpen && (
+        <Dialog
+          title="Create a new note?"
+          description="You have unsaved changes. Creating a new note will leave the current draft behind."
+          onClose={() => setCreateConfirmOpen(false)}
+          actions={
+            <>
+              <button className={styles.secondaryButton} type="button" onClick={() => setCreateConfirmOpen(false)}>
+                Cancel
+              </button>
+              <button
+                className={styles.primaryButton}
+                type="button"
+                onClick={() => {
+                  setCreateConfirmOpen(false);
+                  void createNoteNow();
+                }}
+              >
+                Create note
+              </button>
+            </>
+          }
         />
       )}
     </section>

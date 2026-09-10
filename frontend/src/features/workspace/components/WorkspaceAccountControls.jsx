@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { LogOut } from 'lucide-react';
 import { Alert } from '../../../components/common/Alert/Alert.jsx';
+import { Dialog } from '../../../components/common/Dialog/Dialog.jsx';
 import { useAuth } from '../../auth/context/AuthContext.jsx';
 import { useAccountMutations } from '../hooks/useAccountMutations.js';
 import { useWorkspaceIdentitiesQuery } from '../hooks/useWorkspaceQueries.js';
@@ -14,6 +15,8 @@ export function WorkspaceAccountControls({ styles, canLeaveDraft }) {
   const [pendingProvider, setPendingProvider] = useState(null);
   const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState(null);
+  const [unlinkTarget, setUnlinkTarget] = useState(null);
+  const [signOutConfirmOpen, setSignOutConfirmOpen] = useState(false);
   const identities = identitiesQuery.data ?? [];
   const busy = Boolean(
     pendingProvider ||
@@ -23,11 +26,16 @@ export function WorkspaceAccountControls({ styles, canLeaveDraft }) {
   );
 
   async function unlink(provider) {
-    if (!window.confirm(`Unlink ${provider} from this account?`)) return;
+    setUnlinkTarget(provider);
+  }
+
+  async function confirmUnlink() {
+    if (!unlinkTarget) return;
     setError(null);
-    setPendingProvider(provider);
+    setPendingProvider(unlinkTarget);
     try {
-      await unlinkProvider.mutateAsync(provider);
+      await unlinkProvider.mutateAsync(unlinkTarget);
+      setUnlinkTarget(null);
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -48,7 +56,10 @@ export function WorkspaceAccountControls({ styles, canLeaveDraft }) {
   }
 
   async function signOut() {
-    if (!canLeaveDraft()) return;
+    setSignOutConfirmOpen(true);
+  }
+
+  async function completeSignOut() {
     setError(null);
     setSigningOut(true);
     try {
@@ -57,6 +68,11 @@ export function WorkspaceAccountControls({ styles, canLeaveDraft }) {
       setError(requestError.message);
       setSigningOut(false);
     }
+  }
+
+  function confirmSignOut() {
+    setSignOutConfirmOpen(false);
+    canLeaveDraft(() => void completeSignOut());
   }
 
   return (
@@ -107,6 +123,40 @@ export function WorkspaceAccountControls({ styles, canLeaveDraft }) {
         <LogOut className="icon" size={16} aria-hidden="true" />
         <span>{signingOut ? 'Signing out...' : 'Sign out'}</span>
       </button>
+      {unlinkTarget && (
+        <Dialog
+          title={`Unlink ${unlinkTarget}?`}
+          description="You will no longer be able to use this provider to sign in unless you link it again."
+          onClose={() => setUnlinkTarget(null)}
+          actions={
+            <>
+              <button className={styles.secondaryButton} type="button" onClick={() => setUnlinkTarget(null)}>
+                Cancel
+              </button>
+              <button className={styles.dangerButton} type="button" onClick={() => void confirmUnlink()}>
+                Unlink
+              </button>
+            </>
+          }
+        />
+      )}
+      {signOutConfirmOpen && (
+        <Dialog
+          title="Sign out?"
+          description="Your workspace will be closed. Any unsaved changes must be handled before signing out."
+          onClose={() => setSignOutConfirmOpen(false)}
+          actions={
+            <>
+              <button className={styles.secondaryButton} type="button" onClick={() => setSignOutConfirmOpen(false)}>
+                Cancel
+              </button>
+              <button className={styles.dangerButton} type="button" onClick={confirmSignOut}>
+                Sign out
+              </button>
+            </>
+          }
+        />
+      )}
     </>
   );
 }

@@ -10,6 +10,8 @@ import {
   Trash2,
 } from 'lucide-react';
 import { Alert } from '../../../components/common/Alert/Alert.jsx';
+import { Dialog } from '../../../components/common/Dialog/Dialog.jsx';
+import { useToast } from '../../../components/common/Toast/Toast.jsx';
 import { TagControls } from '../../tags/components/TagControls.jsx';
 import { useAutosave } from '../hooks/useAutosave.js';
 import { useNoteMutations } from '../hooks/useNoteMutations.js';
@@ -39,6 +41,8 @@ export const WorkspaceEditor = memo(function WorkspaceEditor({
   const tagsQuery = useWorkspaceTagsQuery();
   const noteMutations = useNoteMutations();
   const [error, setError] = useState(null);
+  const [trashConfirmOpen, setTrashConfirmOpen] = useState(false);
+  const { notify } = useToast();
   const note = noteQuery.data ?? null;
   const notebooks = notebooksQuery.data ?? [];
   const availableTags = tagsQuery.data ?? [];
@@ -109,16 +113,15 @@ export const WorkspaceEditor = memo(function WorkspaceEditor({
   }
 
   async function trashCurrentNote() {
-    if (
-      !draft ||
-      isSaving ||
-      !canLeaveDraft() ||
-      !window.confirm('Move this note to Trash?')
-    )
-      return;
+    if (!draft || isSaving) return;
+    setTrashConfirmOpen(true);
+  }
+
+  async function performTrash() {
     setError(null);
     try {
       await noteMutations.trashNote.mutateAsync(draft.id);
+      notify('Note moved to Trash.');
       allowNextNavigation();
       navigate('/workspace/notes');
     } catch (requestError) {
@@ -307,6 +310,34 @@ export const WorkspaceEditor = memo(function WorkspaceEditor({
         <div className={styles.editorEmpty}>
           Select a note or create a new one.
         </div>
+      )}
+      {trashConfirmOpen && (
+        <Dialog
+          title="Move note to Trash?"
+          description={
+            isDirty
+              ? 'This will discard unsaved changes and move the note to Trash.'
+              : 'The note will leave your active workspace and move to Trash.'
+          }
+          onClose={() => setTrashConfirmOpen(false)}
+          actions={
+            <>
+              <button className={styles.secondaryButton} type="button" onClick={() => setTrashConfirmOpen(false)}>
+                Cancel
+              </button>
+              <button
+                className={styles.dangerButton}
+                type="button"
+                onClick={() => {
+                  setTrashConfirmOpen(false);
+                  void performTrash();
+                }}
+              >
+                Move to Trash
+              </button>
+            </>
+          }
+        />
       )}
     </section>
   );

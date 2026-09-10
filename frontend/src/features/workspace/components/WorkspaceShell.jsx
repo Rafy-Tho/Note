@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../auth/context/AuthContext.jsx';
+import { ToastProvider } from '../../../components/common/Toast/Toast.jsx';
 import { WorkspaceHeader } from './WorkspaceHeader.jsx';
 import { WorkspaceSidebar } from './WorkspaceSidebar.jsx';
 
@@ -30,7 +31,7 @@ export function WorkspaceShell({
   }
 
   return (
-    <>
+    <ToastProvider>
       <WorkspaceHeader
         email={session.user.email}
         menuOpen={menuOpen}
@@ -57,6 +58,6 @@ export function WorkspaceShell({
         />
         {children}
       </div>
-    </>
+    </ToastProvider>
   );
 }

@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Folder, Plus, Settings2 } from 'lucide-react';
 import { Alert } from '../../../components/common/Alert/Alert.jsx';
+import { Dialog } from '../../../components/common/Dialog/Dialog.jsx';
+import { useToast } from '../../../components/common/Toast/Toast.jsx';
 import { useNoteMutations } from '../hooks/useNoteMutations.js';
 import { useNotebookMutations } from '../hooks/useNotebookMutations.js';
 
@@ -16,6 +18,11 @@ export function NotebookControls({
   const [error, setError] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
   const [showManage, setShowManage] = useState(false);
+  const [renameTarget, setRenameTarget] = useState(null);
+  const [renameName, setRenameName] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const renameInputRef = useRef(null);
+  const { notify } = useToast();
   const mutationBusy =
     noteMutations.assignNotebook.isPending ||
     notebookMutations.createNotebook.isPending ||
@@ -59,8 +66,7 @@ export function NotebookControls({
   }
 
   async function rename(notebook) {
-    const name = window.prompt('Rename notebook', notebook.name);
-    const trimmedName = name?.trim();
+    const trimmedName = renameName.trim();
     if (!trimmedName || trimmedName === notebook.name || busy) return;
     setError(null);
     try {
@@ -68,23 +74,31 @@ export function NotebookControls({
         notebookId: notebook.id,
         name: trimmedName,
       });
+      notify('Notebook renamed.');
+      setRenameTarget(null);
     } catch (requestError) {
       setError(requestError.message);
     }
   }
 
+  function openRename(notebook) {
+    setRenameTarget(notebook);
+    setRenameName(notebook.name);
+  }
+
   async function remove(notebook) {
-    if (
-      busy ||
-      !window.confirm(
-        `Delete notebook "${notebook.name}"? Notes will be unassigned.`,
-      )
-    )
-      return;
+    if (busy) return;
+    setDeleteTarget(notebook);
+  }
+
+  async function confirmRemove() {
+    if (!deleteTarget) return;
     setError(null);
     try {
-      await notebookMutations.deleteNotebook.mutateAsync(notebook.id);
-      if (note.notebookId === notebook.id) await assign('');
+      await notebookMutations.deleteNotebook.mutateAsync(deleteTarget.id);
+      if (note.notebookId === deleteTarget.id) await assign('');
+      notify('Notebook deleted.');
+      setDeleteTarget(null);
     } catch (requestError) {
       setError(requestError.message);
     }
@@ -170,7 +184,7 @@ export function NotebookControls({
               <button
                 type="button"
                 className={styles.textButton}
-                onClick={() => void rename(notebook)}
+                 onClick={() => openRename(notebook)}
                 disabled={busy}
               >
                 Rename
@@ -188,6 +202,69 @@ export function NotebookControls({
         </div>
       )}
       {error && <Alert>{error}</Alert>}
+      {renameTarget && (
+        <Dialog
+          title="Rename notebook"
+          description="Choose a clear name for this notebook."
+          onClose={() => setRenameTarget(null)}
+          initialFocusRef={renameInputRef}
+          actions={
+            <>
+              <button
+                className={styles.secondaryButton}
+                type="button"
+                onClick={() => setRenameTarget(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className={styles.primaryButton}
+                type="submit"
+                form="rename-notebook-form"
+                disabled={busy}
+              >
+                Rename
+              </button>
+            </>
+          }
+        >
+          <form
+            id="rename-notebook-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void rename(renameTarget);
+            }}
+          >
+            <label className={styles.visuallyHidden} htmlFor="rename-notebook-name">
+              Notebook name
+            </label>
+            <input
+              ref={renameInputRef}
+              id="rename-notebook-name"
+              value={renameName}
+              onChange={(event) => setRenameName(event.target.value)}
+              autoComplete="off"
+            />
+          </form>
+        </Dialog>
+      )}
+      {deleteTarget && (
+        <Dialog
+          title={`Delete ${deleteTarget.name}?`}
+          description="Notes in this notebook will remain in your workspace without a notebook."
+          onClose={() => setDeleteTarget(null)}
+          actions={
+            <>
+              <button className={styles.secondaryButton} type="button" onClick={() => setDeleteTarget(null)}>
+                Cancel
+              </button>
+              <button className={styles.dangerButton} type="button" onClick={() => void confirmRemove()}>
+                Delete notebook
+              </button>
+            </>
+          }
+        />
+      )}
     </div>
   );
 }

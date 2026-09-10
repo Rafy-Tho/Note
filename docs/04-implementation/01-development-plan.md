@@ -148,6 +148,12 @@ Refine the note editor organization workflow with a compact top context bar for 
 
 **Gate:** Users can organize an open note from the editor context bar, newly created notebooks and tags are assigned only after successful server confirmation, management controls remain accessible, and frontend checks plus supported viewport verification pass.
 
+## Step 13F - Workspace Dialogs and Toast Feedback
+
+Replace browser-native prompts and confirmations with accessible application dialogs and add workspace-scoped toast feedback for confirmed operations. Preserve unsaved-draft protection, destructive-action confirmation, keyboard focus behavior, responsive touch targets, and the existing inline error states. Track the detailed scope, checklist, and acceptance criteria in `tasks/13F-workspace-dialogs-and-toast-feedback.md`.
+
+**Gate:** No frontend browser-native prompt, confirm, or alert remains; dialog and toast behavior passes frontend checks; confirmed workspace mutations provide accessible feedback; and supported desktop/mobile verification passes.
+
 ## Step 14 - Test and Harden
 
 Run unit, integration, API, authorization, rich-text security, autosave, end-to-end, accessibility, performance, backup, and recovery tests. Fix critical defects and regressions.

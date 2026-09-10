@@ -100,6 +100,15 @@ Every major view must support:
 
 Destructive actions must use clear labels and confirmation for permanent deletion.
 
+### Dialogs and Toasts
+
+- Use application dialogs instead of browser-native prompts, confirmations, or alerts.
+- Dialogs must have a clear title, a labeled body control when input is required, explicit cancel and confirm actions, and an accessible modal relationship.
+- Opening a dialog moves focus into the dialog; Escape and Cancel close it; closing restores focus to the control that opened it.
+- Dirty-note navigation, note deletion, permanent deletion, notebook deletion, and account unlinking require an explicit dialog confirmation.
+- Use workspace toasts for short-lived success or operation feedback after server confirmation. Toasts must use an accessible live region, provide a visible dismiss action, and auto-dismiss without removing the persistent inline error or save status needed for recovery.
+- Toasts stack in a bounded viewport, remain readable on mobile, and must not cover the editor's primary controls.
+
 ## Navigation Rules
 
 - Protected areas require authentication.

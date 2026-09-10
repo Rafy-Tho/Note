@@ -6,6 +6,7 @@ import {
   useParams,
   useSearchParams,
 } from 'react-router-dom';
+import { Dialog } from '../../../components/common/Dialog/Dialog.jsx';
 import {
   collectionPath,
   mobilePaneFromNoteId,
@@ -26,53 +27,47 @@ export function Workspace() {
   const view = viewFromPath(location.pathname);
   const selectedTagId = params.tagId ?? '';
   const mobilePane = mobilePaneFromNoteId(params.noteId);
-  const [editorState, setEditorState] = useState({
-    isDirty: false,
-    isSaving: false,
-  });
+  const [editorState, setEditorState] = useState({ isDirty: false, isSaving: false });
   const editorStateRef = useRef(editorState);
   const allowBlockedNavigationRef = useRef(false);
+  const pendingNavigationRef = useRef(null);
+  const blockedNavigationRef = useRef(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const { isDirty, isSaving } = editorState;
   const blocker = useBlocker(isDirty && !isSaving);
 
   useEffect(() => {
-    if (blocker.state !== 'blocked') return;
+    if (blocker.state !== 'blocked' || confirmOpen) return;
     if (allowBlockedNavigationRef.current) {
       allowBlockedNavigationRef.current = false;
       blocker.proceed();
       return;
     }
-    if (
-      window.confirm(
-        'You have unsaved changes. Leave this note without saving?',
-      )
-    )
-      blocker.proceed();
-    else blocker.reset();
-  }, [blocker]);
+    blockedNavigationRef.current = blocker;
+    setConfirmOpen(true);
+  }, [blocker, confirmOpen]);
 
   const onEditorStateChange = useCallback((nextState) => {
     editorStateRef.current = nextState;
     setEditorState((current) =>
-      current.isDirty === nextState.isDirty &&
-      current.isSaving === nextState.isSaving
+      current.isDirty === nextState.isDirty && current.isSaving === nextState.isSaving
         ? current
         : nextState,
     );
   }, []);
 
-  const confirmNavigation = useCallback(
-    () =>
-      !editorStateRef.current.isDirty ||
-      window.confirm(
-        'You have unsaved changes. Leave this note without saving?',
-      ),
-    [],
-  );
+  const confirmNavigation = useCallback((onConfirm) => {
+    if (!editorStateRef.current.isDirty) {
+      onConfirm();
+      return true;
+    }
+    pendingNavigationRef.current = onConfirm;
+    setConfirmOpen(true);
+    return false;
+  }, []);
 
   const allowNextNavigation = useCallback(() => {
-    if (editorStateRef.current.isDirty)
-      allowBlockedNavigationRef.current = true;
+    if (editorStateRef.current.isDirty) allowBlockedNavigationRef.current = true;
   }, []);
 
   const getEditorState = useCallback(() => editorStateRef.current, []);
@@ -80,78 +75,97 @@ export function Workspace() {
   const selectNote = useCallback(
     (note) => {
       const { isSaving: editorIsSaving } = editorStateRef.current;
-      if (
-        editorIsSaving ||
-        note.id === params.noteId ||
-        !confirmNavigation()
-      )
-        return false;
-      allowNextNavigation();
-      navigate(notePath(view, note.id, selectedTagId));
-      return true;
+      if (editorIsSaving || note.id === params.noteId) return false;
+      return confirmNavigation(() => {
+        allowNextNavigation();
+        navigate(notePath(view, note.id, selectedTagId));
+      });
     },
-    [
-      allowNextNavigation,
-      confirmNavigation,
-      navigate,
-      params.noteId,
-      selectedTagId,
-      view,
-    ],
+    [allowNextNavigation, confirmNavigation, navigate, params.noteId, selectedTagId, view],
   );
 
   const switchView = useCallback(
     (nextView) => {
-      if (
-        editorStateRef.current.isSaving ||
-        view === nextView ||
-        !confirmNavigation()
-      )
-        return false;
-      allowNextNavigation();
-      navigate(collectionPath(nextView));
-      return true;
+      if (editorStateRef.current.isSaving || view === nextView) return false;
+      return confirmNavigation(() => {
+        allowNextNavigation();
+        navigate(collectionPath(nextView));
+      });
     },
     [allowNextNavigation, confirmNavigation, navigate, view],
   );
 
   const openSearchResult = useCallback(
     (result) => {
-      if (editorStateRef.current.isSaving || !confirmNavigation()) return false;
-      allowNextNavigation();
-      navigate(searchNotePath(result.id, searchParams));
-      return true;
+      if (editorStateRef.current.isSaving) return false;
+      return confirmNavigation(() => {
+        allowNextNavigation();
+        navigate(searchNotePath(result.id, searchParams));
+      });
     },
     [allowNextNavigation, confirmNavigation, navigate, searchParams],
   );
 
-  const goBackToCollection = useCallback(() => {
-    if (!confirmNavigation()) return false;
-    allowNextNavigation();
-    navigate(collectionPath(view, selectedTagId));
-    return true;
-  }, [allowNextNavigation, confirmNavigation, navigate, selectedTagId, view]);
+  const goBackToCollection = useCallback(
+    () =>
+      confirmNavigation(() => {
+        allowNextNavigation();
+        navigate(collectionPath(view, selectedTagId));
+      }),
+    [allowNextNavigation, confirmNavigation, navigate, selectedTagId, view],
+  );
 
   const openTag = useCallback(
     (tagId) => {
-      if (
-        editorStateRef.current.isSaving ||
-        !confirmNavigation()
-      )
-        return false;
-      allowNextNavigation();
-      navigate(collectionPath('tags', tagId));
-      return true;
+      if (editorStateRef.current.isSaving) return false;
+      return confirmNavigation(() => {
+        allowNextNavigation();
+        navigate(collectionPath('tags', tagId));
+      });
     },
     [allowNextNavigation, confirmNavigation, navigate],
   );
+
+  const requestLeave = useCallback(
+    (onConfirm = () => {}) => {
+      if (!editorStateRef.current.isDirty) {
+        onConfirm();
+        return true;
+      }
+      pendingNavigationRef.current = onConfirm;
+      setConfirmOpen(true);
+      return false;
+    },
+    [],
+  );
+
+  function cancelNavigation() {
+    blockedNavigationRef.current?.reset();
+    blockedNavigationRef.current = null;
+    pendingNavigationRef.current = null;
+    setConfirmOpen(false);
+  }
+
+  function acceptNavigation() {
+    const blocked = blockedNavigationRef.current;
+    const pending = pendingNavigationRef.current;
+    blockedNavigationRef.current = null;
+    pendingNavigationRef.current = null;
+    setConfirmOpen(false);
+    if (blocked) {
+      allowBlockedNavigationRef.current = true;
+      blocked.proceed();
+    } else {
+      pending?.();
+    }
+  }
 
   return (
     <main className={styles.workspace} aria-labelledby="workspace-title">
       <WorkspaceShell
         styles={styles}
         view={view}
-        canLeaveDraft={confirmNavigation}
+        canLeaveDraft={requestLeave}
         onSwitchView={switchView}
       >
         <WorkspaceCollection
@@ -172,12 +186,29 @@ export function Workspace() {
           mobilePane={mobilePane}
           view={view}
           noteId={params.noteId}
-          canLeaveDraft={confirmNavigation}
+          canLeaveDraft={requestLeave}
           allowNextNavigation={allowNextNavigation}
           onBack={goBackToCollection}
           onEditorStateChange={onEditorStateChange}
         />
       </WorkspaceShell>
+      {confirmOpen && (
+        <Dialog
+          title="Leave note?"
+          description="You have unsaved changes. Leaving now will discard them."
+          onClose={cancelNavigation}
+          actions={
+            <>
+              <button className={styles.secondaryButton} type="button" onClick={cancelNavigation}>
+                Stay
+              </button>
+              <button className={styles.dangerButton} type="button" onClick={acceptNavigation}>
+                Leave note
+              </button>
+            </>
+          }
+        />
+      )}
     </main>
   );
 }

@@ -3,6 +3,8 @@ import { RotateCcw, Trash2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Alert } from '../../../components/common/Alert/Alert.jsx';
+import { Dialog } from '../../../components/common/Dialog/Dialog.jsx';
+import { useToast } from '../../../components/common/Toast/Toast.jsx';
 import { documentText } from '../../notes/noteDocument.js';
 import { useNoteMutations } from '../hooks/useNoteMutations.js';
 import {
@@ -16,6 +18,8 @@ export function WorkspaceTrash({ styles }) {
   const trashQuery = useWorkspaceTrashQuery(true);
   const { restoreNote, permanentlyDelete } = useNoteMutations();
   const [error, setError] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const { notify } = useToast();
   const busy = restoreNote.isPending || permanentlyDelete.isPending;
   const notes = trashQuery.data ?? [];
 
@@ -23,6 +27,7 @@ export function WorkspaceTrash({ styles }) {
     setError(null);
     try {
       const restored = await restoreNote.mutateAsync(note.id);
+      notify('Note restored.');
       queryClient.setQueryData(
         workspaceQueryKeys.note(restored.id),
         restored,
@@ -38,11 +43,16 @@ export function WorkspaceTrash({ styles }) {
   }
 
   async function permanentlyRemove(note) {
-    if (!window.confirm('Permanently delete this note? This cannot be undone.'))
-      return;
+    setDeleteTarget(note);
+  }
+
+  async function confirmPermanentRemove() {
+    if (!deleteTarget) return;
     setError(null);
     try {
-      await permanentlyDelete.mutateAsync(note.id);
+      await permanentlyDelete.mutateAsync(deleteTarget.id);
+      notify('Note permanently deleted.');
+      setDeleteTarget(null);
     } catch (requestError) {
       setError(requestError.message);
     }
@@ -95,6 +105,23 @@ export function WorkspaceTrash({ styles }) {
             </div>
           ))}
         </div>
+      )}
+      {deleteTarget && (
+        <Dialog
+          title="Delete note permanently?"
+          description="This cannot be undone. The note and its content will be removed from Trash."
+          onClose={() => setDeleteTarget(null)}
+          actions={
+            <>
+              <button className={styles.secondaryButton} type="button" onClick={() => setDeleteTarget(null)}>
+                Cancel
+              </button>
+              <button className={styles.dangerButton} type="button" onClick={() => void confirmPermanentRemove()}>
+                Delete permanently
+              </button>
+            </>
+          }
+        />
       )}
     </>
   );

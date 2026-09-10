@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Bold,
   Code,
@@ -13,6 +13,8 @@ import { EditorContent, useEditor } from '@tiptap/react';
 import Link from '@tiptap/extension-link';
 import StarterKit from '@tiptap/starter-kit';
 import { documentsEqual } from '../../notes/noteDocument.js';
+import { Dialog } from '../../../components/common/Dialog/Dialog.jsx';
+import { isAllowedLink } from '../../../components/common/feedback.js';
 import styles from './Workspace.module.css';
 
 function ToolbarButton({ label, active, onClick, children }) {
@@ -32,6 +34,9 @@ function ToolbarButton({ label, active, onClick, children }) {
 
 export function NoteEditor({ content, onChange }) {
   const localContentRef = useRef(null);
+  const linkInputRef = useRef(null);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -76,17 +81,30 @@ export function NoteEditor({ content, onChange }) {
 
   function setLink() {
     const previousUrl = editor.getAttributes('link').href;
-    const url = window.prompt('Link URL', previousUrl ?? 'https://');
-    if (url === null) return;
+    setLinkUrl(previousUrl ?? 'https://');
+    setLinkDialogOpen(true);
+  }
+
+  function closeLinkDialog() {
+    setLinkDialogOpen(false);
+  }
+
+  function applyLink(event) {
+    event.preventDefault();
+    const url = linkUrl.trim();
     if (url === '') {
       editor.chain().focus().unsetLink().run();
+    } else if (isAllowedLink(url)) {
+      editor.chain().focus().setLink({ href: url }).run();
+    } else {
       return;
     }
-    editor.chain().focus().setLink({ href: url }).run();
+    closeLinkDialog();
   }
 
   return (
-    <div className={styles.noteEditor}>
+    <>
+      <div className={styles.noteEditor}>
       <div className={styles.toolbar} aria-label="Formatting toolbar">
         <ToolbarButton
           label="Heading 1"
@@ -152,6 +170,38 @@ export function NoteEditor({ content, onChange }) {
       <div className={styles.editorScroll}>
         <EditorContent editor={editor} />
       </div>
-    </div>
+      </div>
+      {linkDialogOpen && (
+        <Dialog
+          title="Add link"
+          description="Enter an HTTPS or email link. Leave it empty to remove the current link."
+          onClose={closeLinkDialog}
+          initialFocusRef={linkInputRef}
+          actions={
+            <>
+              <button className={styles.secondaryButton} type="button" onClick={closeLinkDialog}>
+                Cancel
+              </button>
+              <button className={styles.primaryButton} type="submit" form="link-dialog-form">
+                Apply
+              </button>
+            </>
+          }
+        >
+          <form id="link-dialog-form" onSubmit={applyLink}>
+            <label htmlFor="note-link-url">Link URL</label>
+            <input
+              ref={linkInputRef}
+              id="note-link-url"
+              value={linkUrl}
+              onChange={(event) => setLinkUrl(event.target.value)}
+              placeholder="https://example.com"
+              inputMode="url"
+              autoComplete="url"
+            />
+          </form>
+        </Dialog>
+      )}
+    </>
   );
 }
