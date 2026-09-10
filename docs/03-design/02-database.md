@@ -93,6 +93,22 @@ Only an unexpired, unconsumed token can verify an account.
 
 Only an unexpired, unconsumed token below the attempt limit can reset a password. Reset consumption, password replacement, and session revocation are one transaction.
 
+### auth_callback_states
+
+| Field | Rule |
+| --- | --- |
+| id | Primary key. |
+| state_hash | Required and unique; raw callback state is never stored. |
+| provider | Required value: `google` or `facebook`. |
+| purpose | Required value: `sign_in` or `link`. |
+| session_id | Nullable foreign key to sessions; required for linking. |
+| browser_binding_hash | Required hash binding the flow to the initiating browser. |
+| expires_at | Required short expiry timestamp. |
+| consumed_at | Set after a successful or terminal callback attempt. |
+| created_at | Required UTC timestamp. |
+
+Callback state is one-time use. Sign-in state may have no authenticated session, while link state must reference the initiating authenticated session.
+
 ### notes
 
 | Field | Rule |
@@ -210,6 +226,8 @@ At minimum, provide indexes for:
 - `email_verification_tokens(user_id, expires_at)`
 - `password_reset_tokens.token_hash`
 - `password_reset_tokens(user_id, expires_at)`
+- `auth_callback_states.state_hash`
+- `auth_callback_states(expires_at, consumed_at)`
 - `notes(user_id, state, updated_at)`
 - `notes(user_id, notebook_id, state)`
 - `notes(user_id, is_favorite, state)`

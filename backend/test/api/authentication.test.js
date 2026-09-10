@@ -4,6 +4,7 @@ import { createApp } from '../../src/app.js';
 import {
   createSessionMiddleware,
   requireAuthentication,
+  requireVerifiedEmail,
 } from '../../src/modules/auth/auth.middleware.js';
 
 const config = {
@@ -12,7 +13,7 @@ const config = {
   csrfSecret: 'csrf-test-secret',
 };
 
-function createFakeAuthService() {
+function createFakeAuthService(verified = true) {
   const sessions = new Map();
   const users = new Map();
   let nextUserId = 1;
@@ -28,6 +29,26 @@ function createFakeAuthService() {
       users.set(email, user);
       return user;
     },
+    async verifyEmail() {
+      return {
+        id: 'user-1',
+        email: 'user@example.com',
+        emailVerified: true,
+      };
+    },
+    async requestEmailVerification() {
+      return { accepted: true };
+    },
+    async requestPasswordReset() {
+      return { accepted: true };
+    },
+    async resetPassword() {
+      return {
+        id: 'user-1',
+        email: 'user@example.com',
+        emailVerified: true,
+      };
+    },
     async verifyCredentials({ email, password }) {
       if (password !== 'correct-password') return null;
       const user = users.get(email);
@@ -39,6 +60,7 @@ function createFakeAuthService() {
       sessions.set(token, {
         userId,
         email: [...users.values()].find((user) => user.id === userId).email,
+        emailVerifiedAt: verified ? new Date() : null,
       });
       return { token, session: {} };
     },
@@ -49,6 +71,7 @@ function createFakeAuthService() {
         id: 'session-id',
         userId: session.userId,
         email: session.email,
+        emailVerifiedAt: session.emailVerifiedAt,
         token,
         csrfToken: 'unused',
       };
@@ -77,6 +100,7 @@ function createTestApp(authService = createFakeAuthService()) {
             cookieName: config.sessionCookieName,
           }),
           requireAuthentication,
+          requireVerifiedEmail,
           (request, response) =>
             response.json({ data: { userId: request.auth.userId } }),
         );
@@ -134,6 +158,7 @@ describe('authentication API', () => {
     expect(login.body.data.user).toEqual({
       id: 'user-1',
       email: 'user@example.com',
+      emailVerified: false,
     });
     expect(login.body.data).not.toHaveProperty('token');
     expect((await agent.get('/api/v1/protected')).body).toEqual({
@@ -170,5 +195,58 @@ describe('authentication API', () => {
     expect(response.body).toEqual({
       data: { authenticated: false, user: null, csrfToken: null },
     });
+  });
+
+  it('requires email verification before protected access', async () => {
+    const { app } = createTestApp(createFakeAuthService(false));
+    const agent = request.agent(app);
+    await agent
+      .post('/api/v1/auth/register')
+      .send({ email: 'user@example.com', password: 'correct-password' });
+    await agent
+      .post('/api/v1/auth/login')
+      .send({ email: 'user@example.com', password: 'correct-password' });
+
+    const response = await agent.get('/api/v1/protected');
+
+    expect(response.status).toBe(403);
+    expect(response.body.error.code).toBe('EMAIL_VERIFICATION_REQUIRED');
+  });
+
+  it('exposes verification and resend endpoints without session tokens', async () => {
+    const { app } = createTestApp();
+
+    const resend = await request(app)
+      .post('/api/v1/auth/email/verification/resend')
+      .send({ email: 'user@example.com' });
+    const verify = await request(app)
+      .post('/api/v1/auth/email/verify')
+      .send({ token: 'verification-token-value' });
+
+    expect(resend.status).toBe(200);
+    expect(resend.body).toEqual({ data: { accepted: true } });
+    expect(verify.status).toBe(200);
+    expect(verify.body.data.user.emailVerified).toBe(true);
+    expect(verify.headers['set-cookie']).toBeUndefined();
+  });
+
+  it('exposes generic password reset endpoints without creating a session', async () => {
+    const { app } = createTestApp();
+
+    const requestReset = await request(app)
+      .post('/api/v1/auth/password/reset/request')
+      .send({ email: 'user@example.com' });
+    const confirmReset = await request(app)
+      .post('/api/v1/auth/password/reset/confirm')
+      .send({
+        token: 'password-reset-token-value',
+        password: 'new-correct-password',
+      });
+
+    expect(requestReset.status).toBe(200);
+    expect(requestReset.body).toEqual({ data: { accepted: true } });
+    expect(confirmReset.status).toBe(200);
+    expect(confirmReset.body.data.user.emailVerified).toBe(true);
+    expect(confirmReset.headers['set-cookie']).toBeUndefined();
   });
 });

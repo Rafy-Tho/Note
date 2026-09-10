@@ -1,4 +1,4 @@
-import { authenticationRequiredError } from '../../common/errors.js';
+import { AppError, authenticationRequiredError } from '../../common/errors.js';
 import { Router } from 'express';
 import { createCsrfMiddleware } from './auth.csrf.js';
 
@@ -43,10 +43,25 @@ export function requireAuthentication(request, _response, next) {
   next();
 }
 
+export function requireVerifiedEmail(request, _response, next) {
+  if (!request.auth?.emailVerifiedAt) {
+    next(
+      new AppError(
+        403,
+        'EMAIL_VERIFICATION_REQUIRED',
+        'Email verification is required to access private notes.',
+      ),
+    );
+    return;
+  }
+  next();
+}
+
 export function createProtectedRouter({ authService, cookieName, csrfSecret }) {
   const router = Router();
   router.use(createSessionMiddleware({ authService, cookieName }));
   router.use(requireAuthentication);
+  router.use(requireVerifiedEmail);
   router.use(createCsrfMiddleware({ authService, csrfSecret }));
   return router;
 }

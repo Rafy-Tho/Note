@@ -4,7 +4,12 @@ import { sendData } from '../../common/http.js';
 import { AppError } from '../../common/errors.js';
 import { assertObject } from '../../common/validation.js';
 import { publicUser } from './auth.constants.js';
-import { validateCredentials } from './auth.validation.js';
+import {
+  validateCredentials,
+  validateEmailBody,
+  validatePasswordResetBody,
+  validateVerificationTokenBody,
+} from './auth.validation.js';
 
 function setSessionCookie(response, name, token, secure) {
   response.cookie(name, token, {
@@ -46,33 +51,84 @@ export function createAuthController({ authService, config }) {
       }
     },
 
-    login(request, response, next) {
-      passport.authenticate('local', { session: false }, async (error, user) => {
-        try {
-          if (error) throw error;
-          if (!user)
-            throw new AppError(
-              401,
-              'AUTHENTICATION_FAILED',
-              'Invalid email or password.',
-            );
+    async verifyEmail(request, response, next) {
+      try {
+        assertObject(request.body);
+        const token = validateVerificationTokenBody(request.body);
+        const user = await authService.verifyEmail(token);
+        sendData(response, { user });
+      } catch (error) {
+        next(error);
+      }
+    },
 
-          const { token } = await authService.createSession(user.id);
-          setSessionCookie(
-            response,
-            config.sessionCookieName,
-            token,
-            config.nodeEnv === 'production',
-          );
-          sendData(response, {
-            authenticated: true,
-            user: publicUser(user),
-            csrfToken: authService.csrfToken(token, config.csrfSecret),
-          });
-        } catch (authError) {
-          next(authError);
-        }
-      })(request, response, next);
+    async resendVerification(request, response, next) {
+      try {
+        assertObject(request.body);
+        const email = validateEmailBody(request.body);
+        const result = await authService.requestEmailVerification(email);
+        sendData(response, result);
+      } catch (error) {
+        next(error);
+      }
+    },
+
+    async requestPasswordReset(request, response, next) {
+      try {
+        assertObject(request.body);
+        const email = validateEmailBody(request.body);
+        const result = await authService.requestPasswordReset(email);
+        sendData(response, result);
+      } catch (error) {
+        next(error);
+      }
+    },
+
+    async confirmPasswordReset(request, response, next) {
+      try {
+        assertObject(request.body);
+        const credentials = validatePasswordResetBody(request.body);
+        const user = await authService.resetPassword(
+          credentials.token,
+          credentials.password,
+        );
+        sendData(response, { user });
+      } catch (error) {
+        next(error);
+      }
+    },
+
+    login(request, response, next) {
+      passport.authenticate(
+        'local',
+        { session: false },
+        async (error, user) => {
+          try {
+            if (error) throw error;
+            if (!user)
+              throw new AppError(
+                401,
+                'AUTHENTICATION_FAILED',
+                'Invalid email or password.',
+              );
+
+            const { token } = await authService.createSession(user.id);
+            setSessionCookie(
+              response,
+              config.sessionCookieName,
+              token,
+              config.nodeEnv === 'production',
+            );
+            sendData(response, {
+              authenticated: true,
+              user: publicUser(user),
+              csrfToken: authService.csrfToken(token, config.csrfSecret),
+            });
+          } catch (authError) {
+            next(authError);
+          }
+        },
+      )(request, response, next);
     },
 
     getSession(request, response) {
@@ -81,7 +137,11 @@ export function createAuthController({ authService, config }) {
         request.auth
           ? {
               authenticated: true,
-              user: { id: request.auth.userId, email: request.auth.email },
+              user: {
+                id: request.auth.userId,
+                email: request.auth.email,
+                emailVerified: Boolean(request.auth.emailVerifiedAt),
+              },
               csrfToken: authService.csrfToken(
                 request.auth.token,
                 config.csrfSecret,

@@ -10,6 +10,7 @@ import { getConfig } from './config/env.js';
 import { createAuthRepository } from './modules/auth/auth.repository.js';
 import { createAuthService } from './modules/auth/auth.service.js';
 import { createAuthRouter } from './modules/auth/auth.routes.js';
+import { createResendMailService } from './modules/auth/mail.service.js';
 import {
   createNotesRouter,
   createTrashRouter,
@@ -31,7 +32,10 @@ export function createApp({
   logger = createLogger(),
   configureRoutes = () => {},
   config = getConfig(),
-  authService = createAuthService({ repository: createAuthRepository() }),
+  authService = createAuthService({
+    repository: createAuthRepository(),
+    mailService: createResendMailService(config),
+  }),
   notesService,
   tagsService,
   searchService,

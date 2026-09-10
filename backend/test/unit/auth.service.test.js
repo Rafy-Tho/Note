@@ -30,7 +30,11 @@ describe('authentication service', () => {
       'user@example.com',
       'argon-hash',
     );
-    expect(result).toEqual({ id: 'user-1', email: 'user@example.com' });
+    expect(result).toEqual({
+      id: 'user-1',
+      email: 'user@example.com',
+      emailVerified: false,
+    });
     expect(result).not.toHaveProperty('password_hash');
   });
 
@@ -75,5 +79,204 @@ describe('authentication service', () => {
     expect(
       service.csrfMatches('opaque-token', 'wrong-token', 'csrf-secret'),
     ).toBe(false);
+  });
+
+  it('creates and sends an email verification challenge during registration', async () => {
+    const repository = {
+      createUser: vi.fn(async () => ({
+        id: 'user-1',
+        email: 'user@example.com',
+        email_verified_at: null,
+      })),
+      invalidateVerificationTokens: vi.fn(),
+      createEmailVerificationToken: vi.fn(),
+    };
+    const mailService = { sendVerificationEmail: vi.fn() };
+    const password = {
+      argon2id: 'argon2id',
+      hash: vi.fn(async () => 'argon-hash'),
+    };
+    const transaction = vi.fn(async (work) => work({}));
+    const service = createAuthService({
+      repository,
+      password,
+      transaction,
+      mailService,
+      now: () => Date.parse('2026-09-10T00:00:00Z'),
+    });
+
+    await service.register({
+      email: 'user@example.com',
+      password: 'correct-password',
+    });
+
+    expect(repository.createEmailVerificationToken).toHaveBeenCalledWith(
+      {},
+      expect.objectContaining({
+        userId: 'user-1',
+        expiresAt: new Date('2026-09-11T00:00:00Z'),
+      }),
+    );
+    expect(mailService.sendVerificationEmail).toHaveBeenCalledWith({
+      to: 'user@example.com',
+      token: expect.any(String),
+    });
+  });
+
+  it('consumes a valid verification token and marks the user verified', async () => {
+    const repository = {
+      findEmailVerificationToken: vi.fn(async () => ({
+        user_id: 'user-1',
+        email: 'user@example.com',
+        expires_at: new Date('2026-09-11T00:00:00Z'),
+        consumed_at: null,
+      })),
+      consumeEmailVerificationToken: vi.fn(async () => true),
+      markEmailVerified: vi.fn(async () => ({
+        id: 'user-1',
+        email: 'user@example.com',
+        email_verified_at: new Date('2026-09-10T00:00:00Z'),
+      })),
+    };
+    const service = createAuthService({
+      repository,
+      transaction: vi.fn(async (work) => work({})),
+      now: () => Date.parse('2026-09-10T00:00:00Z'),
+    });
+
+    const result = await service.verifyEmail('verification-token-value');
+
+    expect(result).toEqual({
+      id: 'user-1',
+      email: 'user@example.com',
+      emailVerified: true,
+    });
+    expect(repository.consumeEmailVerificationToken).toHaveBeenCalledOnce();
+    expect(repository.markEmailVerified).toHaveBeenCalledWith({}, 'user-1');
+  });
+
+  it('sends a reset message only for verified password accounts', async () => {
+    const repository = {
+      findUserByEmail: vi.fn(async () => ({
+        id: 'user-1',
+        email: 'user@example.com',
+        password_hash: 'existing-hash',
+        email_verified_at: new Date('2026-09-10T00:00:00Z'),
+      })),
+      invalidatePasswordResetTokens: vi.fn(),
+      createPasswordResetToken: vi.fn(),
+    };
+    const mailService = { sendPasswordResetEmail: vi.fn() };
+    const service = createAuthService({
+      repository,
+      transaction: vi.fn(async (work) => work({})),
+      mailService,
+      now: () => Date.parse('2026-09-10T00:00:00Z'),
+    });
+
+    const result = await service.requestPasswordReset('user@example.com');
+
+    expect(result).toEqual({ accepted: true });
+    expect(repository.createPasswordResetToken).toHaveBeenCalledWith(
+      {},
+      expect.objectContaining({
+        userId: 'user-1',
+        expiresAt: new Date('2026-09-10T01:00:00Z'),
+      }),
+    );
+    expect(mailService.sendPasswordResetEmail).toHaveBeenCalledWith({
+      to: 'user@example.com',
+      token: expect.any(String),
+    });
+  });
+
+  it('replaces the password and revokes all sessions after reset', async () => {
+    const repository = {
+      findPasswordResetToken: vi.fn(async () => ({
+        user_id: 'user-1',
+        email: 'user@example.com',
+        email_verified_at: new Date('2026-09-10T00:00:00Z'),
+        password_hash: 'old-hash',
+        expires_at: new Date('2026-09-10T01:00:00Z'),
+        consumed_at: null,
+        attempt_count: 0,
+      })),
+      consumePasswordResetToken: vi.fn(async () => true),
+      updatePasswordHash: vi.fn(async () => ({
+        id: 'user-1',
+        email: 'user@example.com',
+        email_verified_at: new Date('2026-09-10T00:00:00Z'),
+      })),
+      revokeAllSessions: vi.fn(),
+    };
+    const password = {
+      argon2id: 'argon2id',
+      hash: vi.fn(async () => 'new-hash'),
+    };
+    const service = createAuthService({
+      repository,
+      password,
+      transaction: vi.fn(async (work) => work({})),
+      now: () => Date.parse('2026-09-10T00:00:00Z'),
+    });
+
+    const result = await service.resetPassword(
+      'password-reset-token-value',
+      'new-correct-password',
+    );
+
+    expect(password.hash).toHaveBeenCalledWith('new-correct-password', {
+      type: 'argon2id',
+    });
+    expect(repository.updatePasswordHash).toHaveBeenCalledWith(
+      {},
+      'user-1',
+      'new-hash',
+    );
+    expect(repository.revokeAllSessions).toHaveBeenCalledWith({}, 'user-1');
+    expect(result).toEqual({
+      id: 'user-1',
+      email: 'user@example.com',
+      emailVerified: true,
+    });
+  });
+
+  it('does not send reset mail or create a password for provider-only accounts', async () => {
+    const repository = {
+      findUserByEmail: vi.fn(async () => ({
+        id: 'user-1',
+        email: 'user@example.com',
+        password_hash: null,
+        email_verified_at: new Date('2026-09-10T00:00:00Z'),
+      })),
+      createPasswordResetToken: vi.fn(),
+    };
+    const mailService = { sendPasswordResetEmail: vi.fn() };
+    const service = createAuthService({ repository, mailService });
+
+    expect(await service.requestPasswordReset('user@example.com')).toEqual({
+      accepted: true,
+    });
+    expect(repository.createPasswordResetToken).not.toHaveBeenCalled();
+    expect(mailService.sendPasswordResetEmail).not.toHaveBeenCalled();
+  });
+
+  it('rejects an invalid reset token without hashing a password', async () => {
+    const repository = {
+      findPasswordResetToken: vi.fn(async () => null),
+    };
+    const password = {
+      argon2id: 'argon2id',
+      hash: vi.fn(),
+    };
+    const service = createAuthService({ repository, password });
+
+    await expect(
+      service.resetPassword(
+        'password-reset-token-value',
+        'new-correct-password',
+      ),
+    ).rejects.toMatchObject({ code: 'PASSWORD_RESET_TOKEN_INVALID' });
+    expect(password.hash).not.toHaveBeenCalled();
   });
 });

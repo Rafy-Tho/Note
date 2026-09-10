@@ -16,8 +16,14 @@ const config = {
 
 function createAuthorizationTestApp() {
   const sessions = new Map([
-    ['session-user-a', { userId: 'user-a', email: 'a@example.com' }],
-    ['session-user-b', { userId: 'user-b', email: 'b@example.com' }],
+    [
+      'session-user-a',
+      { userId: 'user-a', email: 'a@example.com', emailVerifiedAt: new Date() },
+    ],
+    [
+      'session-user-b',
+      { userId: 'user-b', email: 'b@example.com', emailVerifiedAt: new Date() },
+    ],
   ]);
   const notes = new Map([
     ['note-a', { id: 'note-a', user_id: 'user-a', title: 'A private note' }],

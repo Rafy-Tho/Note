@@ -19,6 +19,9 @@ describe('getConfig', () => {
       sessionCookieName: 'note_app_session',
       csrfSecret: 'csrf-secret',
       corsOrigin: '',
+      resendApiKey: '',
+      mailFromAddress: '',
+      appUrl: 'http://localhost:5173',
     });
   });
 
@@ -35,6 +38,9 @@ describe('getConfig', () => {
         DATABASE_URL: 'DATABASE_URL is required.',
         SESSION_SECRET: 'SESSION_SECRET is required outside development.',
         CSRF_SECRET: 'CSRF_SECRET is required outside development.',
+        RESEND_API_KEY: 'RESEND_API_KEY is required in production.',
+        MAIL_FROM_ADDRESS: 'MAIL_FROM_ADDRESS is required in production.',
+        APP_URL: 'APP_URL is required in production.',
       });
     }
   });

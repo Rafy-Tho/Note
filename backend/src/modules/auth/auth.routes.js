@@ -34,6 +34,26 @@ export function createAuthRouter({ authService, config }) {
   expressRouter.use(sessionMiddleware);
   expressRouter.post('/register', authRateLimiter(), controller.register);
   expressRouter.post('/login', authRateLimiter(), controller.login);
+  expressRouter.post(
+    '/email/verify',
+    authRateLimiter(),
+    controller.verifyEmail,
+  );
+  expressRouter.post(
+    '/email/verification/resend',
+    authRateLimiter(),
+    controller.resendVerification,
+  );
+  expressRouter.post(
+    '/password/reset/request',
+    authRateLimiter(),
+    controller.requestPasswordReset,
+  );
+  expressRouter.post(
+    '/password/reset/confirm',
+    authRateLimiter(),
+    controller.confirmPasswordReset,
+  );
   expressRouter.get('/session', controller.getSession);
 
   expressRouter.post(

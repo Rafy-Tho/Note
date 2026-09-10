@@ -11,8 +11,14 @@ const config = {
 
 function createNotesTestApp() {
   const sessions = new Map([
-    ['session-a', { userId: 'user-a', email: 'a@example.com' }],
-    ['session-b', { userId: 'user-b', email: 'b@example.com' }],
+    [
+      'session-a',
+      { userId: 'user-a', email: 'a@example.com', emailVerifiedAt: new Date() },
+    ],
+    [
+      'session-b',
+      { userId: 'user-b', email: 'b@example.com', emailVerifiedAt: new Date() },
+    ],
   ]);
   const notes = new Map();
   const tags = new Map();

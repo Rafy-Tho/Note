@@ -57,6 +57,8 @@ Only a hash of the session token is stored in the database. The raw token exists
 
 The account model supports one password credential and zero or more external identities. Google and Facebook identities may be added only from an authenticated account-linking flow. An external identity may belong to only one local account.
 
+Existing accounts are marked unverified when the authentication expansion migration runs and must complete email verification before accessing private notes. Password reset applies only to accounts with a password credential; provider-only accounts receive the same generic reset response and must use their provider or an authenticated linking flow.
+
 ## Email Verification and Password Reset
 
 New password accounts must verify their normalized email before accessing private notes. A verification record stores only a hash of a high-entropy, single-use token, its expiry, and its consumed timestamp. Tokens expire after a configurable period and verification-message requests are rate limited.
@@ -75,7 +77,7 @@ Google and Facebook authentication use server-side authorization-code callbacks.
 
 The server must:
 
-1. Generate and store a short-lived, one-time callback state bound to the initiating browser session.
+1. Generate and store a short-lived, one-time callback state in PostgreSQL, bound to the initiating browser binding and, for linking, the authenticated session.
 2. Validate the callback state and redirect URI.
 3. Exchange the authorization code server-to-server.
 4. Validate the provider response, client identity, issuer or endpoint, expiry, and stable provider subject.

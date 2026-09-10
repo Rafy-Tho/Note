@@ -2,7 +2,7 @@
 
 ## Status
 
-Not Started
+In Progress
 
 ## Objective
 
@@ -25,17 +25,21 @@ Add mandatory email verification, secure password reset, Google and Facebook sig
 - Provider identities are linked only from an authenticated session.
 - Matching email addresses never automatically merge accounts.
 - Resend is the planned transactional email provider.
+- Existing accounts are marked unverified by the migration and must verify before note access.
+- OAuth callback state is stored as hashed, one-time database state bound to the browser and linking session when applicable.
+- Password reset does not create passwords for provider-only accounts.
 
 ## Backend and Database
 
-- [ ] Add a migration for nullable password hashes and `email_verified_at`.
-- [ ] Add `auth_identities` with unique provider and subject constraints.
-- [ ] Add hashed, expiring, single-use email verification tokens.
-- [ ] Add hashed, expiring, single-use password-reset tokens with bounded attempts.
-- [ ] Add the Resend mail adapter and safe configuration validation.
-- [ ] Implement verification and resend services with rate limits.
-- [ ] Implement generic password-reset requests and reset confirmation.
-- [ ] Revoke all sessions atomically after a successful password reset.
+- [x] Add a migration for nullable password hashes and `email_verified_at`.
+- [x] Add `auth_identities` with unique provider and subject constraints.
+- [x] Add `auth_callback_states` with expiry, one-time consumption, and browser/session binding.
+- [x] Add hashed, expiring, single-use email verification tokens.
+- [x] Add hashed, expiring, single-use password-reset tokens with bounded attempts.
+- [x] Add the Resend mail adapter and safe configuration validation.
+- [x] Implement verification and resend services with rate limits.
+- [x] Implement generic password-reset requests and reset confirmation.
+- [x] Revoke all sessions atomically after a successful password reset.
 - [ ] Implement Google authorization-code callback validation.
 - [ ] Implement Facebook authorization-code callback validation.
 - [ ] Implement provider resolution and authenticated linking.
@@ -51,10 +55,17 @@ Add mandatory email verification, secure password reset, Google and Facebook sig
 
 ## Tests and Evidence
 
+- Database migration applies, rolls back, and reapplies successfully.
+- Database integration tests cover authentication expansion records and callback-state constraints.
+- Email verification and resend API coverage is implemented.
+- Password reset API coverage, Argon2id replacement, session revocation, and provider-only account behavior are implemented.
+- Full backend tests pass: 55 tests.
+- Targeted ESLint passes for the authentication implementation and tests. Repository backend lint remains blocked by the pre-existing `backend/test/api/organization.test.js:191` error.
+
 - [ ] Test valid, invalid, expired, and reused verification tokens.
-- [ ] Test generic reset responses for registered and unknown email addresses.
+- [x] Test generic reset responses for registered and unknown email addresses.
 - [ ] Test valid, invalid, expired, reused, and over-attempted password-reset tokens.
-- [ ] Test password hashing and complete session revocation after reset.
+- [x] Test password hashing and complete session revocation after reset.
 - [ ] Test verification resend rate limits and mail failures.
 - [ ] Test provider state, redirect, subject, issuer, audience, expiry, and verified-email validation.
 - [ ] Test provider identity collisions and no automatic email-based merging.
