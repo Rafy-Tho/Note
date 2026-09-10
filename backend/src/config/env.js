@@ -33,6 +33,20 @@ export function getConfig(env = process.env) {
     errors.APP_URL = 'APP_URL is required in production.';
   }
 
+  if (nodeEnv === 'production' && !env.GOOGLE_CLIENT_ID) {
+    errors.GOOGLE_CLIENT_ID = 'GOOGLE_CLIENT_ID is required in production.';
+  }
+
+  if (nodeEnv === 'production' && !env.GOOGLE_CLIENT_SECRET) {
+    errors.GOOGLE_CLIENT_SECRET =
+      'GOOGLE_CLIENT_SECRET is required in production.';
+  }
+
+  if (nodeEnv === 'production' && !env.GOOGLE_REDIRECT_URI) {
+    errors.GOOGLE_REDIRECT_URI =
+      'GOOGLE_REDIRECT_URI is required in production.';
+  }
+
   if (Object.keys(errors).length > 0) {
     const error = new Error('Invalid application configuration.');
     error.code = 'CONFIGURATION_ERROR';
@@ -51,5 +65,8 @@ export function getConfig(env = process.env) {
     resendApiKey: env.RESEND_API_KEY ?? '',
     mailFromAddress: env.MAIL_FROM_ADDRESS ?? '',
     appUrl: env.APP_URL ?? 'http://localhost:5173',
+    googleClientId: env.GOOGLE_CLIENT_ID ?? '',
+    googleClientSecret: env.GOOGLE_CLIENT_SECRET ?? '',
+    googleRedirectUri: env.GOOGLE_REDIRECT_URI ?? '',
   };
 }

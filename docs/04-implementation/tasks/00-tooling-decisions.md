@@ -43,7 +43,7 @@ Confirm the development tools and dependencies before creating application sourc
 
 ## Planned Dependencies
 
-- Runtime: `express`, `pg`, `argon2`, `csrf-sync`, and `express-rate-limit`, plus the selected Google/Facebook provider clients and Resend mail client after the authentication expansion spike.
+- Runtime: `express`, `pg`, `argon2`, `csrf-sync`, `express-rate-limit`, `jose` for provider ID-token validation, plus the selected Google/Facebook provider clients and Resend mail client after the authentication expansion spike.
 - Session handling: implement the application-owned PostgreSQL session middleware; provider adapters must not introduce a second session format or persist raw session identifiers.
 - Frontend: React, React DOM, Vite, and the required Tiptap packages.
 - Development: Vitest, Supertest, Playwright, ESLint, Prettier, and `node-pg-migrate`.

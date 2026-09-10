@@ -40,7 +40,7 @@ Add mandatory email verification, secure password reset, Google and Facebook sig
 - [x] Implement verification and resend services with rate limits.
 - [x] Implement generic password-reset requests and reset confirmation.
 - [x] Revoke all sessions atomically after a successful password reset.
-- [ ] Implement Google authorization-code callback validation.
+- [x] Implement Google authorization-code callback validation.
 - [ ] Implement Facebook authorization-code callback validation.
 - [ ] Implement provider resolution and authenticated linking.
 - [ ] Preserve the existing opaque PostgreSQL session and CSRF behavior.
@@ -59,7 +59,8 @@ Add mandatory email verification, secure password reset, Google and Facebook sig
 - Database integration tests cover authentication expansion records and callback-state constraints.
 - Email verification and resend API coverage is implemented.
 - Password reset API coverage, Argon2id replacement, session revocation, and provider-only account behavior are implemented.
-- Full backend tests pass: 55 tests.
+- Google authorization URL, callback claim validation, browser binding, account resolution, and no-automatic-merge coverage are implemented.
+- Full backend tests pass: 61 tests.
 - Targeted ESLint passes for the authentication implementation and tests. Repository backend lint remains blocked by the pre-existing `backend/test/api/organization.test.js:191` error.
 
 - [ ] Test valid, invalid, expired, and reused verification tokens.

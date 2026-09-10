@@ -54,6 +54,12 @@ export function createAuthRouter({ authService, config }) {
     authRateLimiter(),
     controller.confirmPasswordReset,
   );
+  expressRouter.get('/google/start', controller.startGoogleSignIn);
+  expressRouter.get(
+    '/google/callback',
+    authRateLimiter(),
+    controller.completeGoogleSignIn,
+  );
   expressRouter.get('/session', controller.getSession);
 
   expressRouter.post(

@@ -49,6 +49,19 @@ function createFakeAuthService(verified = true) {
         emailVerified: true,
       };
     },
+    async startGoogleSignIn() {
+      return 'https://accounts.google.com/o/oauth2/v2/auth?state=test-state';
+    },
+    async completeGoogleSignIn() {
+      return {
+        token: 'session-user-1',
+        user: {
+          id: 'user-1',
+          email: 'user@example.com',
+          emailVerified: true,
+        },
+      };
+    },
     async verifyCredentials({ email, password }) {
       if (password !== 'correct-password') return null;
       const user = users.get(email);
@@ -248,5 +261,26 @@ describe('authentication API', () => {
     expect(confirmReset.status).toBe(200);
     expect(confirmReset.body.data.user.emailVerified).toBe(true);
     expect(confirmReset.headers['set-cookie']).toBeUndefined();
+  });
+
+  it('starts Google sign-in with a browser binding and creates the normal session', async () => {
+    const { app } = createTestApp();
+    const agent = request.agent(app);
+
+    const start = await agent.get('/api/v1/auth/google/start');
+    const callback = await agent
+      .get('/api/v1/auth/google/callback')
+      .query({ code: 'authorization-code', state: 'test-state' });
+
+    expect(start.status).toBe(302);
+    expect(start.headers.location).toContain('accounts.google.com');
+    expect(start.headers['set-cookie']).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('note_app_oauth_binding'),
+      ]),
+    );
+    expect(callback.status).toBe(200);
+    expect(callback.body.data.authenticated).toBe(true);
+    expect(callback.body.data).not.toHaveProperty('token');
   });
 });

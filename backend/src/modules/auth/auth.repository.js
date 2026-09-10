@@ -149,6 +149,86 @@ export function createAuthRepository(database = { query }) {
       );
     },
 
+    async createAuthCallbackState(
+      client,
+      {
+        stateHash,
+        provider,
+        purpose,
+        sessionId,
+        browserBindingHash,
+        expiresAt,
+      },
+    ) {
+      const result = await client.query(
+        `INSERT INTO auth_callback_states
+           (state_hash, provider, purpose, session_id, browser_binding_hash, expires_at)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING id, provider, purpose, session_id, expires_at`,
+        [
+          stateHash,
+          provider,
+          purpose,
+          sessionId,
+          browserBindingHash,
+          expiresAt,
+        ],
+      );
+      return result.rows[0];
+    },
+
+    async consumeAuthCallbackState(
+      client,
+      { stateHash, provider, purpose, browserBindingHash, sessionId },
+    ) {
+      const result = await client.query(
+        `UPDATE auth_callback_states
+         SET consumed_at = NOW()
+         WHERE state_hash = $1
+           AND provider = $2
+           AND purpose = $3
+           AND browser_binding_hash = $4
+           AND consumed_at IS NULL
+           AND expires_at > NOW()
+           AND session_id IS NOT DISTINCT FROM $5
+         RETURNING id, session_id`,
+        [stateHash, provider, purpose, browserBindingHash, sessionId],
+      );
+      return result.rows[0] ?? null;
+    },
+
+    async findIdentity(provider, providerSubject) {
+      const result = await database.query(
+        `SELECT ai.id, ai.user_id, u.email, u.email_verified_at,
+                u.password_hash
+         FROM auth_identities ai
+         JOIN users u ON u.id = ai.user_id
+         WHERE ai.provider = $1 AND ai.provider_subject = $2`,
+        [provider, providerSubject],
+      );
+      return result.rows[0] ?? null;
+    },
+
+    async createExternalUser(client, email) {
+      const result = await client.query(
+        `INSERT INTO users (email, password_hash, email_verified_at)
+         VALUES ($1, NULL, NOW())
+         RETURNING id, email, password_hash, email_verified_at`,
+        [email],
+      );
+      return result.rows[0];
+    },
+
+    async createIdentity(client, { userId, provider, providerSubject }) {
+      const result = await client.query(
+        `INSERT INTO auth_identities (user_id, provider, provider_subject)
+         VALUES ($1, $2, $3)
+         RETURNING id, user_id, provider, provider_subject`,
+        [userId, provider, providerSubject],
+      );
+      return result.rows[0];
+    },
+
     async createSession(client, { userId, tokenHash, expiresAt }) {
       const result = await client.query(
         `INSERT INTO sessions (user_id, token_hash, expires_at)

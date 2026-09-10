@@ -22,6 +22,9 @@ describe('getConfig', () => {
       resendApiKey: '',
       mailFromAddress: '',
       appUrl: 'http://localhost:5173',
+      googleClientId: '',
+      googleClientSecret: '',
+      googleRedirectUri: '',
     });
   });
 
@@ -41,6 +44,9 @@ describe('getConfig', () => {
         RESEND_API_KEY: 'RESEND_API_KEY is required in production.',
         MAIL_FROM_ADDRESS: 'MAIL_FROM_ADDRESS is required in production.',
         APP_URL: 'APP_URL is required in production.',
+        GOOGLE_CLIENT_ID: 'GOOGLE_CLIENT_ID is required in production.',
+        GOOGLE_CLIENT_SECRET: 'GOOGLE_CLIENT_SECRET is required in production.',
+        GOOGLE_REDIRECT_URI: 'GOOGLE_REDIRECT_URI is required in production.',
       });
     }
   });

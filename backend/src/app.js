@@ -11,6 +11,7 @@ import { createAuthRepository } from './modules/auth/auth.repository.js';
 import { createAuthService } from './modules/auth/auth.service.js';
 import { createAuthRouter } from './modules/auth/auth.routes.js';
 import { createResendMailService } from './modules/auth/mail.service.js';
+import { createGoogleProvider } from './modules/auth/google.provider.js';
 import {
   createNotesRouter,
   createTrashRouter,
@@ -35,6 +36,7 @@ export function createApp({
   authService = createAuthService({
     repository: createAuthRepository(),
     mailService: createResendMailService(config),
+    googleProvider: createGoogleProvider(config),
   }),
   notesService,
   tagsService,

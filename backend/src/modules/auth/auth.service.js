@@ -10,6 +10,8 @@ import { withTransaction } from '../../db/transaction.js';
 import { AppError } from '../../common/errors.js';
 import {
   ABSOLUTE_TIMEOUT_MS,
+  AUTH_CALLBACK_STATE_BYTES,
+  AUTH_CALLBACK_STATE_TTL_MS,
   EMAIL_VERIFICATION_TOKEN_BYTES,
   EMAIL_VERIFICATION_TTL_MS,
   IDLE_TIMEOUT_MS,
@@ -39,6 +41,13 @@ const invalidPasswordResetTokenError = () =>
     'The password reset link is invalid or expired.',
   );
 
+const providerLinkRequiredError = () =>
+  new AppError(
+    409,
+    'PROVIDER_LINK_REQUIRED',
+    'Sign in to your existing account before linking this provider.',
+  );
+
 const acceptedVerificationResponse = () => ({ accepted: true });
 
 function tokenHash(token) {
@@ -57,6 +66,7 @@ export function createAuthService({
   repository,
   transaction = withTransaction,
   password = argon2,
+  googleProvider,
   mailService = {
     sendVerificationEmail: async () => {},
     sendPasswordResetEmail: async () => {},
@@ -265,6 +275,100 @@ export function createAuthService({
       });
 
       return publicUser(user);
+    },
+
+    async startGoogleSignIn({ browserBinding }) {
+      if (!googleProvider || typeof browserBinding !== 'string')
+        throw new AppError(
+          503,
+          'PROVIDER_UNAVAILABLE',
+          'Google sign-in is temporarily unavailable.',
+        );
+
+      const state = createOpaqueToken(AUTH_CALLBACK_STATE_BYTES);
+      await transaction(async (client) =>
+        repository.createAuthCallbackState(client, {
+          stateHash: hashOpaqueToken(state),
+          provider: 'google',
+          purpose: 'sign_in',
+          sessionId: null,
+          browserBindingHash: hashOpaqueToken(browserBinding),
+          expiresAt: new Date(now() + AUTH_CALLBACK_STATE_TTL_MS),
+        }),
+      );
+      return googleProvider.authorizationUrl({ state });
+    },
+
+    async completeGoogleSignIn({ code, state, browserBinding }) {
+      if (
+        typeof code !== 'string' ||
+        typeof state !== 'string' ||
+        typeof browserBinding !== 'string'
+      ) {
+        throw new AppError(
+          400,
+          'PROVIDER_CALLBACK_INVALID',
+          'The Google callback is invalid.',
+        );
+      }
+
+      const callbackState = await transaction((client) =>
+        repository.consumeAuthCallbackState(client, {
+          stateHash: hashOpaqueToken(state),
+          provider: 'google',
+          purpose: 'sign_in',
+          browserBindingHash: hashOpaqueToken(browserBinding),
+          sessionId: null,
+        }),
+      );
+      if (!callbackState) {
+        throw new AppError(
+          400,
+          'PROVIDER_CALLBACK_INVALID',
+          'The Google callback is invalid or expired.',
+        );
+      }
+
+      const profile = await googleProvider.authenticateCode({
+        code,
+        nonce: state,
+      });
+      const email = normalizeEmail(profile.email);
+      if (!email || !profile.subject) {
+        throw new AppError(
+          401,
+          'PROVIDER_AUTHENTICATION_FAILED',
+          'Google authentication could not be completed.',
+        );
+      }
+
+      let user = await repository.findIdentity('google', profile.subject);
+      if (user) {
+        user = {
+          id: user.user_id,
+          email: user.email,
+          email_verified_at: user.email_verified_at,
+          password_hash: user.password_hash,
+        };
+      } else {
+        const existingUser = await repository.findUserByEmail(email);
+        if (existingUser) throw providerLinkRequiredError();
+        user = await transaction(async (client) => {
+          const createdUser = await repository.createExternalUser(
+            client,
+            email,
+          );
+          await repository.createIdentity(client, {
+            userId: createdUser.id,
+            provider: 'google',
+            providerSubject: profile.subject,
+          });
+          return createdUser;
+        });
+      }
+
+      const session = await this.createSession(user.id);
+      return { user: publicUser(user), token: session.token };
     },
 
     csrfToken(token, secret = '') {

@@ -279,4 +279,93 @@ describe('authentication service', () => {
     ).rejects.toMatchObject({ code: 'PASSWORD_RESET_TOKEN_INVALID' });
     expect(password.hash).not.toHaveBeenCalled();
   });
+
+  it('creates callback state and resolves a new Google identity into a session', async () => {
+    const repository = {
+      createAuthCallbackState: vi.fn(),
+      findIdentity: vi.fn(async () => null),
+      findUserByEmail: vi.fn(async () => null),
+      createExternalUser: vi.fn(async () => ({
+        id: 'user-1',
+        email: 'user@example.com',
+        password_hash: null,
+        email_verified_at: new Date('2026-09-10T00:00:00Z'),
+      })),
+      createIdentity: vi.fn(),
+      consumeAuthCallbackState: vi.fn(async () => ({ id: 'state-1' })),
+      createSession: vi.fn(async () => ({ id: 'session-1' })),
+    };
+    const googleProvider = {
+      authorizationUrl: vi.fn(() => 'https://accounts.google.com/auth'),
+      authenticateCode: vi.fn(async () => ({
+        subject: 'google-subject',
+        email: 'user@example.com',
+      })),
+    };
+    const service = createAuthService({
+      repository,
+      googleProvider,
+      transaction: vi.fn(async (work) => work({})),
+      now: () => Date.parse('2026-09-10T00:00:00Z'),
+    });
+
+    await expect(
+      service.startGoogleSignIn({ browserBinding: 'browser-binding' }),
+    ).resolves.toBe('https://accounts.google.com/auth');
+    const result = await service.completeGoogleSignIn({
+      code: 'authorization-code',
+      state: 'callback-state-value',
+      browserBinding: 'browser-binding',
+    });
+
+    expect(repository.createExternalUser).toHaveBeenCalledWith(
+      {},
+      'user@example.com',
+    );
+    expect(repository.createIdentity).toHaveBeenCalledWith(
+      {},
+      expect.objectContaining({
+        userId: 'user-1',
+        provider: 'google',
+        providerSubject: 'google-subject',
+      }),
+    );
+    expect(result.user).toEqual({
+      id: 'user-1',
+      email: 'user@example.com',
+      emailVerified: true,
+    });
+    expect(result.token).toBeTruthy();
+  });
+
+  it('does not merge a Google identity into an existing email account', async () => {
+    const repository = {
+      consumeAuthCallbackState: vi.fn(async () => ({ id: 'state-1' })),
+      findIdentity: vi.fn(async () => null),
+      findUserByEmail: vi.fn(async () => ({
+        id: 'existing-user',
+        email: 'user@example.com',
+      })),
+      createExternalUser: vi.fn(),
+    };
+    const service = createAuthService({
+      repository,
+      googleProvider: {
+        authenticateCode: vi.fn(async () => ({
+          subject: 'google-subject',
+          email: 'user@example.com',
+        })),
+      },
+      transaction: vi.fn(async (work) => work({})),
+    });
+
+    await expect(
+      service.completeGoogleSignIn({
+        code: 'authorization-code',
+        state: 'callback-state-value',
+        browserBinding: 'browser-binding',
+      }),
+    ).rejects.toMatchObject({ code: 'PROVIDER_LINK_REQUIRED' });
+    expect(repository.createExternalUser).not.toHaveBeenCalled();
+  });
 });

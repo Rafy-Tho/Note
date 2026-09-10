@@ -4,6 +4,9 @@ import { sendData } from '../../common/http.js';
 import { AppError } from '../../common/errors.js';
 import { assertObject } from '../../common/validation.js';
 import { publicUser } from './auth.constants.js';
+import { AUTH_BROWSER_BINDING_COOKIE } from './auth.constants.js';
+import { createOpaqueToken } from './auth.tokens.js';
+import { readCookie } from './auth.middleware.js';
 import {
   validateCredentials,
   validateEmailBody,
@@ -18,6 +21,30 @@ function setSessionCookie(response, name, token, secure) {
     sameSite: 'lax',
     path: '/',
     maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+}
+
+function getOrSetBrowserBinding(request, response, secure) {
+  const existing = readCookie(request, AUTH_BROWSER_BINDING_COOKIE);
+  if (existing) return existing;
+
+  const binding = createOpaqueToken();
+  response.cookie(AUTH_BROWSER_BINDING_COOKIE, binding, {
+    httpOnly: true,
+    secure,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 10 * 60 * 1000,
+  });
+  return binding;
+}
+
+function clearBrowserBinding(response, secure) {
+  response.clearCookie(AUTH_BROWSER_BINDING_COOKIE, {
+    httpOnly: true,
+    secure,
+    sameSite: 'lax',
+    path: '/',
   });
 }
 
@@ -93,6 +120,49 @@ export function createAuthController({ authService, config }) {
           credentials.password,
         );
         sendData(response, { user });
+      } catch (error) {
+        next(error);
+      }
+    },
+
+    async startGoogleSignIn(request, response, next) {
+      try {
+        const secure = config.nodeEnv === 'production';
+        const browserBinding = getOrSetBrowserBinding(
+          request,
+          response,
+          secure,
+        );
+        const authorizationUrl = await authService.startGoogleSignIn({
+          browserBinding,
+        });
+        response.redirect(authorizationUrl);
+      } catch (error) {
+        next(error);
+      }
+    },
+
+    async completeGoogleSignIn(request, response, next) {
+      try {
+        const browserBinding = readCookie(request, AUTH_BROWSER_BINDING_COOKIE);
+        const result = await authService.completeGoogleSignIn({
+          code: request.query.code,
+          state: request.query.state,
+          browserBinding,
+        });
+        const secure = config.nodeEnv === 'production';
+        setSessionCookie(
+          response,
+          config.sessionCookieName,
+          result.token,
+          secure,
+        );
+        clearBrowserBinding(response, secure);
+        sendData(response, {
+          authenticated: true,
+          user: result.user,
+          csrfToken: authService.csrfToken(result.token, config.csrfSecret),
+        });
       } catch (error) {
         next(error);
       }

@@ -2,7 +2,7 @@ import { AppError, authenticationRequiredError } from '../../common/errors.js';
 import { Router } from 'express';
 import { createCsrfMiddleware } from './auth.csrf.js';
 
-function readCookie(request, name) {
+export function readCookie(request, name) {
   const header = request.get('cookie') ?? '';
   for (const part of header.split(';')) {
     const separator = part.indexOf('=');
