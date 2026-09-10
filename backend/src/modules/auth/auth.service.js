@@ -8,7 +8,7 @@ import {
   timingSafeEqual,
 } from 'node:crypto';
 import { withTransaction } from '../../db/transaction.js';
-import { AppError } from '../../common/errors.js';
+import { AppError } from '../../common/errors/errors.js';
 import {
   ABSOLUTE_TIMEOUT_MS,
   AUTH_CALLBACK_STATE_BYTES,

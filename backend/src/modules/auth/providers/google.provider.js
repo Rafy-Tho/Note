@@ -1,6 +1,6 @@
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 import { URL, URLSearchParams } from 'node:url';
-import { AppError } from '../../common/errors.js';
+import { AppError } from '../../../common/errors/errors.js';
 
 const GOOGLE_AUTHORIZATION_ENDPOINT =
   'https://accounts.google.com/o/oauth2/v2/auth';

@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
-import { createApp } from '../../src/app.js';
-import { AppError, notFoundError } from '../../src/common/errors.js';
+import { createApp } from '../../src/app/app.js';
+import { AppError, notFoundError } from '../../src/common/errors/errors.js';
 
 const config = {
   nodeEnv: 'test',

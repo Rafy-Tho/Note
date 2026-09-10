@@ -124,6 +124,12 @@ Implement shared authentication context, React Router route guards, application 
 
 **Gate:** Authentication and every supported workspace section are reachable through stable URLs, protected correctly, and preserve unsaved-change behavior.
 
+## Step 13B - Backend Hybrid Structure Refactor
+
+Reorganize the backend into the approved hybrid architecture without changing API contracts or business behavior. Establish the app composition layer, separate shared infrastructure, keep database access under `db`, preserve feature-owned modules, update imports and tests, and verify ownership and authentication behavior after the move.
+
+**Gate:** The target backend structure is implemented, all backend tests and lint checks pass, API behavior is unchanged, and the architecture documentation matches the source tree.
+
 ## Step 14 - Test and Harden
 
 Run unit, integration, API, authorization, rich-text security, autosave, end-to-end, accessibility, performance, backup, and recovery tests. Fix critical defects and regressions.

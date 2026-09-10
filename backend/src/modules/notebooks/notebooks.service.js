@@ -1,4 +1,4 @@
-import { AppError, notFoundError } from '../../common/errors.js';
+import { AppError, notFoundError } from '../../common/errors/errors.js';
 import { withTransaction } from '../../db/transaction.js';
 
 export function createNotebooksService({

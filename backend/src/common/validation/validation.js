@@ -1,4 +1,4 @@
-import { validationError } from './errors.js';
+import { validationError } from '../errors/errors.js';
 
 export function assertObject(value, field = 'body') {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {

@@ -1,6 +1,6 @@
 import { URL } from 'node:url';
 import { describe, expect, it, vi } from 'vitest';
-import { createFacebookProvider } from '../../src/modules/auth/facebook.provider.js';
+import { createFacebookProvider } from '../../src/modules/auth/providers/facebook.provider.js';
 
 const providerConfig = {
   facebookClientId: 'facebook-client-id',

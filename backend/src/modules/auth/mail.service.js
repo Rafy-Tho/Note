@@ -1,4 +1,4 @@
-import { AppError } from '../../common/errors.js';
+import { AppError } from '../../common/errors/errors.js';
 import { URL } from 'node:url';
 
 function mailConfigurationError() {

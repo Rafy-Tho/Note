@@ -1,5 +1,5 @@
-import { validationError } from '../../common/errors.js';
-import { assertPagination } from '../../common/validation.js';
+import { validationError } from '../../common/errors/errors.js';
+import { assertPagination } from '../../common/validation/validation.js';
 
 const SEARCH_QUERY_MAX_LENGTH = 200;
 

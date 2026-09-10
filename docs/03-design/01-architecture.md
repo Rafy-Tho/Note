@@ -38,12 +38,12 @@ frontend/
 
 backend/
   src/
-    config/         Environment and application configuration.
-    db/             PostgreSQL pool, transactions, and queries.
-    middleware/     Authentication, authorization, validation, and errors.
-    common/         Shared backend errors, validation, logging, and HTTP helpers.
-    modules/        Feature routes, controllers, services, repositories, and schemas.
-    routes/         Versioned route composition.
+    app/             Express composition, global middleware, and route registration.
+    config/          Environment and application configuration.
+    db/              PostgreSQL pool, transactions, queries, and seed support.
+    common/          Shared errors, middleware, validation, logging, and responses.
+    modules/         Feature-owned routes, controllers, services, repositories, and validation.
+    server.js        Process entry point and graceful shutdown.
   migrations/       Versioned PostgreSQL migrations.
   test/              Unit, API, integration, security, and fixture support.
 
@@ -52,6 +52,21 @@ docs/                Requirements, design, implementation plans, and decisions.
 ```
 
 Keep feature behavior close to its feature module. Keep database access in backend data-access code, business rules in backend application services, and presentation concerns in frontend components.
+
+The backend uses a hybrid architecture: the top-level `app`, `config`, `common`, and `db` directories provide layered application infrastructure, while `modules` organize product behavior by feature. Each feature module may contain routes, controllers, services, repositories, validation, and feature-specific constants or adapters.
+
+### Backend Dependency Direction
+
+```text
+server -> app
+app -> modules, common, config
+routes -> controllers
+controllers -> services
+services -> repositories and common
+repositories -> db
+```
+
+Repositories must not be called directly by controllers. Controllers must not contain database queries or ownership rules. The app layer is the composition root and is responsible for wiring dependencies and registering routes; it must not contain feature business rules.
 
 ## Layer Responsibilities
 
@@ -132,6 +147,8 @@ Restoring a note returns it to its previous state and notebook when available. O
 6. Secrets come from environment or secret-management configuration.
 7. Private note content and credentials are never logged.
 8. New infrastructure must solve a demonstrated MVP problem.
+9. Feature modules must not import another feature's repository directly; shared behavior belongs in a service or common infrastructure.
+10. Shared infrastructure must remain independent of HTTP route registration and feature-specific business rules.
 
 ## Requirement Mapping
 

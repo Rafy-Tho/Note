@@ -1,9 +1,9 @@
-import { validationError } from '../../common/errors.js';
+import { validationError } from '../../common/errors/errors.js';
 import {
   assertObject,
   assertPagination,
   assertUuid,
-} from '../../common/validation.js';
+} from '../../common/validation/validation.js';
 
 const TAG_NAME_MAX_LENGTH = 100;
 

@@ -1,5 +1,5 @@
-import { notFoundError, normalizeError } from '../common/errors.js';
-import { sendError } from '../common/http.js';
+import { notFoundError, normalizeError } from './errors.js';
+import { sendError } from '../utils/response.js';
 
 export function notFoundHandler(_request, _response, next) {
   next(notFoundError());

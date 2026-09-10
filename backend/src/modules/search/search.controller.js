@@ -1,4 +1,4 @@
-import { sendCollection } from '../../common/http.js';
+import { sendCollection } from '../../common/utils/response.js';
 import { getAuthenticatedUserId } from '../authorization/authorization.js';
 import { validateSearch } from './search.validation.js';
 

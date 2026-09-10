@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { checkDatabase } from '../../db/pool.js';
-import { AppError } from '../../common/errors.js';
-import { sendData, sendError } from '../../common/http.js';
+import { AppError } from '../../common/errors/errors.js';
+import { sendData, sendError } from '../../common/utils/response.js';
 
 export function createHealthRouter({ databaseCheck = checkDatabase } = {}) {
   const router = Router();

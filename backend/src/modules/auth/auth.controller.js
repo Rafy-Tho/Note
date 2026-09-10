@@ -1,6 +1,6 @@
-import { sendData } from '../../common/http.js';
-import { AppError } from '../../common/errors.js';
-import { assertObject } from '../../common/validation.js';
+import { sendData } from '../../common/utils/response.js';
+import { AppError } from '../../common/errors/errors.js';
+import { assertObject } from '../../common/validation/validation.js';
 import { publicUser } from './auth.constants.js';
 import { AUTH_BROWSER_BINDING_COOKIE } from './auth.constants.js';
 import { createOpaqueToken } from './auth.tokens.js';

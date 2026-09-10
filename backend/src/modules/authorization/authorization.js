@@ -2,7 +2,7 @@ import {
   authenticationRequiredError,
   notFoundError,
   AppError,
-} from '../../common/errors.js';
+} from '../../common/errors/errors.js';
 
 const INVALID_STATE_MESSAGE =
   'The resource is not available for this operation.';

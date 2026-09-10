@@ -1,6 +1,6 @@
 import { getConfig } from './config/env.js';
 import { closeDatabase } from './db/pool.js';
-import { createApp } from './app.js';
+import { createApp } from './app/app.js';
 
 const { port } = getConfig();
 const app = createApp();

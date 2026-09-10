@@ -1,4 +1,4 @@
-import { AppError } from '../../common/errors.js';
+import { AppError } from '../../common/errors/errors.js';
 
 export function createCsrfMiddleware({ authService, csrfSecret }) {
   return (request, _response, next) => {

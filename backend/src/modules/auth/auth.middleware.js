@@ -1,4 +1,7 @@
-import { AppError, authenticationRequiredError } from '../../common/errors.js';
+import {
+  AppError,
+  authenticationRequiredError,
+} from '../../common/errors/errors.js';
 import { Router } from 'express';
 import { createCsrfMiddleware } from './auth.csrf.js';
 

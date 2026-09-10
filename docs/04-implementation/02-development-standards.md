@@ -12,6 +12,11 @@ This document defines the minimum standards for implementing and reviewing MVP c
 - Keep business rules in the application or backend layer.
 - Keep database queries out of UI components.
 - Reuse shared validation and error-handling behavior.
+- Use the hybrid backend structure: application infrastructure is layered under `app`, `config`, `common`, and `db`, while product behavior is organized under feature modules.
+- Keep route registration in the app composition layer and keep feature routes focused on middleware/controller wiring.
+- Keep controllers dependent on services, services dependent on repositories or shared infrastructure, and repositories dependent on database helpers.
+- Do not import a feature repository directly from another feature; expose cross-feature behavior through an application service or explicit shared contract.
+- Avoid circular dependencies between feature modules; dependency wiring belongs in the app composition root.
 
 ## Coding Rules
 

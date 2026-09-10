@@ -1,4 +1,4 @@
-import { sendCollection, sendData } from '../../common/http.js';
+import { sendCollection, sendData } from '../../common/utils/response.js';
 import { getAuthenticatedUserId } from '../authorization/authorization.js';
 import {
   validateCreateNote,

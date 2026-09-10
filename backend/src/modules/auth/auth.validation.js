@@ -1,4 +1,4 @@
-import { validationError } from '../../common/errors.js';
+import { validationError } from '../../common/errors/errors.js';
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

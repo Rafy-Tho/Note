@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
-import { createApp } from '../../src/app.js';
-import { AppError, notFoundError } from '../../src/common/errors.js';
+import { createApp } from '../../src/app/app.js';
+import { AppError, notFoundError } from '../../src/common/errors/errors.js';
 
 const config = {
   nodeEnv: 'test',
@@ -187,9 +187,8 @@ function createOrganizationTestApp() {
 }
 
 function userRequest(app, user, method, path) {
-  return request(app)
-    [method](path)
-    .set('Cookie', `note_app_session=session-${user}`);
+  const client = request(app);
+  return client[method](path).set('Cookie', `note_app_session=session-${user}`);
 }
 
 describe('organization and recovery API', () => {

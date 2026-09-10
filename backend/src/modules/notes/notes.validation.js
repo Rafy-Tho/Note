@@ -1,9 +1,9 @@
-import { validationError } from '../../common/errors.js';
+import { validationError } from '../../common/errors/errors.js';
 import {
   assertObject,
   assertPagination,
   assertUuid,
-} from '../../common/validation.js';
+} from '../../common/validation/validation.js';
 
 const NOTE_STATES = ['active', 'archived'];
 const EMPTY_DOCUMENT = { type: 'doc', content: [] };

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { URL } from 'node:url';
-import { createGoogleProvider } from '../../src/modules/auth/google.provider.js';
+import { createGoogleProvider } from '../../src/modules/auth/providers/google.provider.js';
 
 const providerConfig = {
   googleClientId: 'google-client-id',

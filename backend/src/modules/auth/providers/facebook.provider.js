@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto';
 import { URL, URLSearchParams } from 'node:url';
-import { AppError } from '../../common/errors.js';
+import { AppError } from '../../../common/errors/errors.js';
 
 const FACEBOOK_AUTHORIZATION_ENDPOINT = 'https://www.facebook.com';
 const FACEBOOK_GRAPH_ENDPOINT = 'https://graph.facebook.com';

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createAuthService } from '../../src/modules/auth/auth.service.js';
-import { createGoogleProvider } from '../../src/modules/auth/google.provider.js';
+import { createGoogleProvider } from '../../src/modules/auth/providers/google.provider.js';
 
 const now = Date.parse('2026-09-10T00:00:00Z');
 
