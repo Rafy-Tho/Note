@@ -58,7 +58,7 @@ Use cases describe the main interactions between actors and the system. They def
 | --- | --- |
 | Actor | Unauthenticated visitor or authenticated user |
 | Preconditions | A verification message has been requested for the account. |
-| Main flow | User opens the verification link; system validates the single-use token; system marks the email as verified; private note access becomes available. |
+| Main flow | User enters the verification code from email; system validates the single-use code; system marks the email as verified; private note access becomes available. |
 | Alternatives | User requests a replacement message subject to rate limits. |
 | Failure | Missing, expired, or reused tokens do not verify the email or grant note access. |
 | References | FR-46, FR-51; US-41 |

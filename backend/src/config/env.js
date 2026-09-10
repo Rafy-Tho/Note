@@ -21,12 +21,16 @@ export function getConfig(env = process.env) {
     errors.CSRF_SECRET = 'CSRF_SECRET is required outside development.';
   }
 
-  if (nodeEnv === 'production' && !env.RESEND_API_KEY) {
-    errors.RESEND_API_KEY = 'RESEND_API_KEY is required in production.';
+  if (nodeEnv === 'production' && !env.BREVO_API_KEY) {
+    errors.BREVO_API_KEY = 'BREVO_API_KEY is required in production.';
   }
 
-  if (nodeEnv === 'production' && !env.MAIL_FROM_ADDRESS) {
-    errors.MAIL_FROM_ADDRESS = 'MAIL_FROM_ADDRESS is required in production.';
+  if (nodeEnv === 'production' && !env.BREVO_FROM_EMAIL) {
+    errors.BREVO_FROM_EMAIL = 'BREVO_FROM_EMAIL is required in production.';
+  }
+
+  if (nodeEnv === 'production' && !env.BREVO_FROM_NAME) {
+    errors.BREVO_FROM_NAME = 'BREVO_FROM_NAME is required in production.';
   }
 
   if (nodeEnv === 'production' && !env.APP_URL) {
@@ -73,11 +77,16 @@ export function getConfig(env = process.env) {
     port,
     databaseUrl: env.DATABASE_URL,
     sessionSecret: env.SESSION_SECRET ?? 'development-only-session-secret',
+    authCodeSecret:
+      env.AUTH_CODE_SECRET ??
+      env.SESSION_SECRET ??
+      'development-only-auth-code-secret',
     sessionCookieName: env.SESSION_COOKIE_NAME ?? 'note_app_session',
     csrfSecret: env.CSRF_SECRET ?? 'development-only-csrf-secret',
     corsOrigin: env.CORS_ORIGIN ?? '',
-    resendApiKey: env.RESEND_API_KEY ?? '',
-    mailFromAddress: env.MAIL_FROM_ADDRESS ?? '',
+    brevoApiKey: env.BREVO_API_KEY ?? '',
+    brevoFromEmail: env.BREVO_FROM_EMAIL ?? '',
+    brevoFromName: env.BREVO_FROM_NAME ?? '',
     appUrl: env.APP_URL ?? 'http://localhost:5173',
     googleClientId: env.GOOGLE_CLIENT_ID ?? '',
     googleClientSecret: env.GOOGLE_CLIENT_SECRET ?? '',

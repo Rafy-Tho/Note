@@ -36,6 +36,16 @@ function createFakeAuthService(verified = true) {
         emailVerified: true,
       };
     },
+    async verifyEmailAndCreateSession() {
+      return {
+        token: 'session-user-1',
+        user: {
+          id: 'user-1',
+          email: 'user@example.com',
+          emailVerified: true,
+        },
+      };
+    },
     async requestEmailVerification() {
       return { accepted: true };
     },
@@ -259,13 +269,17 @@ describe('authentication API', () => {
       .send({ email: 'user@example.com' });
     const verify = await request(app)
       .post('/api/v1/auth/email/verify')
-      .send({ token: 'verification-token-value' });
+      .send({ code: '482 913\n' });
 
     expect(resend.status).toBe(200);
     expect(resend.body).toEqual({ data: { accepted: true } });
     expect(verify.status).toBe(200);
-    expect(verify.body.data.user.emailVerified).toBe(true);
-    expect(verify.headers['set-cookie']).toBeUndefined();
+    expect(verify.body.data).toMatchObject({
+      authenticated: true,
+      user: { emailVerified: true },
+      csrfToken: 'csrf-test-secret:session-user-1',
+    });
+    expect(verify.headers['set-cookie']).toBeDefined();
   });
 
   it('exposes generic password reset endpoints without creating a session', async () => {

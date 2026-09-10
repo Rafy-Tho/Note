@@ -114,13 +114,36 @@ describe('authentication service', () => {
       {},
       expect.objectContaining({
         userId: 'user-1',
-        expiresAt: new Date('2026-09-11T00:00:00Z'),
+        expiresAt: new Date('2026-09-10T00:10:00Z'),
       }),
     );
     expect(mailService.sendVerificationEmail).toHaveBeenCalledWith({
       to: 'user@example.com',
-      token: expect.any(String),
+      code: expect.stringMatching(/^\d{6}$/),
     });
+  });
+
+  it('keeps duplicate registration from creating a second account', async () => {
+    const duplicateError = new Error('duplicate');
+    duplicateError.code = '23505';
+    const repository = {
+      createUser: vi.fn(async () => {
+        throw duplicateError;
+      }),
+    };
+    const transaction = vi.fn(async (work) => work({}));
+    const service = createAuthService({ repository, transaction });
+
+    await expect(
+      service.register({
+        email: 'user@example.com',
+        password: 'correct-password',
+      }),
+    ).rejects.toMatchObject({
+      status: 409,
+      code: 'DUPLICATE_EMAIL',
+    });
+    expect(repository.createUser).toHaveBeenCalledOnce();
   });
 
   it('consumes a valid verification token and marks the user verified', async () => {
@@ -144,7 +167,7 @@ describe('authentication service', () => {
       now: () => Date.parse('2026-09-10T00:00:00Z'),
     });
 
-    const result = await service.verifyEmail('verification-token-value');
+    const result = await service.verifyEmail('482913');
 
     expect(result).toEqual({
       id: 'user-1',
@@ -153,6 +176,42 @@ describe('authentication service', () => {
     });
     expect(repository.consumeEmailVerificationToken).toHaveBeenCalledOnce();
     expect(repository.markEmailVerified).toHaveBeenCalledWith({}, 'user-1');
+  });
+
+  it('creates a session after verifying an email', async () => {
+    const repository = {
+      findEmailVerificationToken: vi.fn(async () => ({
+        user_id: 'user-1',
+        email: 'user@example.com',
+        expires_at: new Date('2026-09-11T00:00:00Z'),
+        consumed_at: null,
+      })),
+      consumeEmailVerificationToken: vi.fn(async () => true),
+      markEmailVerified: vi.fn(async () => ({
+        id: 'user-1',
+        email: 'user@example.com',
+        email_verified_at: new Date('2026-09-10T00:00:00Z'),
+      })),
+      createSession: vi.fn(async () => ({ id: 'session-1' })),
+    };
+    const service = createAuthService({
+      repository,
+      transaction: vi.fn(async (work) => work({})),
+      now: () => Date.parse('2026-09-10T00:00:00Z'),
+    });
+
+    const result = await service.verifyEmailAndCreateSession('482913');
+
+    expect(result.user).toEqual({
+      id: 'user-1',
+      email: 'user@example.com',
+      emailVerified: true,
+    });
+    expect(result.token).toEqual(expect.any(String));
+    expect(repository.createSession).toHaveBeenCalledWith(
+      {},
+      expect.objectContaining({ userId: 'user-1' }),
+    );
   });
 
   it('sends a reset message only for verified password accounts', async () => {

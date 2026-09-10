@@ -6,7 +6,7 @@ In Progress
 
 ## Objective
 
-Add mandatory email verification, secure password reset, Google and Facebook sign-in, authenticated provider linking, and Resend-backed transactional email without changing the existing opaque session model.
+Add mandatory email verification, secure password reset, Google and Facebook sign-in, authenticated provider linking, and Brevo-backed transactional email without changing the existing opaque session model.
 
 ## Depends On
 
@@ -24,7 +24,7 @@ Add mandatory email verification, secure password reset, Google and Facebook sig
 - Telegram sign-in and sign-up are deferred.
 - Provider identities are linked only from an authenticated session.
 - Matching email addresses never automatically merge accounts.
-- Resend is the planned transactional email provider.
+- Brevo is the transactional email provider.
 - Existing accounts are marked unverified by the migration and must verify before note access.
 - OAuth callback state is stored as hashed, one-time database state bound to the browser and linking session when applicable.
 - Password reset does not create passwords for provider-only accounts.
@@ -36,7 +36,7 @@ Add mandatory email verification, secure password reset, Google and Facebook sig
 - [x] Add `auth_callback_states` with expiry, one-time consumption, and browser/session binding.
 - [x] Add hashed, expiring, single-use email verification tokens.
 - [x] Add hashed, expiring, single-use password-reset tokens with bounded attempts.
-- [x] Add the Resend mail adapter and safe configuration validation.
+- [x] Add the Brevo mail adapter and safe configuration validation.
 - [x] Implement verification and resend services with rate limits.
 - [x] Implement generic password-reset requests and reset confirmation.
 - [x] Revoke all sessions atomically after a successful password reset.

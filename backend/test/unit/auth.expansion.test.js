@@ -8,21 +8,24 @@ describe('authentication expansion edge cases', () => {
   it.each([
     { consumed_at: new Date(now), expires_at: new Date(now + 60_000) },
     { consumed_at: null, expires_at: new Date(now - 1) },
-  ])('rejects a verification token that is consumed or expired', async (token) => {
-    const repository = {
-      findEmailVerificationToken: vi.fn(async () => ({
-        user_id: 'user-1',
-        ...token,
-      })),
-      consumeEmailVerificationToken: vi.fn(),
-    };
-    const service = createAuthService({ repository, now: () => now });
+  ])(
+    'rejects a verification token that is consumed or expired',
+    async (token) => {
+      const repository = {
+        findEmailVerificationToken: vi.fn(async () => ({
+          user_id: 'user-1',
+          ...token,
+        })),
+        consumeEmailVerificationToken: vi.fn(),
+      };
+      const service = createAuthService({ repository, now: () => now });
 
-    await expect(service.verifyEmail('verification-token-value')).rejects.toMatchObject({
-      code: 'VERIFICATION_TOKEN_INVALID',
-    });
-    expect(repository.consumeEmailVerificationToken).not.toHaveBeenCalled();
-  });
+      await expect(service.verifyEmail('482913')).rejects.toMatchObject({
+        code: 'VERIFICATION_TOKEN_INVALID',
+      });
+      expect(repository.consumeEmailVerificationToken).not.toHaveBeenCalled();
+    },
+  );
 
   it('rejects a reset token after its attempt bound is reached', async () => {
     const repository = {
@@ -84,7 +87,10 @@ describe('authentication expansion edge cases', () => {
   });
 
   it('validates Google issuer, audience, nonce, and verified email claims', async () => {
-    const fetchImpl = vi.fn(async () => ({ ok: true, json: async () => ({ id_token: 'id-token' }) }));
+    const fetchImpl = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ id_token: 'id-token' }),
+    }));
     const jwtVerifyImpl = vi.fn(async () => ({
       payload: {
         iss: 'https://accounts.google.com',
@@ -104,7 +110,9 @@ describe('authentication expansion edge cases', () => {
       jwks: {},
     });
 
-    await expect(provider.authenticateCode({ code: 'code', nonce: 'expected-nonce' })).resolves.toEqual({
+    await expect(
+      provider.authenticateCode({ code: 'code', nonce: 'expected-nonce' }),
+    ).resolves.toEqual({
       subject: 'google-subject',
       email: 'user@example.com',
     });

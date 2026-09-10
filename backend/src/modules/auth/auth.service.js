@@ -3,6 +3,7 @@ import { Buffer } from 'node:buffer';
 import {
   createHash,
   createHmac,
+  randomInt,
   randomBytes,
   timingSafeEqual,
 } from 'node:crypto';
@@ -12,7 +13,7 @@ import {
   ABSOLUTE_TIMEOUT_MS,
   AUTH_CALLBACK_STATE_BYTES,
   AUTH_CALLBACK_STATE_TTL_MS,
-  EMAIL_VERIFICATION_TOKEN_BYTES,
+  EMAIL_VERIFICATION_CODE_DIGITS,
   EMAIL_VERIFICATION_TTL_MS,
   IDLE_TIMEOUT_MS,
   PASSWORD_RESET_MAX_ATTEMPTS,
@@ -21,7 +22,11 @@ import {
   SESSION_TOKEN_BYTES,
   publicUser,
 } from './auth.constants.js';
-import { createOpaqueToken, hashOpaqueToken } from './auth.tokens.js';
+import {
+  createOpaqueToken,
+  hashOpaqueToken,
+  hashVerificationCode,
+} from './auth.tokens.js';
 import { normalizeEmail } from './auth.validation.js';
 
 const invalidCredentialsError = () =>
@@ -31,7 +36,7 @@ const invalidVerificationTokenError = () =>
   new AppError(
     400,
     'VERIFICATION_TOKEN_INVALID',
-    'The verification link is invalid or expired.',
+    'The verification code is invalid or expired.',
   );
 
 const invalidPasswordResetTokenError = () =>
@@ -85,6 +90,7 @@ export function createAuthService({
   password = argon2,
   googleProvider,
   facebookProvider,
+  authCodeSecret = 'development-only-auth-code-secret',
   mailService = {
     sendVerificationEmail: async () => {},
     sendPasswordResetEmail: async () => {},
@@ -93,19 +99,22 @@ export function createAuthService({
 } = {}) {
   async function createVerificationChallenge(client, user) {
     if (!repository.createEmailVerificationToken) return null;
-    const token = createOpaqueToken(EMAIL_VERIFICATION_TOKEN_BYTES);
+    const code = randomInt(
+      10 ** (EMAIL_VERIFICATION_CODE_DIGITS - 1),
+      10 ** EMAIL_VERIFICATION_CODE_DIGITS,
+    ).toString();
     await repository.invalidateVerificationTokens(client, user.id);
     await repository.createEmailVerificationToken(client, {
       userId: user.id,
-      tokenHash: hashOpaqueToken(token),
+      tokenHash: hashVerificationCode(code, authCodeSecret),
       expiresAt: new Date(now() + EMAIL_VERIFICATION_TTL_MS),
     });
-    return token;
+    return code;
   }
 
-  async function sendVerification(user, token) {
-    if (token) {
-      await mailService.sendVerificationEmail({ to: user.email, token });
+  async function sendVerification(user, code) {
+    if (code) {
+      await mailService.sendVerificationEmail({ to: user.email, code });
     }
   }
 
@@ -226,12 +235,11 @@ export function createAuthService({
       return acceptedVerificationResponse();
     },
 
-    async verifyEmail(token) {
-      if (typeof token !== 'string' || token.length < 20)
-        throw invalidVerificationTokenError();
+    async verifyEmail(code) {
+      if (!/^\d{6}$/.test(code ?? '')) throw invalidVerificationTokenError();
 
       const verification = await repository.findEmailVerificationToken(
-        hashOpaqueToken(token),
+        hashVerificationCode(code, authCodeSecret),
       );
       if (
         !verification ||
@@ -244,7 +252,7 @@ export function createAuthService({
       const user = await transaction(async (client) => {
         const consumed = await repository.consumeEmailVerificationToken(
           client,
-          hashOpaqueToken(token),
+          hashVerificationCode(code, authCodeSecret),
           verification.user_id,
         );
         if (!consumed) throw invalidVerificationTokenError();
@@ -252,6 +260,12 @@ export function createAuthService({
       });
 
       return publicUser(user);
+    },
+
+    async verifyEmailAndCreateSession(token) {
+      const user = await this.verifyEmail(token);
+      const session = await this.createSession(user.id);
+      return { user, token: session.token };
     },
 
     async requestPasswordReset(email) {

@@ -72,7 +72,7 @@ Complete registration, mandatory email verification, sign-in, sign-out, session-
 
 ## Step 6A - Authentication Provider Expansion
 
-Implement Resend-backed email verification and password reset, Google and Facebook authorization-code callbacks, provider identity resolution, authenticated provider linking, collision protection, callback state validation, provider configuration, and restricted access for unverified accounts. Telegram sign-in and sign-up remain future scope.
+Implement Brevo-backed email verification and password reset, Google and Facebook authorization-code callbacks, provider identity resolution, authenticated provider linking, collision protection, callback state validation, provider configuration, and restricted access for unverified accounts. Telegram sign-in and sign-up remain future scope.
 
 **Gate:** A user must verify email before accessing private notes; users can safely reset passwords; valid Google and Facebook users can sign in; existing users can link providers without automatic account merging; invalid callbacks and identity collisions are rejected.
 

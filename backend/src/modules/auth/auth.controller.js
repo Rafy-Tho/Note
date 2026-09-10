@@ -1,5 +1,3 @@
-import passport from 'passport';
-import { Strategy as LocalStrategy } from 'passport-local';
 import { sendData } from '../../common/http.js';
 import { AppError } from '../../common/errors.js';
 import { assertObject } from '../../common/validation.js';
@@ -11,7 +9,7 @@ import {
   validateCredentials,
   validateEmailBody,
   validatePasswordResetBody,
-  validateVerificationTokenBody,
+  validateVerificationCodeBody,
 } from './auth.validation.js';
 
 function setSessionCookie(response, name, token, secure) {
@@ -51,30 +49,11 @@ function clearBrowserBinding(response, secure) {
 function redirectProviderFailure(request, response, config, error) {
   if (!request.get('accept')?.includes('text/html')) return false;
   const code = error.code ?? 'PROVIDER_CALLBACK_INVALID';
-  response.redirect(
-    `${config.appUrl}/?authError=${encodeURIComponent(code)}`,
-  );
+  response.redirect(`${config.appUrl}/?authError=${encodeURIComponent(code)}`);
   return true;
 }
 
 export function createAuthController({ authService, config }) {
-  passport.use(
-    new LocalStrategy(
-      { usernameField: 'email', passwordField: 'password' },
-      async (email, password, done) => {
-        try {
-          const credentials = validateCredentials({ email, password });
-          const user = await authService.verifyCredentials(credentials);
-          done(null, user);
-        } catch (error) {
-          if (error instanceof AppError && error.status === 401)
-            done(null, false);
-          else done(error);
-        }
-      },
-    ),
-  );
-
   return {
     async register(request, response, next) {
       try {
@@ -90,9 +69,19 @@ export function createAuthController({ authService, config }) {
     async verifyEmail(request, response, next) {
       try {
         assertObject(request.body);
-        const token = validateVerificationTokenBody(request.body);
-        const user = await authService.verifyEmail(token);
-        sendData(response, { user });
+        const code = validateVerificationCodeBody(request.body);
+        const result = await authService.verifyEmailAndCreateSession(code);
+        setSessionCookie(
+          response,
+          config.sessionCookieName,
+          result.token,
+          config.nodeEnv === 'production',
+        );
+        sendData(response, {
+          authenticated: true,
+          user: result.user,
+          csrfToken: authService.csrfToken(result.token, config.csrfSecret),
+        });
       } catch (error) {
         next(error);
       }
@@ -301,37 +290,32 @@ export function createAuthController({ authService, config }) {
       }
     },
 
-    login(request, response, next) {
-      passport.authenticate(
-        'local',
-        { session: false },
-        async (error, user) => {
-          try {
-            if (error) throw error;
-            if (!user)
-              throw new AppError(
-                401,
-                'AUTHENTICATION_FAILED',
-                'Invalid email or password.',
-              );
-
-            const { token } = await authService.createSession(user.id);
-            setSessionCookie(
-              response,
-              config.sessionCookieName,
-              token,
-              config.nodeEnv === 'production',
-            );
-            sendData(response, {
-              authenticated: true,
-              user: publicUser(user),
-              csrfToken: authService.csrfToken(token, config.csrfSecret),
-            });
-          } catch (authError) {
-            next(authError);
-          }
-        },
-      )(request, response, next);
+    async login(request, response, next) {
+      try {
+        assertObject(request.body);
+        const credentials = validateCredentials(request.body);
+        const user = await authService.verifyCredentials(credentials);
+        if (!user)
+          throw new AppError(
+            401,
+            'AUTHENTICATION_FAILED',
+            'Invalid email or password.',
+          );
+        const { token } = await authService.createSession(user.id);
+        setSessionCookie(
+          response,
+          config.sessionCookieName,
+          token,
+          config.nodeEnv === 'production',
+        );
+        sendData(response, {
+          authenticated: true,
+          user: publicUser(user),
+          csrfToken: authService.csrfToken(token, config.csrfSecret),
+        });
+      } catch (error) {
+        next(error);
+      }
     },
 
     getSession(request, response) {

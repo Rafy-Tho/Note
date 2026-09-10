@@ -63,7 +63,7 @@ Existing accounts are marked unverified when the authentication expansion migrat
 
 New password accounts must verify their normalized email before accessing private notes. A verification record stores only a hash of a high-entropy, single-use token, its expiry, and its consumed timestamp. Tokens expire after a configurable period and verification-message requests are rate limited.
 
-The application sends verification messages through a backend mail adapter using Resend in production. Mail credentials and sender configuration come from the environment. Tokens are never logged, returned by the API, or stored in plaintext.
+The application sends verification messages through a backend mail adapter using Brevo in production. Mail credentials and sender configuration come from the environment. Tokens are never logged, returned by the API, or stored in plaintext.
 
 An unverified account may access only the verification and sign-out flows. Verification failures must not reveal whether another email address belongs to an account.
 
@@ -150,7 +150,9 @@ Use a configurable seven-day idle timeout and thirty-day absolute timeout.
 5. Create the user in a transaction.
 6. Return registration success without automatically creating a session.
 
-The user signs in separately after registration.
+The user signs in separately after registration, unless they enter the verification code. A successful verification consumes the code, marks the email verified, creates the normal opaque session, and signs the user in automatically.
+
+If verification delivery fails after the account transaction commits, the account remains unverified and the user may request another verification message. A retry must not create a second account or replace the existing account credentials.
 
 ## Sign-In Flow
 
@@ -189,6 +191,7 @@ Invalid credentials and invalid input must not create a session.
 - Provider callback failure or cancellation: do not create or change a session or identity.
 - Provider identity collision: reject linking without changing either account.
 - Mail delivery failure: do not claim that a verification message was sent successfully.
+- Failed verification delivery: retain the pending unverified account and direct the user to the rate-limited resend flow.
 - Invalid, expired, reused, or over-attempted reset token: do not change the password.
 - Successful password reset: revoke all existing sessions before reporting success.
 

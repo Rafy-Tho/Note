@@ -39,14 +39,16 @@ export function validateEmailBody(body) {
   return email;
 }
 
-export function validateVerificationTokenBody(body) {
+export function validateVerificationCodeBody(body) {
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
     throw validationError({ body: 'Must be an object.' });
   }
-  if (typeof body.token !== 'string' || body.token.length < 20) {
-    throw validationError({ token: 'Must be a valid verification token.' });
+  const code =
+    typeof body.code === 'string' ? body.code.replace(/\s/g, '') : '';
+  if (!/^\d{6}$/.test(code)) {
+    throw validationError({ code: 'Must be a six-digit verification code.' });
   }
-  return body.token;
+  return code;
 }
 
 export function validatePasswordResetBody(body) {

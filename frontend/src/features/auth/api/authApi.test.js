@@ -38,17 +38,43 @@ describe('auth API client', () => {
   it('maps generic reset and verification failures without exposing response internals', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       response(
-        { error: { code: 'PASSWORD_RESET_TOKEN_INVALID', message: 'The link is invalid.' } },
+        {
+          error: {
+            code: 'PASSWORD_RESET_TOKEN_INVALID',
+            message: 'The link is invalid.',
+          },
+        },
         false,
         400,
       ),
     );
     const api = createAuthApi();
 
-    await expect(api.confirmPasswordReset('raw-token', 'new-password')).rejects.toMatchObject({
+    await expect(
+      api.confirmPasswordReset('raw-token', 'new-password'),
+    ).rejects.toMatchObject({
       code: 'PASSWORD_RESET_TOKEN_INVALID',
       status: 400,
       message: 'The link is invalid.',
+    });
+  });
+
+  it('sends the verification code using the code request field', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      response({
+        data: {
+          authenticated: true,
+          user: { id: 'user-1', emailVerified: true },
+          csrfToken: 'csrf-token',
+        },
+      }),
+    );
+    const api = createAuthApi();
+
+    await api.verifyEmail('518969');
+
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      code: '518969',
     });
   });
 });

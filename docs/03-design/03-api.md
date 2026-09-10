@@ -72,7 +72,7 @@ Error messages must not expose SQL, stack traces, secrets, or another user's res
 | POST | `/auth/login` | Create an authenticated session. |
 | GET | `/auth/:provider/start` | Start Google or Facebook authorization. |
 | GET | `/auth/:provider/callback` | Validate the provider callback and create or resolve a session. |
-| POST | `/auth/email/verify` | Consume a verification token and verify the account email. |
+| POST | `/auth/email/verify` | Consume a verification token, verify the account email, and create an authenticated session. |
 | POST | `/auth/email/verification/resend` | Request a new verification message. |
 | POST | `/auth/password/reset/request` | Request a password-reset message with a generic response. |
 | POST | `/auth/password/reset/confirm` | Consume a valid reset token and set a new password. |

@@ -22,7 +22,7 @@ Acceptance criteria define observable conditions for deciding whether MVP behavi
 ### AC-49 - Email Verification
 
 - **Given** a new account has an unverified email, **when** the user requests verification, **then** the system sends a verification message through the configured mail service.
-- **Given** a valid unexpired verification link is opened, **then** the email is marked verified and private note access becomes available.
+- **Given** a valid unexpired verification code is submitted, **then** the email is marked verified and private note access becomes available.
 - **Given** a token is invalid, expired, or already used, **then** verification fails and private note access remains unavailable.
 - **Given** repeated verification requests exceed the configured limit, **then** the request is rate limited.
 

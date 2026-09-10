@@ -1,5 +1,4 @@
 import express from 'express';
-import passport from 'passport';
 import { createLogger } from './common/logger.js';
 import { validationError } from './common/errors.js';
 import { errorHandler, notFoundHandler } from './middleware/errors.js';
@@ -10,7 +9,7 @@ import { getConfig } from './config/env.js';
 import { createAuthRepository } from './modules/auth/auth.repository.js';
 import { createAuthService } from './modules/auth/auth.service.js';
 import { createAuthRouter } from './modules/auth/auth.routes.js';
-import { createResendMailService } from './modules/auth/mail.service.js';
+import { createBrevoMailService } from './modules/auth/mail.service.js';
 import { createGoogleProvider } from './modules/auth/google.provider.js';
 import { createFacebookProvider } from './modules/auth/facebook.provider.js';
 import {
@@ -36,7 +35,13 @@ export function createApp({
   config = getConfig(),
   authService = createAuthService({
     repository: createAuthRepository(),
-    mailService: createResendMailService(config),
+    mailService: createBrevoMailService({
+      apiKey: config.brevoApiKey,
+      fromEmail: config.brevoFromEmail,
+      fromName: config.brevoFromName,
+      appUrl: config.appUrl,
+    }),
+    authCodeSecret: config.authCodeSecret,
     googleProvider: createGoogleProvider(config),
     facebookProvider: createFacebookProvider(config),
   }),
@@ -56,7 +61,6 @@ export function createApp({
   app.use(requestContext);
   app.use(requestLogging(logger));
   app.use(express.json({ limit: '1mb' }));
-  app.use(passport.initialize());
 
   app.use('/api/v1/health', createHealthRouter({ databaseCheck }));
   app.use('/api/v1/auth', createAuthRouter({ authService, config }));

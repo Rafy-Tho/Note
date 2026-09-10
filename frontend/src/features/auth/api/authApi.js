@@ -59,11 +59,13 @@ export function createAuthApi() {
         body: JSON.stringify(credentials),
       });
     },
-    async verifyEmail(token) {
-      return request('/auth/email/verify', {
+    async verifyEmail(code) {
+      const session = await request('/auth/email/verify', {
         method: 'POST',
-        body: JSON.stringify({ token }),
+        body: JSON.stringify({ code }),
       });
+      csrfToken = session.csrfToken;
+      return session;
     },
     async resendVerification(email) {
       return request('/auth/email/verification/resend', {
