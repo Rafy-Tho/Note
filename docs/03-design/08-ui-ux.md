@@ -47,6 +47,10 @@ Collection or editor view
 
 The sidebar becomes a menu or drawer. The editor and essential actions remain usable without horizontal scrolling.
 
+On tablet and mobile, the navigation sidebar and notes collection are independent temporary drawers over the editor. Only one drawer may be open at a time. The workspace header provides `Menu` for navigation and `Notes` for the collection. The active drawer closes from its toggle, the backdrop, Escape, or successful navigation.
+
+On desktop, `Menu` and `Notes` remain beside the brand in the top header and collapse the navigation or collection pane without changing the current URL or editor state.
+
 ## Required Screens
 
 - Registration

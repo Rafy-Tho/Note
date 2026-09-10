@@ -160,6 +160,12 @@ Add expandable, compact Tags and Notebooks sections to the workspace sidebar wit
 
 **Gate:** Users can browse and manage their owned tags and notebooks from the responsive sidebar, tag CRUD preserves ownership and search consistency, and relevant frontend/backend/browser checks pass.
 
+## Step 13H - Workspace Dual-Pane Drawers
+
+Make the navigation sidebar and notes collection independently slide over the editor on tablet and mobile while preserving the desktop three-pane workspace, URL-driven state, focus behavior, and unsaved-draft protection. Track the detailed scope and acceptance criteria in `tasks/13H-workspace-dual-pane-drawers.md`.
+
+**Gate:** Both auxiliary workspace panes open and close accessibly on supported small screens, only one drawer is open at a time, and desktop/mobile checks pass.
+
 ## Step 14 - Test and Harden
 
 Run unit, integration, API, authorization, rich-text security, autosave, end-to-end, accessibility, performance, backup, and recovery tests. Fix critical defects and regressions.

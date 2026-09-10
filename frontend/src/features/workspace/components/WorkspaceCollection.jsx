@@ -135,6 +135,7 @@ export const WorkspaceCollection = memo(function WorkspaceCollection({
   selectedId,
   selectedTagId,
   selectedNotebookId,
+  collectionOpen,
   getEditorState,
   allowNextNavigation,
   onSelectNote,
@@ -243,7 +244,7 @@ export const WorkspaceCollection = memo(function WorkspaceCollection({
 
   return (
     <section
-      className={`${styles.collection} ${mobilePane === 'editor' ? styles.mobileHidden : ''}`}
+      className={`${styles.collection} ${collectionOpen ? styles.collectionDrawerOpen : ''} ${mobilePane === 'editor' && !collectionOpen ? styles.mobileHidden : ''}`}
       aria-labelledby="workspace-title"
       data-collection-scroll="true"
     >

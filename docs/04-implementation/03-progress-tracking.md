@@ -12,7 +12,7 @@
 | Field | Value |
 | --- | --- |
 | Current phase | Implementation |
-| Current step | Step 13G - Sidebar Tag and Notebook Management |
+| Current step | Step 13H - Workspace Dual-Pane Drawers |
 | Overall status | In Progress |
 | Blocker | None for the completed bootstrap and database gates. |
 | Last updated | 2026-09-10 |
@@ -43,6 +43,7 @@
 | 13E | Editor organization controls | In Progress | Notebook and tag organization is compact, accessible, and safe from the editor. | Added two compact `Notebooks` and `Tags` buttons with toggle panels containing notebook selection/creation/management and tag assignment/creation/removal. Frontend lint, Vitest (7 files, 18 tests), and build pass. Browser verification remains blocked by the unavailable local Chromium executable. See `tasks/13E-editor-organization-controls.md`. |
 | 13F | Workspace dialogs and toast feedback | In Progress | Native browser prompts are removed and workspace feedback is accessible and consistent. | Added shared dialog and workspace toast primitives, migrated link, rename, dirty-navigation, destructive-action, and account confirmation flows, and added feedback helper tests. Frontend lint passes; Vitest passes with 7 files and 18 tests; production build passes with the existing large-bundle warning. Browser verification remains blocked by the unavailable local Chromium executable. See `tasks/13F-workspace-dialogs-and-toast-feedback.md`. |
 | 13G | Sidebar tag and notebook management | In Progress | Owned tags and notebooks are browseable and manageable from the responsive sidebar without visual clutter or cross-user access. | Added ownership-safe tag rename/delete service and API behavior, shared frontend tag CRUD methods, expandable sidebar tag and notebook sections, create/rename/delete dialogs, and search-projection refresh behavior. Verification and browser coverage remain pending. See `tasks/13G-sidebar-tag-management.md`. |
+| 13H | Workspace dual-pane drawers | In Progress | Navigation and notes collection can slide over the editor accessibly on small screens. | Added coordinated navigation/collection drawer state, mobile Notes toggle, mutually exclusive slide-in panes, shared backdrop/Escape closing, and preserved URL/draft guard behavior. Frontend lint, Vitest (8 files, 19 tests), and build pass. Browser verification remains blocked by the unavailable local Chromium executable. See `tasks/13H-workspace-dual-pane-drawers.md`. |
 | 14 | Testing and hardening | Not Started | No critical security, data-loss, or regression issue remains. | |
 | 15 | Deployment preparation | Not Started | Deployment and recovery procedures work. | |
 

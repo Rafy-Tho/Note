@@ -28,6 +28,7 @@ export const WorkspaceEditor = memo(function WorkspaceEditor({
   mobilePane,
   view,
   noteId,
+  collectionOpen,
   canLeaveDraft,
   allowNextNavigation,
   onBack,
@@ -179,7 +180,7 @@ export const WorkspaceEditor = memo(function WorkspaceEditor({
 
   return (
     <section
-      className={`${styles.editor} ${mobilePane === 'collection' ? styles.mobileHidden : ''}`}
+      className={`${styles.editor} ${mobilePane === 'collection' || collectionOpen ? styles.mobileHidden : ''}`}
       aria-label="Note editor"
     >
       <button

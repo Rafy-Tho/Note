@@ -28,6 +28,7 @@ export function Workspace() {
   const selectedTagId = params.tagId ?? '';
   const selectedNotebookId = params.notebookId ?? '';
   const mobilePane = mobilePaneFromNoteId(params.noteId);
+  const [collectionOpen, setCollectionOpen] = useState(!params.noteId);
   const [editorState, setEditorState] = useState({ isDirty: false, isSaving: false });
   const editorStateRef = useRef(editorState);
   const allowBlockedNavigationRef = useRef(false);
@@ -36,6 +37,11 @@ export function Workspace() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const { isDirty, isSaving } = editorState;
   const blocker = useBlocker(isDirty && !isSaving);
+
+  useEffect(() => {
+    if (!params.noteId) setCollectionOpen(true);
+    else setCollectionOpen(false);
+  }, [params.noteId]);
 
   useEffect(() => {
     if (blocker.state !== 'blocked' || confirmOpen) return;
@@ -178,6 +184,11 @@ export function Workspace() {
         styles={styles}
         view={view}
         selectedTagId={selectedTagId}
+        collectionOpen={collectionOpen}
+        onOpenCollection={() =>
+          setCollectionOpen((current) => (params.noteId ? !current : true))
+        }
+        onCloseCollection={() => setCollectionOpen(false)}
         canLeaveDraft={requestLeave}
         onSwitchView={switchView}
         onSelectTag={openTag}
@@ -189,6 +200,7 @@ export function Workspace() {
           selectedId={params.noteId}
           selectedTagId={selectedTagId}
           selectedNotebookId={selectedNotebookId}
+          collectionOpen={collectionOpen}
           getEditorState={getEditorState}
           allowNextNavigation={allowNextNavigation}
           onSelectNote={selectNote}
@@ -202,6 +214,7 @@ export function Workspace() {
           mobilePane={mobilePane}
           view={view}
           noteId={params.noteId}
+          collectionOpen={collectionOpen}
           canLeaveDraft={requestLeave}
           allowNextNavigation={allowNextNavigation}
           onBack={goBackToCollection}
