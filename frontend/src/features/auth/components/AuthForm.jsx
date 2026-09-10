@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { ArrowRight, Eye, EyeOff } from 'lucide-react';
-import { Alert } from '../../../components/Alert/Alert.jsx';
-import { authApi } from '../api/authApi.js';
-import { validateCredentials } from '../authValidation.js';
+import { Alert } from '../../../components/common/Alert/Alert.jsx';
+import { authApi } from '../services/authApi.js';
+import { validateCredentials } from '../validation/authValidation.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import styles from './AuthForm.module.css';
 

@@ -1,9 +1,9 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { authApi } from '../../auth/api/authApi.js';
-import { notesApi } from '../../notes/api/notesApi.js';
-import { searchApi } from '../../search/api/searchApi.js';
-import { tagsApi } from '../../tags/api/tagsApi.js';
-import { notebooksApi } from '../../notebooks/api/notebooksApi.js';
+import { authApi } from '../../auth/services/authApi.js';
+import { notesApi } from '../../notes/services/notesApi.js';
+import { searchApi } from '../../search/services/searchApi.js';
+import { tagsApi } from '../../tags/services/tagsApi.js';
+import { notebooksApi } from '../../notebooks/services/notebooksApi.js';
 
 export const workspaceQueryKeys = {
   notes: ['workspace', 'notes'],

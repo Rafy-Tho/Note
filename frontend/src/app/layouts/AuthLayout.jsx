@@ -1,5 +1,5 @@
 import { Outlet, useSearchParams } from 'react-router-dom';
-import { Brand } from '../../components/Brand/Brand.jsx';
+import { Brand } from '../../components/common/Brand/Brand.jsx';
 import styles from '../App.module.css';
 
 export function AuthLayout() {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Plus, X } from 'lucide-react';
-import { Alert } from '../../../components/Alert/Alert.jsx';
-import { tagsApi } from '../api/tagsApi.js';
+import { Alert } from '../../../components/common/Alert/Alert.jsx';
+import { tagsApi } from '../services/tagsApi.js';
 import styles from '../../workspace/components/Workspace.module.css';
 
 export function TagControls({ noteId, tags, onTagsChange, disabled = false }) {

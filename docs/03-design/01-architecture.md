@@ -28,13 +28,16 @@ Application code lives at the repository root, separate from project documentati
 ```text
 frontend/
   src/
-    app/            Application setup, providers, and routing.
-    components/     Reusable presentation components.
-    features/       Auth, notes, notebooks, tags, search, and note states.
-    hooks/          Shared React hooks.
-    lib/            API client and frontend utilities.
+    app/            Application setup, providers, query client, routing, and layouts.
+    components/     Shared UI and common product presentation components.
+    features/       Feature-owned components, hooks, services, validation, and tests.
+    pages/          Thin route-level screen composition.
+    hooks/          Hooks shared by multiple features.
+    lib/            Framework-independent application infrastructure.
+    utils/          Framework-independent shared helpers.
+    constants/      Shared application constants.
+    assets/         Static frontend assets.
     styles/         Global and shared styles.
-    test/           Frontend test setup and fixtures.
 
 backend/
   src/
@@ -53,6 +56,8 @@ docs/                Requirements, design, implementation plans, and decisions.
 
 Keep feature behavior close to its feature module. Keep database access in backend data-access code, business rules in backend application services, and presentation concerns in frontend components.
 
+The frontend uses a hybrid structure: `app` contains application composition and infrastructure, `features` contain product behavior by capability, and the top-level `components`, `hooks`, `lib`, `utils`, and `constants` directories contain intentionally shared code. Route-level screens in `pages` compose features and should remain thin. Shared code must not import feature internals.
+
 The backend uses a hybrid architecture: the top-level `app`, `config`, `common`, and `db` directories provide layered application infrastructure, while `modules` organize product behavior by feature. Each feature module may contain routes, controllers, services, repositories, validation, and feature-specific constants or adapters.
 
 ### Backend Dependency Direction
@@ -67,6 +72,19 @@ repositories -> db
 ```
 
 Repositories must not be called directly by controllers. Controllers must not contain database queries or ownership rules. The app layer is the composition root and is responsible for wiring dependencies and registering routes; it must not contain feature business rules.
+
+### Frontend Dependency Direction
+
+```text
+main -> app/providers -> features and shared infrastructure
+app/router -> pages, layouts, and feature route guards
+pages -> feature public components
+feature components -> feature hooks and services
+feature services -> lib infrastructure when needed
+shared components/hooks/utils -> no feature internals
+```
+
+Feature services own feature-specific API operations. Shared transport or framework infrastructure belongs in `lib` or `app`; it must not contain feature business rules. A global state store is not required unless a demonstrated requirement exceeds React context and React Query.
 
 ## Layer Responsibilities
 
@@ -149,6 +167,9 @@ Restoring a note returns it to its previous state and notebook when available. O
 8. New infrastructure must solve a demonstrated MVP problem.
 9. Feature modules must not import another feature's repository directly; shared behavior belongs in a service or common infrastructure.
 10. Shared infrastructure must remain independent of HTTP route registration and feature-specific business rules.
+
+12. Frontend feature behavior stays inside its feature; shared components remain feature-agnostic.
+13. Frontend pages compose routes and features but do not own API or business logic.
 
 ## Requirement Mapping
 

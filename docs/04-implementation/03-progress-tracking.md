@@ -12,7 +12,7 @@
 | Field | Value |
 | --- | --- |
 | Current phase | Implementation |
-| Current step | Step 13B - Backend Hybrid Structure Refactor |
+| Current step | Step 13C - Frontend Hybrid Structure Refactor |
 | Overall status | In Progress |
 | Blocker | None for the completed bootstrap and database gates. |
 | Last updated | 2026-09-10 |
@@ -38,6 +38,7 @@
 | 13 | Cross-slice UI integration | In Progress | The core workflow works accessibly on supported screen sizes. | Responsive three-area workspace shell, mobile navigation drawer, collection/editor switching, visible focus treatment, reduced-motion support, retryable initial loading failure, centralized unsaved-change navigation guard, and consistent Lucide iconography with accessible labels implemented. Frontend lint, Vitest (4 tests), and build pass. Playwright projects and mobile keyboard journey added; browser execution remains blocked because the local Chromium executable is unavailable. |
 | 13A | Frontend routing and application context | In Progress | Authentication and workspace routes work through shared context and URL state. | React Router, AuthProvider, route guards, layouts, authentication/workspace route parameters, and workspace routing tests implemented. Frontend lint, 9 Vitest tests, and build pass. Browser verification remains pending because the local Chromium executable is unavailable. See `tasks/12A-frontend-routing-and-context.md`. |
 | 13B | Backend hybrid structure refactor | Complete | Target structure, tests, lint, and API behavior remain valid. | Added `src/app` composition, reorganized shared code under `src/common`, moved auth providers under `modules/auth/providers`, updated source/tests/docs. Backend lint passes; all 18 test files and 78 tests pass. |
+| 13C | Frontend hybrid structure refactor | Complete | Target frontend structure, tests, lint, and build remain valid. | Added explicit app providers/query client, moved shared components under `components/common`, moved feature API modules under feature `services`, moved auth validation under `validation`, and updated architecture/task documentation. Frontend lint passes; 4 Vitest files and 9 tests pass; production build passes with the existing large-bundle warning. |
 | 14 | Testing and hardening | Not Started | No critical security, data-loss, or regression issue remains. | |
 | 15 | Deployment preparation | Not Started | Deployment and recovery procedures work. | |
 

@@ -5,7 +5,7 @@ import {
   useOutletContext,
   useSearchParams,
 } from 'react-router-dom';
-import { Alert } from '../components/Alert/Alert.jsx';
+import { Alert } from '../components/common/Alert/Alert.jsx';
 import { AuthForm } from '../features/auth/components/AuthForm.jsx';
 import { useAuth } from '../features/auth/context/AuthContext.jsx';
 

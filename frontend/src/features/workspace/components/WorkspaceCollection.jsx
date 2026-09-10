@@ -6,7 +6,7 @@ import {
   Search,
   Trash2,
 } from 'lucide-react';
-import { Alert } from '../../../components/Alert/Alert.jsx';
+import { Alert } from '../../../components/common/Alert/Alert.jsx';
 import { documentText } from '../../notes/noteDocument.js';
 
 const titles = {

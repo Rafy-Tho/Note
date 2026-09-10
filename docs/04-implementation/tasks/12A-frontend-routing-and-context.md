@@ -68,6 +68,8 @@ Trash remains list-only because the current interface does not edit trashed note
 frontend/src/
 ├── app/
 │   ├── App.jsx
+│   ├── providers.jsx
+│   ├── queryClient.js
 │   ├── router.jsx
 │   └── layouts/
 │       ├── AppLayout.jsx
@@ -81,11 +83,15 @@ frontend/src/
 │       └── components/
 │           ├── ProtectedRoute.jsx
 │           └── PublicRoute.jsx
+├── components/
+│   └── common/
 └── pages/
     ├── AuthPage.jsx
     ├── WorkspacePage.jsx
     └── NotFoundPage.jsx
 ```
+
+The complete frontend hybrid structure and dependency boundaries are defined in `tasks/13C-frontend-hybrid-structure.md`. This task owns routing and context behavior; the later structure refactor owns file organization without changing those behaviors.
 
 ## Provider Composition
 

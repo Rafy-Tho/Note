@@ -1,5 +1,5 @@
 import { Menu } from 'lucide-react';
-import { Brand } from '../../../components/Brand/Brand.jsx';
+import { Brand } from '../../../components/common/Brand/Brand.jsx';
 
 export function WorkspaceHeader({ email, menuOpen, onOpenMenu, styles }) {
   return (

@@ -17,6 +17,11 @@ This document defines the minimum standards for implementing and reviewing MVP c
 - Keep controllers dependent on services, services dependent on repositories or shared infrastructure, and repositories dependent on database helpers.
 - Do not import a feature repository directly from another feature; expose cross-feature behavior through an application service or explicit shared contract.
 - Avoid circular dependencies between feature modules; dependency wiring belongs in the app composition root.
+- Use the frontend hybrid structure: `app` owns composition and infrastructure, `features` own product behavior, and shared directories contain only genuinely reusable code.
+- Keep frontend pages thin; route-level pages compose layouts and feature components without owning API calls or business rules.
+- Keep feature-specific API operations in the owning feature's `services` directory. Shared request infrastructure belongs in `lib`.
+- Shared frontend components, hooks, utilities, and constants must not import feature internals.
+- Do not add a global state store without a demonstrated requirement that React context and React Query cannot satisfy.
 
 ## Coding Rules
 

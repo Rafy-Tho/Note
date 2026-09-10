@@ -1,4 +1,4 @@
-import noteAppMark from '../../assets/icons/note-app-mark.svg';
+import noteAppMark from '../../../assets/icons/note-app-mark.svg';
 import styles from './Brand.module.css';
 
 export function Brand() {

@@ -7,8 +7,8 @@ import {
   useParams,
   useSearchParams,
 } from 'react-router-dom';
-import { authApi } from '../../auth/api/authApi.js';
-import { notesApi } from '../../notes/api/notesApi.js';
+import { authApi } from '../../auth/services/authApi.js';
+import { notesApi } from '../../notes/services/notesApi.js';
 import { useAuth } from '../../auth/context/AuthContext.jsx';
 import { useWorkspaceMutations } from '../hooks/useWorkspaceMutations.js';
 import {

@@ -1,4 +1,4 @@
-import { authApi } from '../../auth/api/authApi.js';
+import { authApi } from '../../auth/services/authApi.js';
 
 export const searchApi = {
   search(query, page = 1) {

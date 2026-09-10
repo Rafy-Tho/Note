@@ -130,6 +130,12 @@ Reorganize the backend into the approved hybrid architecture without changing AP
 
 **Gate:** The target backend structure is implemented, all backend tests and lint checks pass, API behavior is unchanged, and the architecture documentation matches the source tree.
 
+## Step 13C - Frontend Hybrid Structure Refactor
+
+Reorganize the frontend into the approved hybrid architecture. Keep application composition under `app`, feature behavior under `features`, route screens under `pages`, and genuinely reusable presentation and infrastructure under the shared directories. Track the detailed target tree, boundaries, migration checklist, and verification evidence in `tasks/13C-frontend-hybrid-structure.md`.
+
+**Gate:** The target frontend structure is implemented, imports and tests are updated, frontend lint/tests/build pass, and routing, authentication, autosave, and workspace behavior remain unchanged.
+
 ## Step 14 - Test and Harden
 
 Run unit, integration, API, authorization, rich-text security, autosave, end-to-end, accessibility, performance, backup, and recovery tests. Fix critical defects and regressions.
