@@ -300,13 +300,31 @@ h1 {
     monospace;
 }
 .editorHeader {
-  justify-content: flex-end;
+  align-items: flex-start;
+  flex-wrap: wrap;
   min-height: 36px;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--color-border);
 }
+.editorContext {
+  display: flex;
+  flex: 1 1 560px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+.editorActions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 .saveStatus {
-  margin-right: auto;
+  margin-right: 4px;
+  white-space: nowrap;
 }
 .titleInput,
 .editorContent {
@@ -409,14 +427,23 @@ h1 {
   background: var(--color-surface);
 }
 .tagControls {
-  display: grid;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
-  margin-bottom: 18px;
-  padding: 12px 0;
-  border-top: 1px solid var(--color-border);
-  border-bottom: 1px solid var(--color-border);
+  min-width: 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
 }
-.notebookControls,
+.notebookControls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
 .tagBrowse {
   display: flex;
   align-items: center;
@@ -429,6 +456,17 @@ h1 {
   color: var(--color-text-muted);
   font-size: 12px;
 }
+.contextLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-muted);
+  font: 11px var(--font-code);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+.contextSelect,
 .notebookControls select,
 .tagBrowse select {
   min-height: 36px;
@@ -436,7 +474,51 @@ h1 {
   border: 1px solid var(--color-border);
   color: var(--color-text);
   background: var(--color-surface);
-  border-radius: var(--radius-control);
+  border-radius: 0;
+  font-size: 12px;
+}
+.contextSelect {
+  min-width: 150px;
+  max-width: min(240px, 34vw);
+}
+.contextSelect:hover {
+  border-color: var(--color-interaction);
+}
+.contextButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 7px 10px;
+  border: 1px dashed var(--color-border);
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border-radius: 0;
+  font: 11px var(--font-code);
+}
+.contextButton:hover,
+.contextButton[aria-expanded='true'] {
+  border-color: var(--color-interaction);
+  color: var(--color-text);
+  background: var(--color-surface-elevated);
+}
+.contextCreateForm {
+  display: flex;
+  flex: 1 1 220px;
+  align-items: center;
+  gap: 8px;
+  min-width: 190px;
+}
+.contextCreateForm input {
+  min-width: 0;
+  flex: 1;
+  min-height: 36px;
+  padding: 7px 9px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  background: var(--color-surface);
+  border-radius: 0;
   font-size: 12px;
 }
 .notebookControls form {
@@ -444,13 +526,29 @@ h1 {
   gap: 8px;
   margin-left: auto;
 }
+.notebookManage {
+  display: grid;
+  flex: 1 1 100%;
+  gap: 6px;
+  padding-top: 4px;
+}
 .notebookItem {
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
+  justify-content: flex-end;
   padding: 6px 8px;
   border: 1px solid var(--color-border);
   color: var(--color-text);
+  background: var(--color-surface);
+  font-size: 12px;
+}
+.notebookItem span {
+  overflow: hidden;
+  margin-right: auto;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .textButton {
   padding: 0;
@@ -459,21 +557,15 @@ h1 {
   background: transparent;
   font-size: 11px;
 }
+.textDanger {
+  color: var(--color-danger);
+}
 .tagHeader,
-.tagActions,
-.newTagForm {
+.tagActions {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-}
-.tagLabel {
-  color: var(--color-text);
-  font:
-    12px 'JetBrains Mono',
-    monospace;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
 }
 .tagMeta {
   color: var(--color-text-muted);
@@ -494,7 +586,7 @@ h1 {
   border: 1px solid var(--color-interaction);
   color: var(--color-text);
   background: var(--color-surface);
-  border-radius: var(--radius-control);
+  border-radius: 0;
   font-size: 12px;
 }
 .tagChip button {
@@ -506,18 +598,25 @@ h1 {
     12px 'JetBrains Mono',
     monospace;
 }
-.tagActions select,
-.newTagForm input {
+.tagActions select {
   min-height: 36px;
   padding: 7px 9px;
   border: 1px solid var(--color-border);
   color: var(--color-text);
   background: var(--color-surface);
-  border-radius: var(--radius-control);
+  border-radius: 0;
   font-size: 12px;
 }
-.newTagForm input {
-  width: 130px;
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 .searchForm {
   display: flex;
@@ -646,6 +745,33 @@ h1 {
     min-height: 0;
     padding: 20px 16px;
     overflow: visible;
+  }
+  .editorHeader {
+    gap: 12px;
+  }
+  .editorContext,
+  .editorActions {
+    flex-basis: 100%;
+    width: 100%;
+  }
+  .editorActions {
+    justify-content: flex-start;
+  }
+  .contextSelect {
+    flex: 1 1 160px;
+    max-width: none;
+    min-height: 44px;
+  }
+  .contextButton {
+    min-height: 44px;
+  }
+  .contextCreateForm {
+    flex-basis: 100%;
+    min-width: 0;
+  }
+  .contextCreateForm input,
+  .contextCreateForm .secondaryButton {
+    min-height: 44px;
   }
   .mobileHidden {
     display: none;

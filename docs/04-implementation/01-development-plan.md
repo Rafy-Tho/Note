@@ -142,6 +142,12 @@ Harden the workspace after cross-slice integration by keeping the workspace shel
 
 **Gate:** Workspace navigation does not remount the shell or issue duplicate/looping detail requests, unsaved drafts are never silently replaced, private query data is cleared across sessions, collection payloads are appropriately lightweight, and relevant frontend/backend/browser checks pass.
 
+## Step 13E - Editor Organization Controls
+
+Refine the note editor organization workflow with a compact top context bar for notebook selection, tag assignment, and creation of new notebooks or tags. Keep notebook management available without filling the writing surface, preserve existing ownership and autosave behavior, and document the responsive interaction states in `tasks/13E-editor-organization-controls.md`.
+
+**Gate:** Users can organize an open note from the editor context bar, newly created notebooks and tags are assigned only after successful server confirmation, management controls remain accessible, and frontend checks plus supported viewport verification pass.
+
 ## Step 14 - Test and Harden
 
 Run unit, integration, API, authorization, rich-text security, autosave, end-to-end, accessibility, performance, backup, and recovery tests. Fix critical defects and regressions.

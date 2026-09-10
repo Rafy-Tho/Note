@@ -77,6 +77,18 @@ Components should provide default, hover, focus, active, disabled, loading, succ
 - Save-status indicator with explicit text: Unsaved Changes, Saving, Saved, or Save Failed
 - Toasts, dialogs, drawers, loading skeletons, empty states, and error states
 
+### Editor Organization Context
+
+The note editor uses a compact, flat context bar above the title. The bar groups the current notebook selector, assigned tag chips, existing-tag assignment, create-new controls, save status, and note actions without introducing a card around the writing canvas.
+
+- Use a labeled native notebook select with a `No notebook` option and a folder icon.
+- Use square tag chips with visible remove controls and an accessible name for each removal action.
+- Use compact bordered controls for existing-tag selection and creation actions.
+- Reveal create forms inline only after the user activates `New`; do not permanently occupy editor space with empty forms.
+- Keep rename and delete notebook operations behind `Manage` so the editor remains writing-focused.
+- Use `--color-interaction` for focus and selection, `--color-primary` for successful creation/save states, and `--color-danger` for destructive notebook actions.
+- Keep the context bar wrapping and touch usable at the mobile breakpoint; never require horizontal scrolling.
+
 ## Accessibility
 
 - Use semantic HTML and accessible names for all controls.

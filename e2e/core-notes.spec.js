@@ -29,8 +29,22 @@ test('authenticated user can create, edit, and reload a note', async ({
   await expect(
     page.getByRole('button', { name: /Browser journey/ }),
   ).toBeVisible();
+
+  await page.getByRole('button', { name: 'Create new notebook' }).click();
+  await page.getByLabel('New notebook name').fill('Project Notes');
+  await page.getByRole('button', { name: 'Create', exact: true }).click();
+  const notebookSelect = page.getByLabel('Notebook');
+  const notebookOption = notebookSelect.locator('option', {
+    hasText: 'Project Notes',
+  });
+  await expect(notebookOption).toHaveCount(1);
+  await expect(notebookSelect).toHaveValue(
+    await notebookOption.getAttribute('value'),
+  );
+
+  await page.getByRole('button', { name: 'Create new tag' }).click();
   await page.getByLabel('New tag name').fill('Project Alpha');
-  await page.getByRole('button', { name: 'Create' }).click();
+  await page.getByRole('button', { name: 'Create', exact: true }).click();
   await expect(
     page.getByRole('button', { name: 'Remove Project Alpha tag' }),
   ).toBeVisible();

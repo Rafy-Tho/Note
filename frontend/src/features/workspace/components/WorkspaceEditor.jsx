@@ -198,68 +198,97 @@ export const WorkspaceEditor = memo(function WorkspaceEditor({
       ) : draft ? (
         <>
           <div className={styles.editorHeader}>
-            <span className={styles.saveStatus} aria-live="polite">
-              {saveStatus}
-            </span>
-            <button
-              className={styles.saveButton}
-              type="button"
-              onClick={() => void saveDraft()}
-              disabled={saveStatus === 'Saved' || saveStatus === 'Saving'}
-              aria-label={
-                saveStatus === 'Save Failed' ? 'Retry save' : 'Save note'
-              }
-              title={saveStatus === 'Save Failed' ? 'Retry save' : 'Save note'}
+            <div
+              className={styles.editorContext}
+              role="group"
+              aria-label="Note organization"
             >
-              {saveStatus === 'Save Failed' ? (
-                <RotateCcw className="icon" size={15} aria-hidden="true" />
-              ) : (
-                <FileText className="icon" size={15} aria-hidden="true" />
+              <NotebookControls
+                styles={styles}
+                note={draft}
+                notebooks={notebooks}
+                onNoteUpdated={updateFromServer}
+                disabled={busy}
+              />
+              <TagControls
+                noteId={draft.id}
+                tags={draft.tags ?? []}
+                availableTags={availableTags}
+                tagsLoading={tagsQuery.isLoading}
+                onTagsChange={updateTags}
+                disabled={busy}
+              />
+            </div>
+            <div className={styles.editorActions}>
+              <span className={styles.saveStatus} aria-live="polite">
+                {saveStatus}
+              </span>
+              <button
+                className={styles.saveButton}
+                type="button"
+                onClick={() => void saveDraft()}
+                disabled={saveStatus === 'Saved' || saveStatus === 'Saving'}
+                aria-label={
+                  saveStatus === 'Save Failed' ? 'Retry save' : 'Save note'
+                }
+                title={
+                  saveStatus === 'Save Failed' ? 'Retry save' : 'Save note'
+                }
+              >
+                {saveStatus === 'Save Failed' ? (
+                  <RotateCcw className="icon" size={15} aria-hidden="true" />
+                ) : (
+                  <FileText className="icon" size={15} aria-hidden="true" />
+                )}
+              </button>
+              {conflict && (
+                <button
+                  className={styles.secondaryButton}
+                  type="button"
+                  onClick={() => void reloadServerCopy()}
+                  aria-label="Reload server copy"
+                  title="Reload server copy"
+                >
+                  <RotateCcw className="icon" size={15} aria-hidden="true" />
+                </button>
               )}
-            </button>
-            {conflict && (
+              <button
+                className={styles.dangerButton}
+                type="button"
+                onClick={() => void trashCurrentNote()}
+                disabled={busy}
+                aria-label="Move note to Trash"
+                title="Move note to Trash"
+              >
+                <Trash2 className="icon" size={15} aria-hidden="true" />
+              </button>
               <button
                 className={styles.secondaryButton}
                 type="button"
-                onClick={() => void reloadServerCopy()}
-                aria-label="Reload server copy"
-                title="Reload server copy"
+                onClick={() => void setNoteFavorite(!draft.isFavorite)}
+                disabled={busy}
+                aria-label={
+                  draft.isFavorite ? 'Unfavorite note' : 'Favorite note'
+                }
+                title={draft.isFavorite ? 'Unfavorite note' : 'Favorite note'}
               >
-                <RotateCcw className="icon" size={15} aria-hidden="true" />
+                <Star className="icon" size={15} aria-hidden="true" />
               </button>
-            )}
-            <button
-              className={styles.dangerButton}
-              type="button"
-              onClick={() => void trashCurrentNote()}
-              disabled={busy}
-              aria-label="Move note to Trash"
-              title="Move note to Trash"
-            >
-              <Trash2 className="icon" size={15} aria-hidden="true" />
-            </button>
-            <button
-              className={styles.secondaryButton}
-              type="button"
-              onClick={() => void setNoteFavorite(!draft.isFavorite)}
-              disabled={busy}
-              aria-label={draft.isFavorite ? 'Unfavorite note' : 'Favorite note'}
-              title={draft.isFavorite ? 'Unfavorite note' : 'Favorite note'}
-            >
-              <Star className="icon" size={15} aria-hidden="true" />
-            </button>
-            <button
-              className={styles.secondaryButton}
-              type="button"
-              onClick={() => void changeArchive()}
-              disabled={busy}
-              aria-label={
-                draft.state === 'archived' ? 'Unarchive note' : 'Archive note'
-              }
-              title={draft.state === 'archived' ? 'Unarchive note' : 'Archive note'}
-            >
-              <Archive className="icon" size={15} aria-hidden="true" />
-            </button>
+              <button
+                className={styles.secondaryButton}
+                type="button"
+                onClick={() => void changeArchive()}
+                disabled={busy}
+                aria-label={
+                  draft.state === 'archived' ? 'Unarchive note' : 'Archive note'
+                }
+                title={
+                  draft.state === 'archived' ? 'Unarchive note' : 'Archive note'
+                }
+              >
+                <Archive className="icon" size={15} aria-hidden="true" />
+              </button>
+            </div>
           </div>
           <input
             className={styles.titleInput}
@@ -267,20 +296,6 @@ export const WorkspaceEditor = memo(function WorkspaceEditor({
             value={draft.title}
             onChange={(event) => changeDraft('title', event.target.value)}
             placeholder="Untitled note"
-          />
-          <TagControls
-            noteId={draft.id}
-            tags={draft.tags ?? []}
-            availableTags={availableTags}
-            tagsLoading={tagsQuery.isLoading}
-            onTagsChange={updateTags}
-            disabled={busy}
-          />
-          <NotebookControls
-            styles={styles}
-            note={draft}
-            notebooks={notebooks}
-            onNoteUpdated={updateFromServer}
           />
           <NoteEditor
             key={draft.id}

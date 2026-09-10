@@ -73,6 +73,20 @@ The editor must provide:
 
 Autosave behavior is defined in `07-autosave.md`.
 
+### Editor Organization Context
+
+Notebook and tag controls live in a compact context bar at the top of the note editor, before the title and writing canvas. The context bar shall:
+
+- Show a labeled notebook dropdown with a `No notebook` option.
+- Show assigned tags as removable chips.
+- Provide a dropdown for assigning an existing tag.
+- Provide separate `Create new notebook` and `Create new tag` actions that reveal short inline forms.
+- Assign a newly created notebook or tag to the current note after successful creation.
+- Keep notebook rename and delete actions behind an explicit Manage control instead of listing all management actions in the writing surface.
+- Preserve clear error feedback and disable organization controls while the note is saving or a related mutation is pending.
+
+On mobile, the context bar wraps into multiple rows and keeps every control usable without horizontal scrolling. Selects, buttons, chip removal controls, and form actions retain practical 44px touch targets. The save status and primary note actions remain visible below the organization context.
+
 ## Feedback States
 
 Every major view must support:
@@ -128,6 +142,7 @@ Mobile behavior must define sidebar collapse, notes-list/editor navigation, tool
 | --- | --- |
 | Dashboard and navigation | FR-37-FR-39, US-31-US-33 |
 | Editor and save feedback | FR-08, FR-32-FR-35, NFR-17, NFR-38 |
+| Editor organization context | FR-20-FR-27, AC-08-AC-15 |
 | Collection and empty states | FR-30, FR-38, NFR-38 |
 | Responsive interface | NFR-40, NFR-46 |
 | Accessibility | NFR-41-NFR-44 |
