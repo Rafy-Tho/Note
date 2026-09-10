@@ -6,6 +6,7 @@ import {
   validateNoteId,
   validateTagId,
   validateTagList,
+  validateRenameTag,
 } from './tags.validation.js';
 
 export function createTagsController({ service }) {
@@ -34,6 +35,31 @@ export function createTagsController({ service }) {
           validateCreateTag(request.body),
         );
         sendData(response, tag, 201);
+      } catch (error) {
+        next(error);
+      }
+    },
+
+    async rename(request, response, next) {
+      try {
+        const tag = await service.rename(
+          getAuthenticatedUserId(request),
+          validateTagId(request.params.tagId),
+          validateRenameTag(request.body),
+        );
+        sendData(response, tag);
+      } catch (error) {
+        next(error);
+      }
+    },
+
+    async removeTag(request, response, next) {
+      try {
+        await service.delete(
+          getAuthenticatedUserId(request),
+          validateTagId(request.params.tagId),
+        );
+        response.status(204).send();
       } catch (error) {
         next(error);
       }

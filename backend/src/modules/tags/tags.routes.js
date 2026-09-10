@@ -20,6 +20,8 @@ export function createTagsRouter({ authService, config, service } = {}) {
 
   router.get('/', controller.list);
   router.post('/', controller.create);
+  router.patch('/:tagId', controller.rename);
+  router.delete('/:tagId', controller.removeTag);
   router.get('/:tagId/notes', controller.listNotesByTag);
   return router;
 }

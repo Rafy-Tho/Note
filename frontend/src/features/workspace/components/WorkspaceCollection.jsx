@@ -12,6 +12,7 @@ import {
   useWorkspaceArchiveQuery,
   useWorkspaceFavoritesQuery,
   useWorkspaceNotesQuery,
+  useWorkspaceNotebooksQuery,
   useWorkspaceTagNotesQuery,
   useWorkspaceTagsQuery,
   workspaceQueryKeys,
@@ -24,6 +25,7 @@ const titles = {
   favorites: 'Favorites',
   archive: 'Archive',
   tags: 'Tags',
+  notebooks: 'Notebooks',
   search: 'Search',
   trash: 'Trash',
 };
@@ -132,17 +134,22 @@ export const WorkspaceCollection = memo(function WorkspaceCollection({
   mobilePane,
   selectedId,
   selectedTagId,
+  selectedNotebookId,
   getEditorState,
   allowNextNavigation,
   onSelectNote,
   onOpenNote,
   onTagChange,
+  onNotebookChange,
   onSearchOpen,
 }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const notesQuery = useWorkspaceNotesQuery();
+  const notesQuery = useWorkspaceNotesQuery(
+    view === 'notebooks' ? selectedNotebookId : '',
+  );
   const tagsQuery = useWorkspaceTagsQuery();
+  const notebooksQuery = useWorkspaceNotebooksQuery();
   const favoritesQuery = useWorkspaceFavoritesQuery(view === 'favorites');
   const archiveQuery = useWorkspaceArchiveQuery(view === 'archive');
   const tagNotesQuery = useWorkspaceTagNotesQuery(
@@ -157,20 +164,27 @@ export const WorkspaceCollection = memo(function WorkspaceCollection({
   const notes = flattenNotesPages(notesQuery.data);
   const availableTags = tagsQuery.data ?? [];
   const collectionNotes =
-    view === 'favorites'
+    view === 'notebooks'
+      ? flattenNotesPages(notesQuery.data)
+      : view === 'favorites'
       ? (favoritesQuery.data ?? [])
       : view === 'archive'
         ? (archiveQuery.data ?? [])
         : (tagNotesQuery.data ?? []);
   const collectionQuery =
-    view === 'favorites'
+    view === 'notebooks'
+      ? notesQuery
+      : view === 'favorites'
       ? favoritesQuery
       : view === 'archive'
         ? archiveQuery
         : tagNotesQuery;
-  const isInitialLoading = notesQuery.isLoading || tagsQuery.isLoading;
+  const isInitialLoading =
+    notesQuery.isLoading || tagsQuery.isLoading || notebooksQuery.isLoading;
   const initialError =
-    (notesQuery.isLoadingError && notesQuery.error) || tagsQuery.error;
+    (notesQuery.isLoadingError && notesQuery.error) ||
+    tagsQuery.error ||
+    notebooksQuery.error;
   const busy = creating;
   const notesLoadMoreError = notesQuery.isFetchNextPageError
     ? notesQuery.error
@@ -218,7 +232,11 @@ export const WorkspaceCollection = memo(function WorkspaceCollection({
 
   async function retryInitialLoad() {
     setError(null);
-    await Promise.all([notesQuery.refetch(), tagsQuery.refetch()]).catch(
+      await Promise.all([
+        notesQuery.refetch(),
+        tagsQuery.refetch(),
+        notebooksQuery.refetch(),
+      ]).catch(
       (requestError) => setError(requestError.message),
     );
   }
@@ -268,7 +286,7 @@ export const WorkspaceCollection = memo(function WorkspaceCollection({
         <WorkspaceSearch styles={styles} onOpenResult={onSearchOpen} />
       ) : view === 'trash' ? (
         <WorkspaceTrash styles={styles} />
-      ) : ['favorites', 'archive', 'tags'].includes(view) ? (
+      ) : ['favorites', 'archive', 'tags', 'notebooks'].includes(view) ? (
         collectionQuery.isLoading ? (
           <div className={styles.empty} aria-live="polite">
             Loading {view}...
@@ -285,6 +303,22 @@ export const WorkspaceCollection = memo(function WorkspaceCollection({
               {availableTags.map((tag) => (
                 <option value={tag.id} key={tag.id}>
                   {tag.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : view === 'notebooks' && !selectedNotebookId ? (
+          <div className={styles.tagBrowse}>
+            <label htmlFor="browse-notebook">Browse notes by notebook</label>
+            <select
+              id="browse-notebook"
+              value={selectedNotebookId}
+              onChange={(event) => onNotebookChange(event.target.value)}
+            >
+              <option value="">Choose a notebook</option>
+              {notebooksQuery.data?.map((notebook) => (
+                <option value={notebook.id} key={notebook.id}>
+                  {notebook.name}
                 </option>
               ))}
             </select>

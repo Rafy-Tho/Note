@@ -1,10 +1,13 @@
-import { Archive, FileText, Search, Star, Tags, Trash2, X } from 'lucide-react';
+import { Archive, FileText, Folder, Search, Star, Tags, Trash2, X } from 'lucide-react';
 import { WorkspaceAccountControls } from './WorkspaceAccountControls.jsx';
+import { WorkspaceTagSection } from './WorkspaceTagSection.jsx';
+import { WorkspaceNotebookSection } from './WorkspaceNotebookSection.jsx';
 
 const navigation = [
   ['notes', 'Notes', FileText],
   ['favorites', 'Favorites', Star],
   ['archive', 'Archive', Archive],
+  ['notebooks', 'Notebooks', Folder],
   ['tags', 'Tags', Tags],
   ['search', 'Search', Search],
   ['trash', 'Trash', Trash2],
@@ -15,9 +18,11 @@ export function WorkspaceSidebar({
   open,
   closeMenuRef,
   view,
+  selectedTagId,
   canLeaveDraft,
   onClose,
   onSwitchView,
+  onSelectTag,
 }) {
   return (
     <aside
@@ -52,8 +57,14 @@ export function WorkspaceSidebar({
             </span>
             {view === navView && <span aria-hidden="true">/</span>}
           </button>
-        ))}
+          ))}
       </nav>
+      <WorkspaceNotebookSection styles={styles} />
+      <WorkspaceTagSection
+        styles={styles}
+        selectedTagId={selectedTagId}
+        onSelectTag={onSelectTag}
+      />
       <WorkspaceAccountControls
         styles={styles}
         canLeaveDraft={canLeaveDraft}

@@ -122,6 +122,8 @@ Collection endpoints return lightweight note projections for list rendering. A c
 | --- | --- | --- |
 | GET | `/tags` | List the user's tags. |
 | POST | `/tags` | Create a unique tag for the user. |
+| PATCH | `/tags/:tagId` | Rename an owned tag while preserving per-user uniqueness. |
+| DELETE | `/tags/:tagId` | Delete an owned tag and remove its note associations without deleting notes. |
 | POST | `/notes/:noteId/tags` | Assign an owned tag to an owned note. |
 | DELETE | `/notes/:noteId/tags/:tagId` | Remove a tag association. |
 | GET | `/tags/:tagId/notes` | List the user's notes for a tag. |

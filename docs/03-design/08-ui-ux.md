@@ -87,6 +87,22 @@ Notebook and tag controls live behind two compact `Notebooks` and `Tags` buttons
 
 On mobile, the context bar wraps into multiple rows and keeps every control usable without horizontal scrolling. Selects, buttons, chip removal controls, and form actions retain practical 44px touch targets. The save status and primary note actions remain visible below the organization context.
 
+### Sidebar Tags
+
+- The sidebar includes an expandable Tags section with a compact `+` create action.
+- Expanded tags are listed alphabetically and the active tag has a visible selected state.
+- Selecting a tag opens its workspace collection and follows the existing unsaved-change navigation guard.
+- Rename and delete actions remain hidden until a tag row is hovered or keyboard-focused, keeping the sidebar quiet by default.
+- Create, rename, and delete use accessible dialogs. Deleting a tag removes its note associations but never deletes notes.
+- The Tags section remains usable inside the mobile navigation drawer with keyboard access, visible focus, and no horizontal scrolling.
+
+### Sidebar Notebooks
+
+- The sidebar includes an expandable Notebooks section with a compact `+` create action.
+- Expanded notebooks are listed alphabetically with compact hover/focus row actions for rename and delete.
+- Notebook creation, rename, and deletion use the shared accessible dialogs and refresh the editor organization controls after confirmation.
+- Deleting a notebook unassigns its notes but never deletes the notes.
+
 ## Feedback States
 
 Every major view must support:

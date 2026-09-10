@@ -55,4 +55,69 @@ describe('tags service', () => {
       status: 409,
     });
   });
+
+  it('renames an owned tag and refreshes affected search projections', async () => {
+    const updateSearchProjection = vi.fn();
+    const repository = {
+      findTag: vi.fn(async () => ({ id: 'tag-1', name: 'Work' })),
+      rename: vi.fn(async () => ({ id: 'tag-1', name: 'Planning' })),
+      listNotesForTag: vi.fn(async () => [
+        {
+          id: 'note-1',
+          title: 'Roadmap',
+          content_json: { type: 'doc', content: [] },
+        },
+      ]),
+      listNoteTags: vi.fn(async () => [{ id: 'tag-1', name: 'Planning' }]),
+      updateSearchProjection,
+    };
+    const service = createTagsService({ repository, transaction });
+
+    await service.rename('user-1', 'tag-1', {
+      name: 'Planning',
+      normalizedName: 'planning',
+    });
+
+    expect(repository.rename).toHaveBeenCalled();
+    expect(updateSearchProjection).toHaveBeenCalledWith(
+      expect.anything(),
+      'user-1',
+      'note-1',
+      expect.objectContaining({ searchTags: 'Planning' }),
+    );
+  });
+
+  it('deletes an owned tag, removes associations, and refreshes search data', async () => {
+    const updateSearchProjection = vi.fn();
+    const repository = {
+      findTag: vi.fn(async () => ({ id: 'tag-1', name: 'Work' })),
+      listNotesForTag: vi.fn(async () => [
+        {
+          id: 'note-1',
+          title: 'Roadmap',
+          content_json: { type: 'doc', content: [] },
+        },
+      ]),
+      removeFromNotes: vi.fn(),
+      listNoteTags: vi.fn(async () => []),
+      updateSearchProjection,
+      delete: vi.fn(async () => ({ id: 'tag-1' })),
+    };
+    const service = createTagsService({ repository, transaction });
+
+    await service.delete('user-1', 'tag-1');
+
+    expect(repository.removeFromNotes).toHaveBeenCalledWith(
+      expect.anything(),
+      'user-1',
+      'tag-1',
+    );
+    expect(repository.delete).toHaveBeenCalled();
+    expect(updateSearchProjection).toHaveBeenCalledWith(
+      expect.anything(),
+      'user-1',
+      'note-1',
+      expect.objectContaining({ searchTags: '' }),
+    );
+  });
 });

@@ -154,6 +154,12 @@ Replace browser-native prompts and confirmations with accessible application dia
 
 **Gate:** No frontend browser-native prompt, confirm, or alert remains; dialog and toast behavior passes frontend checks; confirmed workspace mutations provide accessible feedback; and supported desktop/mobile verification passes.
 
+## Step 13G - Sidebar Tag and Notebook Management
+
+Add expandable, compact Tags and Notebooks sections to the workspace sidebar with creation, rename, deletion, and tag navigation. Extend the tag API with ownership-safe CRUD behavior, preserve note data when tags are deleted, refresh search projections, and reuse shared tag/notebook queries across the sidebar and editor. Track the detailed scope and acceptance criteria in `tasks/13G-sidebar-tag-management.md`.
+
+**Gate:** Users can browse and manage their owned tags and notebooks from the responsive sidebar, tag CRUD preserves ownership and search consistency, and relevant frontend/backend/browser checks pass.
+
 ## Step 14 - Test and Harden
 
 Run unit, integration, API, authorization, rich-text security, autosave, end-to-end, accessibility, performance, backup, and recovery tests. Fix critical defects and regressions.

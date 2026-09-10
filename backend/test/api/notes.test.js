@@ -127,6 +127,37 @@ function createNotesTestApp() {
       tags.set(tag.id, tag);
       return present(tag);
     },
+    async rename(userId, tagId, input) {
+      const tag = tags.get(tagId);
+      if (!tag || tag.userId !== userId) throw notFoundError();
+      if (
+        [...tags.values()].some(
+          (item) =>
+            item.userId === userId &&
+            item.id !== tagId &&
+            item.normalizedName === input.normalizedName,
+        )
+      )
+        throw new AppError(
+          409,
+          'DUPLICATE_TAG',
+          'A tag with that name already exists.',
+        );
+      Object.assign(tag, input);
+      for (const note of notes.values()) {
+        note.tags = note.tags.map((item) =>
+          item.id === tagId ? present(tag) : item,
+        );
+      }
+      return present(tag);
+    },
+    async delete(userId, tagId) {
+      const tag = tags.get(tagId);
+      if (!tag || tag.userId !== userId) throw notFoundError();
+      tags.delete(tagId);
+      for (const note of notes.values())
+        note.tags = note.tags.filter((item) => item.id !== tagId);
+    },
     async assign(userId, noteId, tagId) {
       const note = notes.get(noteId);
       const tag = tags.get(tagId);
@@ -472,6 +503,37 @@ describe('notes API', () => {
     expect(assigned.body.data.tags).toHaveLength(1);
     expect(crossUser.status).toBe(404);
     expect(removed.body.data.tags).toHaveLength(0);
+  });
+
+  it('renames and deletes owned tags without exposing another user tag', async () => {
+    const app = createNotesTestApp();
+    const note = await userRequest(app, 'a', 'post', '/api/v1/notes')
+      .set('x-csrf-token', 'test')
+      .send({ title: 'Tag lifecycle' });
+    const tag = await userRequest(app, 'a', 'post', '/api/v1/tags')
+      .set('x-csrf-token', 'test')
+      .send({ name: 'Work' });
+    const foreignTag = await userRequest(app, 'b', 'post', '/api/v1/tags')
+      .set('x-csrf-token', 'test')
+      .send({ name: 'Private' });
+    await userRequest(app, 'a', 'post', `/api/v1/notes/${note.body.data.id}/tags`)
+      .set('x-csrf-token', 'test')
+      .send({ tagId: tag.body.data.id });
+
+    const renamed = await userRequest(app, 'a', 'patch', `/api/v1/tags/${tag.body.data.id}`)
+      .set('x-csrf-token', 'test')
+      .send({ name: 'Planning' });
+    const foreignRename = await userRequest(app, 'a', 'patch', `/api/v1/tags/${foreignTag.body.data.id}`)
+      .set('x-csrf-token', 'test')
+      .send({ name: 'Other' });
+    const deleted = await userRequest(app, 'a', 'delete', `/api/v1/tags/${tag.body.data.id}`)
+      .set('x-csrf-token', 'test');
+    const tags = await userRequest(app, 'a', 'get', '/api/v1/tags');
+
+    expect(renamed.body.data.name).toBe('Planning');
+    expect(foreignRename.status).toBe(404);
+    expect(deleted.status).toBe(204);
+    expect(tags.body.data).toHaveLength(0);
   });
 
   it('searches owned active and archived notes while excluding Trash', async () => {

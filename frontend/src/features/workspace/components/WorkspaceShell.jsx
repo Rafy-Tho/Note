@@ -7,8 +7,10 @@ import { WorkspaceSidebar } from './WorkspaceSidebar.jsx';
 export function WorkspaceShell({
   styles,
   view,
+  selectedTagId,
   canLeaveDraft,
   onSwitchView,
+  onSelectTag,
   children,
 }) {
   const { session } = useAuth();
@@ -52,9 +54,11 @@ export function WorkspaceShell({
           open={menuOpen}
           closeMenuRef={closeMenuRef}
           view={view}
+          selectedTagId={selectedTagId}
           canLeaveDraft={canLeaveDraft}
           onClose={() => setMenuOpen(false)}
           onSwitchView={switchView}
+          onSelectTag={onSelectTag}
         />
         {children}
       </div>

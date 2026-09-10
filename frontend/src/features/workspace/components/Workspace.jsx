@@ -26,6 +26,7 @@ export function Workspace() {
   const [searchParams] = useSearchParams();
   const view = viewFromPath(location.pathname);
   const selectedTagId = params.tagId ?? '';
+  const selectedNotebookId = params.notebookId ?? '';
   const mobilePane = mobilePaneFromNoteId(params.noteId);
   const [editorState, setEditorState] = useState({ isDirty: false, isSaving: false });
   const editorStateRef = useRef(editorState);
@@ -126,6 +127,17 @@ export function Workspace() {
     [allowNextNavigation, confirmNavigation, navigate],
   );
 
+  const openNotebook = useCallback(
+    (notebookId) => {
+      if (editorStateRef.current.isSaving) return false;
+      return confirmNavigation(() => {
+        allowNextNavigation();
+        navigate(collectionPath('notebooks', notebookId));
+      });
+    },
+    [allowNextNavigation, confirmNavigation, navigate],
+  );
+
   const requestLeave = useCallback(
     (onConfirm = () => {}) => {
       if (!editorStateRef.current.isDirty) {
@@ -165,8 +177,10 @@ export function Workspace() {
       <WorkspaceShell
         styles={styles}
         view={view}
+        selectedTagId={selectedTagId}
         canLeaveDraft={requestLeave}
         onSwitchView={switchView}
+        onSelectTag={openTag}
       >
         <WorkspaceCollection
           styles={styles}
@@ -174,11 +188,13 @@ export function Workspace() {
           mobilePane={mobilePane}
           selectedId={params.noteId}
           selectedTagId={selectedTagId}
+          selectedNotebookId={selectedNotebookId}
           getEditorState={getEditorState}
           allowNextNavigation={allowNextNavigation}
           onSelectNote={selectNote}
           onOpenNote={selectNote}
           onTagChange={openTag}
+          onNotebookChange={openNotebook}
           onSearchOpen={openSearchResult}
         />
         <WorkspaceEditor

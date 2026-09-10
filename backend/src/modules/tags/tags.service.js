@@ -7,6 +7,23 @@ export function createTagsService({
   repository,
   transaction = withTransaction,
 } = {}) {
+  async function updateAffectedSearchProjections(client, userId, tagId) {
+    const notes = await repository.listNotesForTag(client, userId, tagId);
+    for (const note of notes) {
+      const tags = await repository.listNoteTags(client, userId, note.id);
+      await repository.updateSearchProjection(
+        client,
+        userId,
+        note.id,
+        buildSearchProjection(
+          note.title,
+          note.content_json,
+          tags.map((item) => item.name),
+        ),
+      );
+    }
+  }
+
   return {
     async list(userId, pagination) {
       return repository.list(userId, pagination);
@@ -26,6 +43,54 @@ export function createTagsService({
           );
         throw error;
       }
+    },
+
+    async rename(userId, tagId, input) {
+      try {
+        return await transaction(async (client) => {
+          const tag = await repository.findTag(client, userId, tagId);
+          if (!tag) throw notFoundError();
+          const renamed = await repository.rename(client, userId, tagId, input);
+          await updateAffectedSearchProjections(client, userId, tagId);
+          return renamed;
+        });
+      } catch (error) {
+        if (error.code === '23505')
+          throw new AppError(
+            409,
+            'DUPLICATE_TAG',
+            'A tag with that name already exists.',
+          );
+        throw error;
+      }
+    },
+
+    async delete(userId, tagId) {
+      return transaction(async (client) => {
+        const tag = await repository.findTag(client, userId, tagId);
+        if (!tag) throw notFoundError();
+        const affectedNotes = await repository.listNotesForTag(
+          client,
+          userId,
+          tagId,
+        );
+        await repository.removeFromNotes(client, userId, tagId);
+        for (const note of affectedNotes) {
+          const tags = await repository.listNoteTags(client, userId, note.id);
+          await repository.updateSearchProjection(
+            client,
+            userId,
+            note.id,
+            buildSearchProjection(
+              note.title,
+              note.content_json,
+              tags.map((item) => item.name),
+            ),
+          );
+        }
+        const deleted = await repository.delete(client, userId, tagId);
+        if (!deleted) throw notFoundError();
+      });
     },
 
     async assign(userId, noteId, tagId) {

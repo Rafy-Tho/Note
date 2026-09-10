@@ -35,13 +35,17 @@ export function flattenNotesPages(data) {
   return data?.pages.flatMap((page) => page.data ?? []) ?? EMPTY_NOTES;
 }
 
-export function useWorkspaceNotesQuery() {
+export function useWorkspaceNotesQuery(notebookId = '') {
   return useInfiniteQuery({
-    queryKey: workspaceQueryKeys.notes,
+    queryKey: [...workspaceQueryKeys.notes, notebookId],
     initialPageParam: 1,
     queryFn: ({ pageParam, signal }) =>
       notesApi.list(
-        { page: pageParam, limit: NOTES_PAGE_SIZE },
+        {
+          page: pageParam,
+          limit: NOTES_PAGE_SIZE,
+          notebookId: notebookId || undefined,
+        },
         { signal },
       ),
     getNextPageParam: getNextNotesPageParam,

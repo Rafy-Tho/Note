@@ -54,6 +54,35 @@ export function createTagsRepository(database = { query }) {
       return toTag(result.rows[0]);
     },
 
+    async rename(client, userId, tagId, { name, normalizedName }) {
+      const result = await client.query(
+        `UPDATE tags
+         SET name = $3, normalized_name = $4
+         WHERE id = $1 AND user_id = $2
+         RETURNING ${TAG_COLUMNS}`,
+        [tagId, userId, name, normalizedName],
+      );
+      return toTag(result.rows[0]);
+    },
+
+    async delete(client, userId, tagId) {
+      const result = await client.query(
+        'DELETE FROM tags WHERE id = $1 AND user_id = $2 RETURNING id',
+        [tagId, userId],
+      );
+      return result.rows[0] ?? null;
+    },
+
+    async removeFromNotes(client, userId, tagId) {
+      await client.query(
+        `DELETE FROM note_tags
+         WHERE tag_id = $1
+           AND EXISTS (SELECT 1 FROM tags WHERE id = $1 AND user_id = $2)
+           AND EXISTS (SELECT 1 FROM notes WHERE id = note_tags.note_id AND user_id = $2)`,
+        [tagId, userId],
+      );
+    },
+
     async findTag(client, userId, tagId) {
       const result = await client.query(
         `SELECT ${TAG_COLUMNS} FROM tags WHERE id = $1 AND user_id = $2`,
@@ -70,6 +99,17 @@ export function createTagsRepository(database = { query }) {
         [noteId, userId],
       );
       return result.rows[0] ?? null;
+    },
+
+    async listNotesForTag(client, userId, tagId) {
+      const result = await client.query(
+        `SELECT notes.id, notes.title, notes.content_json
+         FROM notes
+         INNER JOIN note_tags ON note_tags.note_id = notes.id
+         WHERE notes.user_id = $1 AND note_tags.tag_id = $2`,
+        [userId, tagId],
+      );
+      return result.rows;
     },
 
     async assign(client, noteId, tagId) {

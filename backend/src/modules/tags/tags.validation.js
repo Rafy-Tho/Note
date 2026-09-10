@@ -38,6 +38,10 @@ export function validateCreateTag(body) {
   return { name, normalizedName: name.toLowerCase() };
 }
 
+export function validateRenameTag(body) {
+  return validateCreateTag(body);
+}
+
 export function validateAssignTag(body) {
   assertObject(body);
   if (body.tagId === undefined)

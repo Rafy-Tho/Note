@@ -12,7 +12,7 @@
 | Field | Value |
 | --- | --- |
 | Current phase | Implementation |
-| Current step | Step 13F - Workspace Dialogs and Toast Feedback |
+| Current step | Step 13G - Sidebar Tag and Notebook Management |
 | Overall status | In Progress |
 | Blocker | None for the completed bootstrap and database gates. |
 | Last updated | 2026-09-10 |
@@ -42,6 +42,7 @@
 | 13D | Workspace performance and UX hardening | In Progress | Workspace navigation is smooth, request lifecycles are bounded, and unsaved data is protected. | Stable workspace routing, infinite Notes pagination, abortable detail queries, lightweight list projections, cache lifecycle, tag-query reuse, editor render optimizations, responsibility-scoped workspace children, and save-response editor synchronization implemented. Frontend lint/Vitest (6 files, 16 tests)/build and backend lint/Vitest (19 files, 79 tests) pass. Playwright remains blocked by the unavailable local Chromium executable; focused component navigation tests remain pending. See `tasks/13D-workspace-performance-and-ux.md`. |
 | 13E | Editor organization controls | In Progress | Notebook and tag organization is compact, accessible, and safe from the editor. | Added two compact `Notebooks` and `Tags` buttons with toggle panels containing notebook selection/creation/management and tag assignment/creation/removal. Frontend lint, Vitest (7 files, 18 tests), and build pass. Browser verification remains blocked by the unavailable local Chromium executable. See `tasks/13E-editor-organization-controls.md`. |
 | 13F | Workspace dialogs and toast feedback | In Progress | Native browser prompts are removed and workspace feedback is accessible and consistent. | Added shared dialog and workspace toast primitives, migrated link, rename, dirty-navigation, destructive-action, and account confirmation flows, and added feedback helper tests. Frontend lint passes; Vitest passes with 7 files and 18 tests; production build passes with the existing large-bundle warning. Browser verification remains blocked by the unavailable local Chromium executable. See `tasks/13F-workspace-dialogs-and-toast-feedback.md`. |
+| 13G | Sidebar tag and notebook management | In Progress | Owned tags and notebooks are browseable and manageable from the responsive sidebar without visual clutter or cross-user access. | Added ownership-safe tag rename/delete service and API behavior, shared frontend tag CRUD methods, expandable sidebar tag and notebook sections, create/rename/delete dialogs, and search-projection refresh behavior. Verification and browser coverage remain pending. See `tasks/13G-sidebar-tag-management.md`. |
 | 14 | Testing and hardening | Not Started | No critical security, data-loss, or regression issue remains. | |
 | 15 | Deployment preparation | Not Started | Deployment and recovery procedures work. | |
 

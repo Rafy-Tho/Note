@@ -10,6 +10,15 @@ export const tagsApi = {
       body: JSON.stringify({ name }),
     });
   },
+  rename(tagId, name) {
+    return authApi.request(`/tags/${tagId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ name }),
+    });
+  },
+  delete(tagId) {
+    return authApi.request(`/tags/${tagId}`, { method: 'DELETE' });
+  },
   listForNote(noteId) {
     return authApi.request(`/notes/${noteId}/tags`);
   },
