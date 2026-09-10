@@ -215,6 +215,8 @@ The preview should be generated from the server-side searchable/plain-text proje
 - `WorkspaceEditor` should not recreate independent data-fetching clients for tags.
 - Presentational children may use `memo` only when their props are stable and the render reduction is measurable.
 
+The workspace responsibility split now follows these boundaries: `Workspace` coordinates routes and the unsaved-change guard; `WorkspaceShell` owns mobile navigation; collection, search, trash, account, editor, and notebook children own their feature queries, mutations, pending states, and local errors. Shared editor state is limited to the dirty/saving status required by the parent navigation guard.
+
 Avoid adding abstractions that do not address a measured workspace render or request problem.
 
 ## Autosave Requirements
@@ -325,8 +327,9 @@ Implementation evidence:
 - The active Notes list uses `useInfiniteQuery`, server pagination metadata, an IntersectionObserver sentinel, and an accessible load-more fallback.
 - Note details use an enabled, abortable query instead of the previous render-triggered `fetchQuery()` effect.
 - Collection responses now use bounded previews without returning full `contentJson`; detail responses remain complete.
+- Workspace feature workflows are delegated to `WorkspaceShell`, account, collection, search, trash, editor, and notebook children with domain-specific query and mutation hooks; `Workspace.jsx` now coordinates routes and draft protection only.
 - React Query cache defaults, logout cache clearing, tag-query reuse, and editor synchronization were updated.
-- Frontend lint passes; frontend Vitest passes with 6 files and 13 tests.
+- Frontend lint passes; frontend Vitest passes with 6 files and 15 tests.
 - Backend lint passes; backend Vitest passes with 19 files and 79 tests.
 - Frontend production build passes with the existing large-bundle warning.
 - Playwright execution was attempted but is blocked because the local Chromium executable is unavailable.

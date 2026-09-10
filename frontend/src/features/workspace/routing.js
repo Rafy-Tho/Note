@@ -16,3 +16,12 @@ export function notePath(view, noteId, tagId = '') {
   if (view === 'tags' && tagId) return `/workspace/tags/${tagId}/${noteId}`;
   return `${collectionPath(view)}/${noteId}`;
 }
+
+export function mobilePaneFromNoteId(noteId) {
+  return noteId ? 'editor' : 'collection';
+}
+
+export function searchNotePath(noteId, searchParams) {
+  const query = searchParams.toString();
+  return `${notePath('search', noteId)}${query ? `?${query}` : ''}`;
+}

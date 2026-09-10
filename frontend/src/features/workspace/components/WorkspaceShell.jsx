@@ -1,0 +1,62 @@
+import { useEffect, useRef, useState } from 'react';
+import { useAuth } from '../../auth/context/AuthContext.jsx';
+import { WorkspaceHeader } from './WorkspaceHeader.jsx';
+import { WorkspaceSidebar } from './WorkspaceSidebar.jsx';
+
+export function WorkspaceShell({
+  styles,
+  view,
+  canLeaveDraft,
+  onSwitchView,
+  children,
+}) {
+  const { session } = useAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const closeMenuRef = useRef(null);
+
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    closeMenuRef.current?.focus();
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') setMenuOpen(false);
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [menuOpen]);
+
+  function switchView(nextView) {
+    const accepted = onSwitchView(nextView);
+    if (accepted !== false) setMenuOpen(false);
+  }
+
+  return (
+    <>
+      <WorkspaceHeader
+        email={session.user.email}
+        menuOpen={menuOpen}
+        onOpenMenu={() => setMenuOpen(true)}
+        styles={styles}
+      />
+      <div className={styles.layout}>
+        {menuOpen && (
+          <button
+            className={styles.drawerBackdrop}
+            type="button"
+            aria-label="Close navigation"
+            onClick={() => setMenuOpen(false)}
+          />
+        )}
+        <WorkspaceSidebar
+          styles={styles}
+          open={menuOpen}
+          closeMenuRef={closeMenuRef}
+          view={view}
+          canLeaveDraft={canLeaveDraft}
+          onClose={() => setMenuOpen(false)}
+          onSwitchView={switchView}
+        />
+        {children}
+      </div>
+    </>
+  );
+}

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { collectionPath, notePath, viewFromPath } from './routing.js';
+import {
+  collectionPath,
+  mobilePaneFromNoteId,
+  notePath,
+  searchNotePath,
+  viewFromPath,
+} from './routing.js';
 
 describe('workspace routing', () => {
   it('maps workspace URLs to collection views', () => {
@@ -19,5 +25,18 @@ describe('workspace routing', () => {
       '/workspace/tags/tag-1/note-1',
     );
     expect(notePath('search', 'note-1')).toBe('/workspace/search/note-1');
+  });
+
+  it('derives the mobile pane from the route note id', () => {
+    expect(mobilePaneFromNoteId()).toBe('collection');
+    expect(mobilePaneFromNoteId('note-1')).toBe('editor');
+  });
+
+  it('preserves search parameters when opening a search result', () => {
+    expect(
+      searchNotePath('note-1', { toString: () => 'q=ideas&page=2' }),
+    ).toBe(
+      '/workspace/search/note-1?q=ideas&page=2',
+    );
   });
 });

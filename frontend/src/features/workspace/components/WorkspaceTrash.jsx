@@ -1,0 +1,101 @@
+import { useState } from 'react';
+import { RotateCcw, Trash2 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import { Alert } from '../../../components/common/Alert/Alert.jsx';
+import { documentText } from '../../notes/noteDocument.js';
+import { useNoteMutations } from '../hooks/useNoteMutations.js';
+import {
+  useWorkspaceTrashQuery,
+  workspaceQueryKeys,
+} from '../hooks/useWorkspaceQueries.js';
+
+export function WorkspaceTrash({ styles }) {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const trashQuery = useWorkspaceTrashQuery(true);
+  const { restoreNote, permanentlyDelete } = useNoteMutations();
+  const [error, setError] = useState(null);
+  const busy = restoreNote.isPending || permanentlyDelete.isPending;
+  const notes = trashQuery.data ?? [];
+
+  async function restore(note) {
+    setError(null);
+    try {
+      const restored = await restoreNote.mutateAsync(note.id);
+      queryClient.setQueryData(
+        workspaceQueryKeys.note(restored.id),
+        restored,
+      );
+      navigate(
+        restored.state === 'archived'
+          ? `/workspace/archive/${restored.id}`
+          : `/workspace/notes/${restored.id}`,
+      );
+    } catch (requestError) {
+      setError(requestError.message);
+    }
+  }
+
+  async function permanentlyRemove(note) {
+    if (!window.confirm('Permanently delete this note? This cannot be undone.'))
+      return;
+    setError(null);
+    try {
+      await permanentlyDelete.mutateAsync(note.id);
+    } catch (requestError) {
+      setError(requestError.message);
+    }
+  }
+
+  if (trashQuery.isLoading) {
+    return (
+      <div className={styles.empty} aria-live="polite">
+        Loading Trash...
+      </div>
+    );
+  }
+
+  if (trashQuery.error) {
+    return <Alert>{trashQuery.error.message}</Alert>;
+  }
+
+  return (
+    <>
+      {error && <Alert>{error}</Alert>}
+      {notes.length === 0 ? (
+        <div className={styles.empty}>
+          <h2>Trash is empty.</h2>
+          <p>Notes moved here can be restored later.</p>
+        </div>
+      ) : (
+        <div className={styles.noteList} aria-label="Trashed notes">
+          {notes.map((note) => (
+            <div className={styles.noteRow} key={note.id}>
+              <strong>{note.title || 'Untitled note'}</strong>
+              <span>{documentText(note.contentJson).slice(0, 72) || 'Blank note'}</span>
+              <button
+                className={styles.secondaryButton}
+                type="button"
+                onClick={() => void restore(note)}
+                disabled={busy}
+              >
+                <RotateCcw className="icon" size={15} aria-hidden="true" />
+                <span>Restore</span>
+              </button>
+              <button
+                className={styles.dangerButton}
+                type="button"
+                onClick={() => void permanentlyRemove(note)}
+                disabled={busy}
+              >
+                <Trash2 className="icon" size={15} aria-hidden="true" />
+                <span>Delete permanently</span>
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}

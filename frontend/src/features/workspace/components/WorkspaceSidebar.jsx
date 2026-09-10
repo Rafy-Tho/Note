@@ -1,4 +1,5 @@
-import { Archive, FileText, LogOut, Search, Star, Tags, Trash2, X } from 'lucide-react';
+import { Archive, FileText, Search, Star, Tags, Trash2, X } from 'lucide-react';
+import { WorkspaceAccountControls } from './WorkspaceAccountControls.jsx';
 
 const navigation = [
   ['notes', 'Notes', FileText],
@@ -14,14 +15,9 @@ export function WorkspaceSidebar({
   open,
   closeMenuRef,
   view,
-  identities,
-  identityLoading,
-  busy,
+  canLeaveDraft,
   onClose,
   onSwitchView,
-  onLinkProvider,
-  onUnlinkProvider,
-  onSignOut,
 }) {
   return (
     <aside
@@ -58,43 +54,10 @@ export function WorkspaceSidebar({
           </button>
         ))}
       </nav>
-      <div className={styles.accountControls}>
-        <span className={styles.eyebrow}>Sign-in methods</span>
-        {identityLoading ? (
-          <span className={styles.accountHint}>Loading...</span>
-        ) : (
-          ['google', 'facebook'].map((provider) => {
-            const linked = identities?.some((identity) => identity.provider === provider);
-            return linked ? (
-              <div className={styles.identityRow} key={provider}>
-                <span>{provider}</span>
-                <button
-                  className={styles.textButton}
-                  type="button"
-                  onClick={() => onUnlinkProvider(provider)}
-                  disabled={busy}
-                >
-                  Unlink
-                </button>
-              </div>
-            ) : (
-              <button
-                className={styles.identityButton}
-                type="button"
-                key={provider}
-                onClick={() => onLinkProvider(provider)}
-                disabled={busy}
-              >
-                Link {provider}
-              </button>
-            );
-          })
-        )}
-      </div>
-      <button className={styles.signOutButton} type="button" onClick={onSignOut} disabled={busy}>
-        <LogOut className="icon" size={16} aria-hidden="true" />
-        <span>{busy ? 'Signing out...' : 'Sign out'}</span>
-      </button>
+      <WorkspaceAccountControls
+        styles={styles}
+        canLeaveDraft={canLeaveDraft}
+      />
     </aside>
   );
 }

@@ -1,14 +1,21 @@
-import { memo, useEffect, useRef } from 'react';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-  RotateCcw,
-  Search,
-  Trash2,
-} from 'lucide-react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { Plus, RotateCcw } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { Alert } from '../../../components/common/Alert/Alert.jsx';
 import { documentText } from '../../notes/noteDocument.js';
+import { useNoteMutations } from '../hooks/useNoteMutations.js';
+import {
+  flattenNotesPages,
+  useWorkspaceArchiveQuery,
+  useWorkspaceFavoritesQuery,
+  useWorkspaceNotesQuery,
+  useWorkspaceTagNotesQuery,
+  useWorkspaceTagsQuery,
+  workspaceQueryKeys,
+} from '../hooks/useWorkspaceQueries.js';
+import { WorkspaceSearch } from './WorkspaceSearch.jsx';
+import { WorkspaceTrash } from './WorkspaceTrash.jsx';
 
 const titles = {
   notes: 'Notes',
@@ -99,7 +106,9 @@ const NoteList = memo(function NoteList({
               </button>
             </>
           )}
-          {!loadMoreError && isFetchingNextPage && <span>Loading more notes...</span>}
+          {!loadMoreError && isFetchingNextPage && (
+            <span>Loading more notes...</span>
+          )}
           {!loadMoreError && !isFetchingNextPage && hasNextPage && (
             <button
               className={styles.secondaryButton}
@@ -115,150 +124,183 @@ const NoteList = memo(function NoteList({
   );
 });
 
-function SearchPanel({ styles, query, results, status, page, total, onQueryChange, onSubmit, onOpen }) {
-  return (
-    <>
-      <form className={styles.searchForm} onSubmit={onSubmit}>
-        <input
-          aria-label="Search notes"
-          value={query}
-          onChange={(event) => onQueryChange(event.target.value)}
-          placeholder="Search title, content, or tags"
-        />
-        <button className={styles.primaryButton} type="submit">
-          <Search className="icon" size={15} aria-hidden="true" />
-          <span>Search</span>
-        </button>
-      </form>
-      {status === 'loading' ? (
-        <div className={styles.empty} aria-live="polite">Searching...</div>
-      ) : results.length === 0 ? (
-        <EmptyState styles={styles} title={query ? 'No notes found.' : 'Search your notes.'}>
-          Search active and archived notes by title, content, or tag.
-        </EmptyState>
-      ) : (
-        <>
-          <div className={styles.searchResults} aria-label="Search results">
-            {results.map((result) => (
-              <button className={styles.searchResult} key={result.id} onClick={() => onOpen(result)}>
-                <strong>{result.title || 'Untitled note'}</strong>
-                <span>
-                  {result.state} · {result.tags.map((tag) => tag.name).join(', ') || 'No tags'}
-                </span>
-              </button>
-            ))}
-          </div>
-          <div className={styles.pagination}>
-            <button className={styles.secondaryButton} onClick={() => onSubmit(null, page - 1)} disabled={page === 1}>
-              <ChevronLeft className="icon" size={15} aria-hidden="true" />
-              <span>Previous</span>
-            </button>
-            <span>Page {page}</span>
-            <button className={styles.secondaryButton} onClick={() => onSubmit(null, page + 1)} disabled={page * 20 >= total}>
-              <span>Next</span>
-              <ChevronRight className="icon" size={15} aria-hidden="true" />
-            </button>
-          </div>
-        </>
-      )}
-    </>
-  );
-}
-
-export function WorkspaceCollection({
+export const WorkspaceCollection = memo(function WorkspaceCollection({
   styles,
   view,
   mobilePane,
-  notes,
-  notesLoading,
-  notesFetchingNextPage,
-  notesHasNextPage,
-  notesLoadMoreError,
-  onLoadMoreNotes,
   selectedId,
-  availableTags,
   selectedTagId,
-  collectionNotes,
-  collectionLoading,
-  trashNotes,
-  trashLoading,
-  search,
-  error,
-  initialLoadFailed,
-  busy,
-  onCreateNote,
-  onRetry,
+  isDirty,
+  isSaving,
+  allowNextNavigation,
   onSelectNote,
   onOpenNote,
-  onRestore,
-  onPermanentDelete,
   onTagChange,
   onSearchOpen,
 }) {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const notesQuery = useWorkspaceNotesQuery();
+  const tagsQuery = useWorkspaceTagsQuery();
+  const favoritesQuery = useWorkspaceFavoritesQuery(view === 'favorites');
+  const archiveQuery = useWorkspaceArchiveQuery(view === 'archive');
+  const tagNotesQuery = useWorkspaceTagNotesQuery(
+    selectedTagId,
+    view === 'tags',
+  );
+  const { createNote } = useNoteMutations();
+  const [error, setError] = useState(null);
+  const [creating, setCreating] = useState(false);
+  const notes = flattenNotesPages(notesQuery.data);
+  const availableTags = tagsQuery.data ?? [];
+  const collectionNotes =
+    view === 'favorites'
+      ? (favoritesQuery.data ?? [])
+      : view === 'archive'
+        ? (archiveQuery.data ?? [])
+        : (tagNotesQuery.data ?? []);
+  const collectionQuery =
+    view === 'favorites'
+      ? favoritesQuery
+      : view === 'archive'
+        ? archiveQuery
+        : tagNotesQuery;
+  const isInitialLoading = notesQuery.isLoading || tagsQuery.isLoading;
+  const initialError =
+    (notesQuery.isLoadingError && notesQuery.error) || tagsQuery.error;
+  const busy = creating || isSaving;
+  const notesLoadMoreError = notesQuery.isFetchNextPageError
+    ? notesQuery.error
+    : null;
+
+  const loadMoreNotes = useCallback(() => {
+    if (!notesQuery.hasNextPage || notesQuery.isFetchingNextPage) return;
+    void notesQuery.fetchNextPage().catch((requestError) => {
+      setError(requestError.message);
+    });
+  }, [
+    notesQuery.fetchNextPage,
+    notesQuery.hasNextPage,
+    notesQuery.isFetchingNextPage,
+  ]);
+
+  async function create() {
+    if (isSaving) return;
+    if (
+      isDirty &&
+      !window.confirm('You have unsaved changes. Create a new note anyway?')
+    )
+      return;
+    setCreating(true);
+    setError(null);
+    try {
+      const note = await createNote.mutateAsync({
+        title: '',
+        contentJson: { type: 'doc', content: [] },
+      });
+      queryClient.setQueryData(workspaceQueryKeys.note(note.id), note);
+      allowNextNavigation();
+      navigate(`/workspace/notes/${note.id}`);
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  async function retryInitialLoad() {
+    setError(null);
+    await Promise.all([notesQuery.refetch(), tagsQuery.refetch()]).catch(
+      (requestError) => setError(requestError.message),
+    );
+  }
+
   return (
-    <section className={`${styles.collection} ${mobilePane === 'editor' ? styles.mobileHidden : ''}`} aria-labelledby="workspace-title" data-collection-scroll="true">
+    <section
+      className={`${styles.collection} ${mobilePane === 'editor' ? styles.mobileHidden : ''}`}
+      aria-labelledby="workspace-title"
+      data-collection-scroll="true"
+    >
       <div className={styles.collectionHeader}>
         <div>
           <p className={styles.eyebrow}>Private notes</p>
           <h1 id="workspace-title">{titles[view]}</h1>
         </div>
         {view === 'notes' && (
-          <button className={styles.primaryButton} onClick={onCreateNote} disabled={busy}>
+          <button
+            className={styles.primaryButton}
+            type="button"
+            onClick={() => void create()}
+            disabled={busy}
+          >
             <Plus className="icon" size={16} aria-hidden="true" />
             <span>New note</span>
           </button>
         )}
       </div>
       {error && <Alert>{error}</Alert>}
-      {initialLoadFailed && (
-        <button className={styles.secondaryButton} type="button" onClick={onRetry}>
-          <RotateCcw className="icon" size={15} aria-hidden="true" />
-          <span>Retry loading workspace</span>
-        </button>
+      {initialError && (
+        <>
+          <Alert>{initialError.message}</Alert>
+          <button
+            className={styles.secondaryButton}
+            type="button"
+            onClick={() => void retryInitialLoad()}
+          >
+            <RotateCcw className="icon" size={15} aria-hidden="true" />
+            <span>Retry loading workspace</span>
+          </button>
+        </>
       )}
-      {view === 'search' ? (
-        <SearchPanel styles={styles} {...search} onOpen={onSearchOpen} />
-      ) : view === 'trash' && trashLoading ? (
-        <div className={styles.empty} aria-live="polite">Loading Trash...</div>
-      ) : view === 'trash' && trashNotes.length === 0 ? (
-        <EmptyState styles={styles} title="Trash is empty.">Notes moved here can be restored later.</EmptyState>
-      ) : view === 'trash' ? (
-        <div className={styles.noteList} aria-label="Trashed notes">
-          {trashNotes.map((note) => (
-            <div className={styles.noteRow} key={note.id}>
-              <strong>{note.title || 'Untitled note'}</strong>
-              <span>{documentText(note.contentJson).slice(0, 72) || 'Blank note'}</span>
-              <button className={styles.secondaryButton} onClick={() => onRestore(note)} disabled={busy}>
-                <RotateCcw className="icon" size={15} aria-hidden="true" />
-                <span>Restore</span>
-              </button>
-              <button className={styles.dangerButton} onClick={() => onPermanentDelete(note)} disabled={busy}>
-                <Trash2 className="icon" size={15} aria-hidden="true" />
-                <span>Delete permanently</span>
-              </button>
-            </div>
-          ))}
+      {isInitialLoading ? (
+        <div className={styles.empty} aria-live="polite">
+          Loading your notes...
         </div>
+      ) : view === 'search' ? (
+        <WorkspaceSearch styles={styles} onOpenResult={onSearchOpen} />
+      ) : view === 'trash' ? (
+        <WorkspaceTrash styles={styles} />
       ) : ['favorites', 'archive', 'tags'].includes(view) ? (
-        collectionLoading ? (
-          <div className={styles.empty} aria-live="polite">Loading {view}...</div>
+        collectionQuery.isLoading ? (
+          <div className={styles.empty} aria-live="polite">
+            Loading {view}...
+          </div>
         ) : view === 'tags' && !selectedTagId ? (
           <div className={styles.tagBrowse}>
             <label htmlFor="browse-tag">Browse notes by tag</label>
-            <select id="browse-tag" value={selectedTagId} onChange={(event) => onTagChange(event.target.value)}>
+            <select
+              id="browse-tag"
+              value={selectedTagId}
+              onChange={(event) => onTagChange(event.target.value)}
+            >
               <option value="">Choose a tag</option>
-              {availableTags.map((tag) => <option value={tag.id} key={tag.id}>{tag.name}</option>)}
+              {availableTags.map((tag) => (
+                <option value={tag.id} key={tag.id}>
+                  {tag.name}
+                </option>
+              ))}
             </select>
           </div>
         ) : collectionNotes.length === 0 ? (
-          <EmptyState styles={styles} title="No notes here.">Notes matching this view will appear here.</EmptyState>
+          <EmptyState styles={styles} title="No notes here.">
+            Notes matching this view will appear here.
+          </EmptyState>
         ) : (
-          <NoteList styles={styles} notes={collectionNotes} label={`${view} notes`} onOpen={onOpenNote} />
+          <NoteList
+            styles={styles}
+            notes={collectionNotes}
+            label={`${view} notes`}
+            onOpen={onOpenNote}
+          />
         )
-      ) : notesLoading && notes.length === 0 ? (
-        <div className={styles.empty} aria-live="polite">Loading notes...</div>
+      ) : notesQuery.isLoading && notes.length === 0 ? (
+        <div className={styles.empty} aria-live="polite">
+          Loading notes...
+        </div>
       ) : notes.length === 0 ? (
-        <EmptyState styles={styles} title="Your workspace is clear.">Create a note to begin capturing your thoughts.</EmptyState>
+        <EmptyState styles={styles} title="Your workspace is clear.">
+          Create a note to begin capturing your thoughts.
+        </EmptyState>
       ) : (
         <NoteList
           styles={styles}
@@ -266,13 +308,13 @@ export function WorkspaceCollection({
           label="Your notes"
           selectedId={selectedId}
           onSelect={onSelectNote}
-          hasNextPage={notesHasNextPage}
-          isFetchingNextPage={notesFetchingNextPage}
+          hasNextPage={notesQuery.hasNextPage}
+          isFetchingNextPage={notesQuery.isFetchingNextPage}
           loadMoreError={notesLoadMoreError}
-          onEndReached={onLoadMoreNotes}
-          onRetryLoadMore={onLoadMoreNotes}
+          onEndReached={loadMoreNotes}
+          onRetryLoadMore={loadMoreNotes}
         />
       )}
     </section>
   );
-}
+});
