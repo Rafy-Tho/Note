@@ -1,4 +1,5 @@
 import { Archive, ArrowLeft, FileText, RotateCcw, Star, Trash2 } from 'lucide-react';
+import { Alert } from '../../../components/common/Alert/Alert.jsx';
 import { TagControls } from '../../tags/components/TagControls.jsx';
 import { NoteEditor } from './NoteEditor.jsx';
 
@@ -7,7 +8,11 @@ export function WorkspaceEditor({
   mobilePane,
   view,
   draft,
+  noteLoading = false,
+  noteError = null,
   notebooks,
+  availableTags,
+  tagsLoading,
   saveStatus,
   conflict,
   busy,
@@ -30,7 +35,11 @@ export function WorkspaceEditor({
         <ArrowLeft className="icon" size={15} aria-hidden="true" />
         <span>Back to {view === 'notes' ? 'notes' : view}</span>
       </button>
-      {draft ? (
+      {noteLoading ? (
+        <div className={styles.editorEmpty} aria-live="polite">Loading note...</div>
+      ) : noteError ? (
+        <Alert>{noteError.message ?? 'This note could not be loaded.'}</Alert>
+      ) : draft ? (
         <>
           <div className={styles.editorHeader}>
             <span className={styles.saveStatus} aria-live="polite">{saveStatus}</span>
@@ -47,10 +56,16 @@ export function WorkspaceEditor({
             aria-label="Note title"
             value={draft.title}
             onChange={(event) => onDraftChange('title', event.target.value)}
-            onBlur={onSave}
             placeholder="Untitled note"
           />
-          <TagControls noteId={draft.id} tags={draft.tags ?? []} onTagsChange={onTagsChange} disabled={busy || saveStatus === 'Saving'} />
+          <TagControls
+            noteId={draft.id}
+            tags={draft.tags ?? []}
+            availableTags={availableTags}
+            tagsLoading={tagsLoading}
+            onTagsChange={onTagsChange}
+            disabled={busy || saveStatus === 'Saving'}
+          />
           <div className={styles.notebookControls}>
             <label htmlFor="note-notebook">Notebook</label>
             <select id="note-notebook" value={draft.notebookId ?? ''} onChange={(event) => onAssignNotebook(event.target.value)} disabled={busy}>
@@ -69,7 +84,11 @@ export function WorkspaceEditor({
               </span>
             ))}
           </div>
-          <NoteEditor content={draft.contentJson} onChange={(contentJson) => onDraftChange('contentJson', contentJson)} />
+          <NoteEditor
+            key={draft.id}
+            content={draft.contentJson}
+            onChange={(contentJson) => onDraftChange('contentJson', contentJson)}
+          />
         </>
       ) : <div className={styles.editorEmpty}>Select a note or create a new one.</div>}
     </section>

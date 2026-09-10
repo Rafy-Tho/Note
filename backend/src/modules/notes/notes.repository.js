@@ -1,7 +1,7 @@
 import { query } from '../../db/query.js';
 
-const NOTE_COLUMNS = `
-  id, user_id, notebook_id, title, content_json, state, restore_state,
+const NOTE_BASE_COLUMNS = `
+  id, user_id, notebook_id, title, state, restore_state,
   is_favorite, revision, trashed_at,
   created_at, updated_at,
   COALESCE((
@@ -16,19 +16,26 @@ const NOTE_COLUMNS = `
   ), '[]'::json) AS tags
 `;
 
+const NOTE_COLUMNS = `
+  ${NOTE_BASE_COLUMNS}, content_json
+`;
+
+const NOTE_LIST_COLUMNS = `
+  ${NOTE_BASE_COLUMNS}, LEFT(COALESCE(search_content, ''), 240) AS preview
+`;
+
 const SEARCH_VECTOR_FROM_CREATE_VALUES = `
   setweight(to_tsvector('simple', COALESCE($5, '')), 'A') ||
   setweight(to_tsvector('simple', COALESCE($6, '')), 'C') ||
   setweight(to_tsvector('simple', COALESCE($7, '')), 'B')
 `;
 
-function toNote(row) {
+function toNote(row, { includeContent = true } = {}) {
   if (!row) return null;
-  return {
+  const note = {
     id: row.id,
     notebookId: row.notebook_id,
     title: row.title,
-    contentJson: row.content_json,
     state: row.state,
     restoreState: row.restore_state,
     isFavorite: row.is_favorite,
@@ -38,6 +45,9 @@ function toNote(row) {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+  if (includeContent) note.contentJson = row.content_json;
+  if (row.preview !== undefined) note.preview = row.preview ?? '';
+  return note;
 }
 
 export function createNotesRepository(database = { query }) {
@@ -59,14 +69,17 @@ export function createNotesRepository(database = { query }) {
       );
       values.push(limit, (page - 1) * limit);
       const result = await database.query(
-        `SELECT ${NOTE_COLUMNS}
+        `SELECT ${NOTE_LIST_COLUMNS}
          FROM notes
          WHERE ${filters.join(' AND ')}
          ORDER BY updated_at DESC, id DESC
          LIMIT $${values.length - 1} OFFSET $${values.length}`,
         values,
       );
-      return { notes: result.rows.map(toNote), total: count.rows[0].total };
+      return {
+        notes: result.rows.map((row) => toNote(row, { includeContent: false })),
+        total: count.rows[0].total,
+      };
     },
 
     async listFavorites(userId, { page, limit }) {
@@ -77,12 +90,15 @@ export function createNotesRepository(database = { query }) {
         [userId],
       );
       const result = await database.query(
-        `SELECT ${NOTE_COLUMNS} FROM notes
+        `SELECT ${NOTE_LIST_COLUMNS} FROM notes
          WHERE user_id = $1 AND is_favorite = TRUE AND state IN ('active', 'archived')
          ORDER BY updated_at DESC, id DESC LIMIT $2 OFFSET $3`,
         values,
       );
-      return { notes: result.rows.map(toNote), total: count.rows[0].total };
+      return {
+        notes: result.rows.map((row) => toNote(row, { includeContent: false })),
+        total: count.rows[0].total,
+      };
     },
 
     async findById(userId, noteId, connection = database) {

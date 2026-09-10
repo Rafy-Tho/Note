@@ -102,6 +102,8 @@ Registration, password login, and password reset validate their inputs. New acco
 | POST | `/notes/:noteId/favorite` | Mark an owned note as favorite. |
 | DELETE | `/notes/:noteId/favorite` | Remove the favorite state. |
 
+Collection endpoints return lightweight note projections for list rendering. A collection item includes note identity, title, bounded preview text, state, organization metadata, revision, tags, and modification timestamps. Collection responses do not include the complete `contentJson` document. `GET /notes/:noteId` returns the full note document required by the editor. The existing `page`, `limit`, and `total` pagination fields support incremental clients such as TanStack Query `useInfiniteQuery`; the server remains page-based and does not maintain client scroll state.
+
 ## Organization Endpoints
 
 ### Notebooks

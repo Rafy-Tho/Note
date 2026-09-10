@@ -1,7 +1,7 @@
 import { authApi } from '../../auth/services/authApi.js';
 
 export const notesApi = {
-  list(filters = {}) {
+  list(filters = {}, options = {}) {
     const params = Object.entries(filters)
       .filter(
         ([, value]) => value !== undefined && value !== null && value !== '',
@@ -11,10 +11,13 @@ export const notesApi = {
           `${encodeURIComponent(key)}=${encodeURIComponent(value)}`,
       )
       .join('&');
-    return authApi.request(`/notes${params ? `?${params}` : ''}`);
+    return authApi.requestCollection(
+      `/notes${params ? `?${params}` : ''}`,
+      options,
+    );
   },
-  listTrash() {
-    return authApi.request('/trash');
+  listTrash(options = {}) {
+    return authApi.request('/trash', options);
   },
   create(note) {
     return authApi.request('/notes', {
@@ -22,8 +25,8 @@ export const notesApi = {
       body: JSON.stringify(note),
     });
   },
-  get(noteId) {
-    return authApi.request(`/notes/${noteId}`);
+  get(noteId, options = {}) {
+    return authApi.request(`/notes/${noteId}`, options);
   },
   update(noteId, note) {
     return authApi.request(`/notes/${noteId}`, {
@@ -37,8 +40,8 @@ export const notesApi = {
   restore(noteId) {
     return authApi.request(`/notes/${noteId}/restore`, { method: 'POST' });
   },
-  listFavorites() {
-    return authApi.request('/favorites');
+  listFavorites(options = {}) {
+    return authApi.request('/favorites', options);
   },
   archive(noteId) {
     return authApi.request(`/notes/${noteId}/archive`, { method: 'POST' });

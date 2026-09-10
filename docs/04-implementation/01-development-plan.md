@@ -136,6 +136,12 @@ Reorganize the frontend into the approved hybrid architecture. Keep application 
 
 **Gate:** The target frontend structure is implemented, imports and tests are updated, frontend lint/tests/build pass, and routing, authentication, autosave, and workspace behavior remain unchanged.
 
+## Step 13D - Workspace Performance and UX Hardening
+
+Harden the workspace after cross-slice integration by keeping the workspace shell stable across route changes, loading the Notes list incrementally with `useInfiniteQuery`, eliminating duplicate and looping note requests, preserving drafts during navigation, making query and request lifecycles explicit, reducing editor/list rendering work, and verifying the behavior on supported viewport groups. Track the detailed scope, target route model, API impact, checklist, and acceptance criteria in `tasks/13D-workspace-performance-and-ux.md`.
+
+**Gate:** Workspace navigation does not remount the shell or issue duplicate/looping detail requests, unsaved drafts are never silently replaced, private query data is cleared across sessions, collection payloads are appropriately lightweight, and relevant frontend/backend/browser checks pass.
+
 ## Step 14 - Test and Harden
 
 Run unit, integration, API, authorization, rich-text security, autosave, end-to-end, accessibility, performance, backup, and recovery tests. Fix critical defects and regressions.

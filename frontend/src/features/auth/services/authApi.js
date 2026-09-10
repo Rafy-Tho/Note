@@ -94,8 +94,8 @@ export function createAuthApi() {
       });
       window.location.assign(result.authorizationUrl);
     },
-    async listLinkedProviders() {
-      return this.request('/auth/identities');
+    async listLinkedProviders(options = {}) {
+      return this.request('/auth/identities', options);
     },
     async unlinkProvider(provider) {
       return this.request(`/auth/identities/${provider}`, {

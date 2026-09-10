@@ -1,3 +1,4 @@
+import { memo, useEffect, useRef } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
@@ -27,24 +28,92 @@ function EmptyState({ styles, title, children }) {
   );
 }
 
-function NoteList({ styles, notes, label, selectedId, onSelect, onOpen }) {
+function notePreview(note) {
   return (
-    <div className={styles.noteList} aria-label={label}>
-      {notes.map((note) => (
-        <button
-          className={`${styles.noteRow} ${selectedId === note.id ? styles.selected : ''}`}
-          key={note.id}
-          onClick={() => (onSelect ? onSelect(note) : onOpen(note))}
-        >
-          <strong>{note.title || 'Untitled note'}</strong>
-          <span>
-            {documentText(note.contentJson).slice(0, 72) || 'Blank note'}
-          </span>
-        </button>
-      ))}
-    </div>
+    note.preview ??
+    (note.contentJson ? documentText(note.contentJson).slice(0, 240) : '')
   );
 }
+
+const NoteList = memo(function NoteList({
+  styles,
+  notes,
+  label,
+  selectedId,
+  onSelect,
+  onOpen,
+  hasNextPage = false,
+  isFetchingNextPage = false,
+  loadMoreError = null,
+  onEndReached,
+  onRetryLoadMore,
+}) {
+  const sentinelRef = useRef(null);
+
+  useEffect(() => {
+    if (
+      !onEndReached ||
+      !sentinelRef.current ||
+      typeof window.IntersectionObserver === 'undefined'
+    )
+      return undefined;
+    const root = sentinelRef.current.closest('[data-collection-scroll]');
+    const observer = new window.IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && hasNextPage && !isFetchingNextPage)
+          onEndReached();
+      },
+      { root, rootMargin: '240px' },
+    );
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, onEndReached]);
+
+  return (
+    <>
+      <div className={styles.noteList} aria-label={label}>
+        {notes.map((note) => (
+          <button
+            className={`${styles.noteRow} ${selectedId === note.id ? styles.selected : ''}`}
+            key={note.id}
+            type="button"
+            onClick={() => (onSelect ? onSelect(note) : onOpen(note))}
+          >
+            <strong>{note.title || 'Untitled note'}</strong>
+            <span>{notePreview(note) || 'Blank note'}</span>
+          </button>
+        ))}
+      </div>
+      {onEndReached && (hasNextPage || isFetchingNextPage || loadMoreError) && (
+        <div className={styles.loadMore} ref={sentinelRef} aria-live="polite">
+          {loadMoreError && (
+            <>
+              <span>Could not load more notes.</span>
+              <button
+                className={styles.secondaryButton}
+                type="button"
+                onClick={onRetryLoadMore}
+                disabled={isFetchingNextPage}
+              >
+                Retry
+              </button>
+            </>
+          )}
+          {!loadMoreError && isFetchingNextPage && <span>Loading more notes...</span>}
+          {!loadMoreError && !isFetchingNextPage && hasNextPage && (
+            <button
+              className={styles.secondaryButton}
+              type="button"
+              onClick={onEndReached}
+            >
+              Load more notes
+            </button>
+          )}
+        </div>
+      )}
+    </>
+  );
+});
 
 function SearchPanel({ styles, query, results, status, page, total, onQueryChange, onSubmit, onOpen }) {
   return (
@@ -101,6 +170,11 @@ export function WorkspaceCollection({
   view,
   mobilePane,
   notes,
+  notesLoading,
+  notesFetchingNextPage,
+  notesHasNextPage,
+  notesLoadMoreError,
+  onLoadMoreNotes,
   selectedId,
   availableTags,
   selectedTagId,
@@ -122,7 +196,7 @@ export function WorkspaceCollection({
   onSearchOpen,
 }) {
   return (
-    <section className={`${styles.collection} ${mobilePane === 'editor' ? styles.mobileHidden : ''}`} aria-labelledby="workspace-title">
+    <section className={`${styles.collection} ${mobilePane === 'editor' ? styles.mobileHidden : ''}`} aria-labelledby="workspace-title" data-collection-scroll="true">
       <div className={styles.collectionHeader}>
         <div>
           <p className={styles.eyebrow}>Private notes</p>
@@ -181,10 +255,23 @@ export function WorkspaceCollection({
         ) : (
           <NoteList styles={styles} notes={collectionNotes} label={`${view} notes`} onOpen={onOpenNote} />
         )
+      ) : notesLoading && notes.length === 0 ? (
+        <div className={styles.empty} aria-live="polite">Loading notes...</div>
       ) : notes.length === 0 ? (
         <EmptyState styles={styles} title="Your workspace is clear.">Create a note to begin capturing your thoughts.</EmptyState>
       ) : (
-        <NoteList styles={styles} notes={notes} label="Your notes" selectedId={selectedId} onSelect={onSelectNote} />
+        <NoteList
+          styles={styles}
+          notes={notes}
+          label="Your notes"
+          selectedId={selectedId}
+          onSelect={onSelectNote}
+          hasNextPage={notesHasNextPage}
+          isFetchingNextPage={notesFetchingNextPage}
+          loadMoreError={notesLoadMoreError}
+          onEndReached={onLoadMoreNotes}
+          onRetryLoadMore={onLoadMoreNotes}
+        />
       )}
     </section>
   );

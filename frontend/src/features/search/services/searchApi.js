@@ -1,8 +1,8 @@
 import { authApi } from '../../auth/services/authApi.js';
 
 export const searchApi = {
-  search(query, page = 1) {
+  search(query, page = 1, options = {}) {
     const params = `q=${encodeURIComponent(query)}&page=${page}`;
-    return authApi.requestCollection(`/search?${params}`);
+    return authApi.requestCollection(`/search?${params}`, options);
   },
 };

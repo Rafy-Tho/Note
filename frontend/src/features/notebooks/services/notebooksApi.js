@@ -1,8 +1,8 @@
 import { authApi } from '../../auth/services/authApi.js';
 
 export const notebooksApi = {
-  list() {
-    return authApi.request('/notebooks');
+  list(options = {}) {
+    return authApi.request('/notebooks', options);
   },
   create(name) {
     return authApi.request('/notebooks', {

@@ -17,6 +17,16 @@ export function useAutosave({ note, saveNote, debounceMs = 800, onError }) {
   const saveTimerRef = useRef(null);
 
   useEffect(() => {
+    if (
+      note?.id &&
+      latestDraftRef.current?.id === note.id &&
+      dirtyRef.current &&
+      draftSignature(latestDraftRef.current) !== draftSignature(note)
+    ) {
+      return;
+    }
+
+    window.clearTimeout(saveTimerRef.current);
     setDraft(note);
     latestDraftRef.current = note;
     dirtyRef.current = false;
@@ -34,6 +44,7 @@ export function useAutosave({ note, saveNote, debounceMs = 800, onError }) {
         return;
       }
 
+      window.clearTimeout(saveTimerRef.current);
       savingRef.current = true;
       setIsSaving(true);
       setSaveStatus('Saving');
@@ -43,6 +54,7 @@ export function useAutosave({ note, saveNote, debounceMs = 800, onError }) {
       try {
         const updated = await saveNote(snapshot);
         const latest = latestDraftRef.current;
+        if (latest?.id !== snapshot.id) return;
         const changedWhileSaving =
           latest && draftSignature(latest) !== draftSignature(snapshot);
         const nextDraft = changedWhileSaving

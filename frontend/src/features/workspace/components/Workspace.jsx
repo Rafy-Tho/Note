@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   useBlocker,
@@ -12,6 +12,7 @@ import { notesApi } from '../../notes/services/notesApi.js';
 import { useAuth } from '../../auth/context/AuthContext.jsx';
 import { useWorkspaceMutations } from '../hooks/useWorkspaceMutations.js';
 import {
+  flattenNotesPages,
   workspaceQueryKeys,
   useWorkspaceQueries,
 } from '../hooks/useWorkspaceQueries.js';
@@ -24,6 +25,8 @@ import { WorkspaceSidebar } from './WorkspaceSidebar.jsx';
 import styles from './Workspace.module.css';
 
 const EMPTY_DOCUMENT = { type: 'doc', content: [] };
+const EMPTY_LIST = [];
+const EMPTY_SEARCH = { data: [], pagination: { total: 0 } };
 
 export function Workspace() {
   const { session, logout } = useAuth();
@@ -43,12 +46,14 @@ export function Workspace() {
     params.noteId ? 'editor' : 'collection',
   );
   const closeMenuRef = useRef(null);
+  const allowBlockedNavigationRef = useRef(false);
   const queryClient = useQueryClient();
   const queries = useWorkspaceQueries({
     view,
     selectedTagId,
     searchQuery,
     searchPage,
+    noteId: params.noteId,
   });
   const mutations = useWorkspaceMutations();
   const saveNote = useCallback(
@@ -63,10 +68,16 @@ export function Workspace() {
       }),
     [mutations.updateNote],
   );
+  const handleAutosaveError = useCallback(
+    (requestError) => setError(requestError.message),
+    [],
+  );
+  const editorNote =
+    params.noteId && selected?.id === params.noteId ? selected : null;
   const autosave = useAutosave({
-    note: selected,
+    note: editorNote,
     saveNote,
-    onError: (requestError) => setError(requestError.message),
+    onError: handleAutosaveError,
   });
   const {
     draft,
@@ -79,22 +90,22 @@ export function Workspace() {
     conflict,
   } = autosave;
 
-  const notes = queries.notes.data ?? [];
-  const notebooks = queries.notebooks.data ?? [];
-  const availableTags = queries.tags.data ?? [];
-  const identities = queries.identities.data ?? [];
-  const trashNotes = queries.trash.data ?? [];
-  const searchData = queries.search.data ?? {
-    data: [],
-    pagination: { total: 0 },
-  };
+  const notes = useMemo(
+    () => flattenNotesPages(queries.notes.data),
+    [queries.notes.data],
+  );
+  const notebooks = queries.notebooks.data ?? EMPTY_LIST;
+  const availableTags = queries.tags.data ?? EMPTY_LIST;
+  const identities = queries.identities.data ?? EMPTY_LIST;
+  const trashNotes = queries.trash.data ?? EMPTY_LIST;
+  const searchData = queries.search.data ?? EMPTY_SEARCH;
   const isBusy = busy || isSaving;
   const collectionNotes =
     view === 'favorites'
-      ? (queries.favorites.data ?? [])
+      ? (queries.favorites.data ?? EMPTY_LIST)
       : view === 'archive'
-        ? (queries.archive.data ?? [])
-        : (queries.tagNotes.data ?? []);
+        ? (queries.archive.data ?? EMPTY_LIST)
+        : (queries.tagNotes.data ?? EMPTY_LIST);
   const collectionLoading =
     view === 'favorites'
       ? queries.favorites.isLoading
@@ -103,8 +114,28 @@ export function Workspace() {
         : queries.tagNotes.isLoading;
   const blocker = useBlocker(isDirty && !isSaving);
 
+  const notesLoadMoreError = queries.notes.isFetchNextPageError
+    ? queries.notes.error
+    : null;
+
+  const loadMoreNotes = useCallback(() => {
+    if (!queries.notes.hasNextPage || queries.notes.isFetchingNextPage) return;
+    void queries.notes.fetchNextPage().catch((requestError) => {
+      setError(requestError.message);
+    });
+  }, [
+    queries.notes.fetchNextPage,
+    queries.notes.hasNextPage,
+    queries.notes.isFetchingNextPage,
+  ]);
+
   useEffect(() => {
     if (blocker.state !== 'blocked') return;
+    if (allowBlockedNavigationRef.current) {
+      allowBlockedNavigationRef.current = false;
+      blocker.proceed();
+      return;
+    }
     if (
       window.confirm(
         'You have unsaved changes. Leave this note without saving?',
@@ -125,44 +156,29 @@ export function Workspace() {
   }, [mobileMenuOpen]);
 
   useEffect(() => {
-    if (queries.isInitialLoading) return;
     if (!params.noteId) {
-      setSelected(view === 'notes' ? (notes[0] ?? null) : null);
+      setSelected(null);
       return;
     }
-
-    const routeNote = [...notes, ...collectionNotes, ...trashNotes].find(
-      (note) => note.id === params.noteId,
-    );
-    if (routeNote) {
-      setSelected(routeNote);
-      return;
-    }
-
-    let active = true;
-    queryClient
-      .fetchQuery({
-        queryKey: workspaceQueryKeys.note(params.noteId),
-        queryFn: () => notesApi.get(params.noteId),
-      })
-      .then((note) => {
-        if (active) setSelected(note);
-      })
-      .catch((requestError) => {
-        if (active) setError(requestError.message);
+    if (queries.note.data) {
+      setSelected((current) => {
+        if (current?.id === queries.note.data.id && isDirty) return current;
+        return queries.note.data;
       });
-    return () => {
-      active = false;
-    };
-  }, [
-    collectionNotes,
-    notes,
-    params.noteId,
-    queryClient,
-    queries.isInitialLoading,
-    trashNotes,
-    view,
-  ]);
+      setError(null);
+      return;
+    }
+    if (queries.note.error) {
+      setSelected((current) =>
+        current?.id === params.noteId && isDirty ? current : null,
+      );
+      setError(queries.note.error.message);
+      return;
+    }
+    setSelected((current) =>
+      current?.id === params.noteId ? current : null,
+    );
+  }, [isDirty, params.noteId, queries.note.data, queries.note.error]);
 
   useEffect(() => {
     setMobilePane(params.noteId ? 'editor' : 'collection');
@@ -177,16 +193,23 @@ export function Workspace() {
     replaceDraft({ ...draft, tags });
   }
 
-  function canLeaveDraft() {
-    return (
+  const confirmNavigation = useCallback(
+    () =>
       !isDirty ||
       window.confirm(
         'You have unsaved changes. Leave this note without saving?',
-      )
-    );
-  }
+      ),
+    [isDirty],
+  );
+
+  const allowNextNavigation = useCallback(() => {
+    if (isDirty) allowBlockedNavigationRef.current = true;
+  }, [isDirty]);
+
+  const canLeaveDraft = confirmNavigation;
 
   async function createNote() {
+    if (isSaving) return;
     if (
       isDirty &&
       !window.confirm('You have unsaved changes. Create a new note anyway?')
@@ -199,7 +222,8 @@ export function Workspace() {
         title: '',
         contentJson: EMPTY_DOCUMENT,
       });
-      setSelected(note);
+      queryClient.setQueryData(workspaceQueryKeys.note(note.id), note);
+      allowNextNavigation();
       navigate(`/workspace/notes/${note.id}`);
       setMobilePane('editor');
       setMobileMenuOpen(false);
@@ -210,19 +234,39 @@ export function Workspace() {
     }
   }
 
-  function selectNote(note) {
-    if (isSaving) return;
-    setSelected(note);
-    navigate(notePath(view, note.id, selectedTagId));
-    setMobilePane('editor');
-  }
+  const selectNote = useCallback(
+    (note) => {
+      if (
+        isSaving ||
+        note.id === params.noteId ||
+        !confirmNavigation()
+      )
+        return;
+      allowNextNavigation();
+      navigate(notePath(view, note.id, selectedTagId));
+      setMobilePane('editor');
+    },
+    [
+      allowNextNavigation,
+      confirmNavigation,
+      isSaving,
+      navigate,
+      params.noteId,
+      selectedTagId,
+      view,
+    ],
+  );
 
-  function switchView(nextView) {
-    if (isSaving) return;
-    navigate(collectionPath(nextView));
-    setMobilePane('collection');
-    setMobileMenuOpen(false);
-  }
+  const switchView = useCallback(
+    (nextView) => {
+      if (isSaving || view === nextView || !confirmNavigation()) return;
+      allowNextNavigation();
+      navigate(collectionPath(nextView));
+      setMobilePane('collection');
+      setMobileMenuOpen(false);
+    },
+    [allowNextNavigation, confirmNavigation, isSaving, navigate, view],
+  );
 
   function updateSearchQuery(query) {
     const nextParams = new window.URLSearchParams(searchParams);
@@ -250,32 +294,36 @@ export function Workspace() {
     }
   }
 
-  async function openSearchResult(result) {
-    if (isSaving) return;
-    setBusy(true);
-    try {
-      const note = await queryClient.fetchQuery({
-        queryKey: workspaceQueryKeys.note(result.id),
-        queryFn: () => notesApi.get(result.id),
-      });
-      navigate(`/workspace/notes/${result.id}`);
-      setSelected(note);
+  const openSearchResult = useCallback(
+    (result) => {
+      if (isSaving || !confirmNavigation()) return;
+      allowNextNavigation();
+      const nextParams = new window.URLSearchParams(searchParams);
+      navigate(`${notePath('search', result.id)}?${nextParams.toString()}`);
       setMobilePane('editor');
-    } catch (requestError) {
-      setError(requestError.message);
-    } finally {
-      setBusy(false);
-    }
-  }
+    },
+    [allowNextNavigation, confirmNavigation, isSaving, navigate, searchParams],
+  );
+
+  const goBackToCollection = useCallback(() => {
+    if (!confirmNavigation()) return;
+    allowNextNavigation();
+    navigate(collectionPath(view, selectedTagId));
+  }, [allowNextNavigation, confirmNavigation, navigate, selectedTagId, view]);
 
   async function trashCurrentNote() {
-    if (!draft || isSaving || !window.confirm('Move this note to Trash?'))
+    if (
+      !draft ||
+      isSaving ||
+      !confirmNavigation() ||
+      !window.confirm('Move this note to Trash?')
+    )
       return;
     setBusy(true);
     try {
       await mutations.trashNote.mutateAsync(draft.id);
+      allowNextNavigation();
       navigate('/workspace/notes');
-      setSelected(notes.find((note) => note.id !== draft.id) ?? null);
       setMobilePane('collection');
     } catch (requestError) {
       setError(requestError.message);
@@ -288,7 +336,15 @@ export function Workspace() {
     setBusy(true);
     try {
       const restored = await mutations.restoreNote.mutateAsync(note.id);
-      navigate(`/workspace/notes/${restored.id}`);
+      queryClient.setQueryData(
+        workspaceQueryKeys.note(restored.id),
+        restored,
+      );
+      navigate(
+        restored.state === 'archived'
+          ? `/workspace/archive/${restored.id}`
+          : `/workspace/notes/${restored.id}`,
+      );
       setSelected(restored);
       setMobilePane('editor');
     } catch (requestError) {
@@ -308,6 +364,7 @@ export function Workspace() {
       setSelected((current) =>
         current?.id === updated.id ? updated : current,
       );
+      queryClient.setQueryData(workspaceQueryKeys.note(updated.id), updated);
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -327,6 +384,7 @@ export function Workspace() {
           ? `/workspace/notes/${updated.id}`
           : `/workspace/archive/${updated.id}`,
       );
+      queryClient.setQueryData(workspaceQueryKeys.note(updated.id), updated);
       setSelected(updated);
     } catch (requestError) {
       setError(requestError.message);
@@ -404,7 +462,8 @@ export function Workspace() {
     try {
       const serverNote = await queryClient.fetchQuery({
         queryKey: workspaceQueryKeys.note(draft.id),
-        queryFn: () => notesApi.get(draft.id),
+        queryFn: ({ signal }) => notesApi.get(draft.id, { signal }),
+        staleTime: 0,
       });
       setSelected(serverNote);
       setError(null);
@@ -492,7 +551,12 @@ export function Workspace() {
           view={view}
           mobilePane={mobilePane}
           notes={notes}
-          selectedId={selected?.id}
+          notesLoading={queries.notes.isLoading}
+          notesFetchingNextPage={queries.notes.isFetchingNextPage}
+          notesHasNextPage={queries.notes.hasNextPage}
+          notesLoadMoreError={notesLoadMoreError}
+          onLoadMoreNotes={loadMoreNotes}
+          selectedId={params.noteId}
           availableTags={availableTags}
           selectedTagId={selectedTagId}
           collectionNotes={collectionNotes}
@@ -514,7 +578,7 @@ export function Workspace() {
           onCreateNote={createNote}
           onRetry={queries.refetchInitial}
           onSelectNote={selectNote}
-          onOpenNote={openSearchResult}
+          onOpenNote={selectNote}
           onRestore={restoreNote}
           onPermanentDelete={permanentlyDelete}
           onTagChange={(tagId) => navigate(collectionPath('tags', tagId))}
@@ -525,11 +589,15 @@ export function Workspace() {
           mobilePane={mobilePane}
           view={view}
           draft={draft}
+          noteLoading={Boolean(params.noteId && queries.note.isLoading)}
+          noteError={params.noteId ? queries.note.error : null}
           notebooks={notebooks}
+          availableTags={availableTags}
+          tagsLoading={queries.tags.isLoading}
           saveStatus={saveStatus}
           conflict={conflict}
           busy={isBusy}
-          onBack={() => navigate(collectionPath(view, selectedTagId))}
+          onBack={goBackToCollection}
           onSave={() => void saveDraft()}
           onReload={reloadServerCopy}
           onTrash={trashCurrentNote}

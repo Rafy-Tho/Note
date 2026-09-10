@@ -9,6 +9,16 @@ export function useWorkspaceMutations() {
   const queryClient = useQueryClient();
   const refresh = (...keys) =>
     Promise.all(keys.map((key) => queryClient.invalidateQueries({ queryKey: key })));
+  const updateInfiniteNotes = (current, updater) => {
+    if (!current?.pages) return current;
+    return {
+      ...current,
+      pages: current.pages.map((page) => ({
+        ...page,
+        data: updater(page.data),
+      })),
+    };
+  };
 
   const createNote = useMutation({
     mutationFn: (note) => notesApi.create(note),
@@ -16,7 +26,27 @@ export function useWorkspaceMutations() {
   });
   const updateNote = useMutation({
     mutationFn: ({ noteId, note }) => notesApi.update(noteId, note),
-    onSuccess: () => refresh(workspaceQueryKeys.notes, workspaceQueryKeys.favorites),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(workspaceQueryKeys.note(updated.id), updated);
+      const updateList = (notes) =>
+        Array.isArray(notes)
+          ? notes.map((note) =>
+              note.id === updated.id
+                ? { ...updated, preview: updated.preview ?? note.preview }
+                : note,
+            )
+          : notes;
+
+      queryClient.setQueryData(workspaceQueryKeys.notes, (current) =>
+        updateInfiniteNotes(current, updateList),
+      );
+      queryClient.setQueryData(workspaceQueryKeys.favorites, updateList);
+      queryClient.setQueryData(workspaceQueryKeys.archive, updateList);
+      queryClient.setQueriesData(
+        { queryKey: ['workspace', 'tag-notes'] },
+        updateList,
+      );
+    },
   });
   const trashNote = useMutation({
     mutationFn: (noteId) => notesApi.trash(noteId),

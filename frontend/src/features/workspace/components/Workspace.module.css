@@ -1,5 +1,6 @@
 .workspace {
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background: var(--color-bg);
 }
 .loading,
@@ -47,14 +48,18 @@
 .layout {
   display: grid;
   grid-template-columns: 220px minmax(280px, 340px) 1fr;
-  min-height: calc(100vh - 56px);
+  height: calc(100vh - 56px);
+  min-height: 0;
+  overflow: hidden;
 }
 .sidebar {
   display: flex;
   flex-direction: column;
+  min-height: 0;
   padding: 18px 12px;
   border-right: 1px solid var(--color-border);
   background: var(--color-sidebar);
+  overflow-y: auto;
 }
 .sidebarHeader {
   display: flex;
@@ -135,9 +140,10 @@
   display: none;
 }
 .collection {
+  min-height: 0;
   border-right: 1px solid var(--color-border);
   background: var(--color-sidebar);
-  overflow: auto;
+  overflow-y: auto;
 }
 .collectionHeader {
   align-items: flex-end;
@@ -247,6 +253,16 @@ h1 {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.loadMore {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 58px;
+  padding: 10px 16px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
 .empty {
   margin: 24px 20px;
   padding: 28px 18px;
@@ -267,9 +283,10 @@ h1 {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  min-height: calc(100vh - 56px);
+  min-height: 0;
   padding: 24px clamp(24px, 6vw, 88px) 56px;
   background: var(--color-bg);
+  overflow: hidden;
 }
 .backToCollection {
   align-self: flex-start;
@@ -306,10 +323,20 @@ h1 {
   letter-spacing: -0.05em;
 }
 .editorContent {
-  flex: 1;
-  min-height: 360px;
+  min-height: 100%;
   font-size: 17px;
   line-height: 1.8;
+}
+.noteEditor {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+.editorScroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 .editorContent:focus {
   outline: 0;
@@ -581,7 +608,14 @@ h1 {
   }
   .layout {
     display: block;
+    height: auto;
     min-height: 0;
+    overflow: visible;
+  }
+  .workspace {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
   }
   .sidebar {
     position: fixed;
@@ -606,10 +640,12 @@ h1 {
   }
   .collection {
     border-right: 0;
+    overflow-y: visible;
   }
   .editor {
-    min-height: calc(100vh - 56px);
+    min-height: 0;
     padding: 20px 16px;
+    overflow: visible;
   }
   .mobileHidden {
     display: none;
@@ -619,6 +655,12 @@ h1 {
   }
   .editorContent {
     min-height: 300px;
+  }
+  .noteEditor {
+    flex: none;
+  }
+  .editorScroll {
+    overflow: visible;
   }
 }
 

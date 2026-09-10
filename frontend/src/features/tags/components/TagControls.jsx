@@ -1,29 +1,28 @@
 import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Plus, X } from 'lucide-react';
 import { Alert } from '../../../components/common/Alert/Alert.jsx';
 import { tagsApi } from '../services/tagsApi.js';
 import styles from '../../workspace/components/Workspace.module.css';
 
-export function TagControls({ noteId, tags, onTagsChange, disabled = false }) {
-  const [availableTags, setAvailableTags] = useState([]);
+export function TagControls({
+  noteId,
+  tags,
+  availableTags = [],
+  tagsLoading = false,
+  onTagsChange,
+  disabled = false,
+}) {
   const [selectedTagId, setSelectedTagId] = useState('');
   const [newTagName, setNewTagName] = useState('');
-  const [status, setStatus] = useState('loading');
   const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
   const assignedIds = new Set(tags.map((tag) => tag.id));
 
   useEffect(() => {
-    tagsApi
-      .list()
-      .then((result) => {
-        setAvailableTags(result);
-        setStatus('ready');
-      })
-      .catch((requestError) => {
-        setError(requestError.message);
-        setStatus('ready');
-      });
-  }, []);
+    setSelectedTagId('');
+    setError(null);
+  }, [noteId]);
 
   async function assign(tagId) {
     if (!tagId) return;
@@ -42,11 +41,9 @@ export function TagControls({ noteId, tags, onTagsChange, disabled = false }) {
     setError(null);
     try {
       const tag = await tagsApi.create(newTagName);
-      setAvailableTags((current) =>
-        current.some((item) => item.id === tag.id)
-          ? current
-          : [...current, tag],
-      );
+      await queryClient.invalidateQueries({
+        queryKey: ['workspace', 'tags'],
+      });
       await assign(tag.id);
       setNewTagName('');
     } catch (requestError) {
@@ -68,7 +65,7 @@ export function TagControls({ noteId, tags, onTagsChange, disabled = false }) {
     <section className={styles.tagControls} aria-label="Note tags">
       <div className={styles.tagHeader}>
         <span className={styles.tagLabel}>Tags</span>
-        {status === 'loading' && (
+        {tagsLoading && (
           <span className={styles.tagMeta}>Loading...</span>
         )}
       </div>
@@ -97,7 +94,7 @@ export function TagControls({ noteId, tags, onTagsChange, disabled = false }) {
           aria-label="Existing tags"
           value={selectedTagId}
           onChange={(event) => setSelectedTagId(event.target.value)}
-          disabled={disabled || status === 'loading'}
+          disabled={disabled || tagsLoading}
         >
           <option value="">Choose a tag</option>
           {availableTags

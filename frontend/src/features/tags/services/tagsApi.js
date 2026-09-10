@@ -1,8 +1,8 @@
 import { authApi } from '../../auth/services/authApi.js';
 
 export const tagsApi = {
-  list() {
-    return authApi.request('/tags');
+  list(options = {}) {
+    return authApi.request('/tags', options);
   },
   create(name) {
     return authApi.request('/tags', {
@@ -24,7 +24,7 @@ export const tagsApi = {
       method: 'DELETE',
     });
   },
-  listNotes(tagId) {
-    return authApi.request(`/tags/${tagId}/notes`);
+  listNotes(tagId, options = {}) {
+    return authApi.request(`/tags/${tagId}/notes`, options);
   },
 };

@@ -16,7 +16,7 @@ function toNote(row) {
   return {
     id: row.id,
     title: row.title,
-    contentJson: row.content_json,
+    preview: row.preview ?? '',
     state: row.state,
     revision: row.revision,
     createdAt: row.created_at,
@@ -158,8 +158,9 @@ export function createTagsRepository(database = { query }) {
       );
       values.push(limit, (page - 1) * limit);
       const result = await connection.query(
-        `SELECT notes.id, notes.title, notes.content_json, notes.state,
-                notes.revision, notes.created_at, notes.updated_at
+        `SELECT notes.id, notes.title,
+                LEFT(COALESCE(notes.search_content, ''), 240) AS preview,
+                notes.state, notes.revision, notes.created_at, notes.updated_at
          FROM notes
          INNER JOIN note_tags ON note_tags.note_id = notes.id
          WHERE notes.user_id = $1 AND note_tags.tag_id = $2

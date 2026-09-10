@@ -1,4 +1,12 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { authApi } from '../services/authApi.js';
 
 const AuthContext = createContext(null);
@@ -7,12 +15,23 @@ export function AuthProvider({ children }) {
   const [status, setStatus] = useState('loading');
   const [session, setSessionState] = useState(null);
   const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
+  const userIdRef = useRef(null);
+
+  function applySession(nextSession) {
+    const nextUserId = nextSession?.user?.id ?? null;
+    if (userIdRef.current && nextUserId !== userIdRef.current)
+      queryClient.clear();
+    if (!nextUserId) queryClient.clear();
+    userIdRef.current = nextUserId;
+    setSessionState(nextSession);
+  }
 
   async function refreshSession() {
     setError(null);
     try {
       const nextSession = await authApi.getSession();
-      setSessionState(
+      applySession(
         nextSession.authenticated && nextSession.user.emailVerified
           ? nextSession
           : null,
@@ -21,7 +40,7 @@ export function AuthProvider({ children }) {
       return nextSession;
     } catch (requestError) {
       setError(requestError.message);
-      setSessionState(null);
+      applySession(null);
       setStatus('ready');
       throw requestError;
     }
@@ -33,13 +52,13 @@ export function AuthProvider({ children }) {
 
   async function login(credentials) {
     const nextSession = await authApi.login(credentials);
-    setSessionState(nextSession.user.emailVerified ? nextSession : null);
+    applySession(nextSession.user.emailVerified ? nextSession : null);
     setError(null);
     return nextSession;
   }
 
   function acceptSession(nextSession) {
-    setSessionState(
+    applySession(
       nextSession?.authenticated === false ||
         nextSession?.user?.emailVerified === false
         ? null
@@ -52,7 +71,7 @@ export function AuthProvider({ children }) {
     try {
       await authApi.logout();
     } finally {
-      setSessionState(null);
+      applySession(null);
     }
   }
 

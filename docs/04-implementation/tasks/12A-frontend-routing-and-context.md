@@ -58,6 +58,7 @@ Unauthenticated users visiting protected routes redirect to `/login`.
 | `/workspace/tags/:tagId` | Notes filtered by tag |
 | `/workspace/tags/:tagId/:noteId` | Tagged notes with selected editor note |
 | `/workspace/search?q=term&page=1` | Search results |
+| `/workspace/search/:noteId?q=term&page=1` | Search results with selected editor note |
 | `/workspace/trash` | Trash and recovery actions |
 
 Trash remains list-only because the current interface does not edit trashed notes.
@@ -151,7 +152,7 @@ The workspace should use React Router as the source of truth:
 - Refactor `Workspace.jsx` to derive view and selection from the URL.
 - Update `WorkspaceSidebar` buttons to navigate to workspace routes.
 - Update note selection to navigate to `:noteId`.
-- Update search result opening to navigate to `/workspace/notes/:noteId`.
+- Update search result opening to navigate to `/workspace/search/:noteId` while preserving the search query and page parameters.
 - Update note creation to navigate to the newly created note.
 - Update editor back navigation to return to the active collection route.
 - Preserve unsaved-change protection before route changes.

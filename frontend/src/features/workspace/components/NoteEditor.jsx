@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   Bold,
   Code,
@@ -30,6 +30,7 @@ function ToolbarButton({ label, active, onClick, children }) {
 }
 
 export function NoteEditor({ content, onChange }) {
+  const localContentRef = useRef(null);
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -45,12 +46,19 @@ export function NoteEditor({ content, onChange }) {
         class: styles.editorContent,
       },
     },
-    onUpdate: ({ editor: currentEditor }) => onChange(currentEditor.getJSON()),
+    onUpdate: ({ editor: currentEditor }) => {
+      const nextContent = currentEditor.getJSON();
+      localContentRef.current = nextContent;
+      onChange(nextContent);
+    },
   });
 
   useEffect(() => {
-    if (!editor || JSON.stringify(editor.getJSON()) === JSON.stringify(content))
+    if (!editor) return;
+    if (content === localContentRef.current) {
+      localContentRef.current = null;
       return;
+    }
     const { from, to } = editor.state.selection;
     editor.commands.setContent(content, false);
     const documentSize = editor.state.doc.content.size;
@@ -74,7 +82,7 @@ export function NoteEditor({ content, onChange }) {
   }
 
   return (
-    <>
+    <div className={styles.noteEditor}>
       <div className={styles.toolbar} aria-label="Formatting toolbar">
         <ToolbarButton
           label="Heading 1"
@@ -137,7 +145,9 @@ export function NoteEditor({ content, onChange }) {
           <LinkIcon className="icon" size={16} aria-hidden="true" />
         </ToolbarButton>
       </div>
-      <EditorContent editor={editor} />
-    </>
+      <div className={styles.editorScroll}>
+        <EditorContent editor={editor} />
+      </div>
+    </div>
   );
 }

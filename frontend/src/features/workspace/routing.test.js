@@ -18,5 +18,6 @@ describe('workspace routing', () => {
     expect(notePath('tags', 'note-1', 'tag-1')).toBe(
       '/workspace/tags/tag-1/note-1',
     );
+    expect(notePath('search', 'note-1')).toBe('/workspace/search/note-1');
   });
 });
