@@ -211,6 +211,68 @@ export function createAuthController({ authService, config }) {
       }
     },
 
+    async listLinkedProviders(request, response, next) {
+      try {
+        const identities = await authService.listLinkedProviders(
+          request.auth.userId,
+        );
+        sendData(response, { identities });
+      } catch (error) {
+        next(error);
+      }
+    },
+
+    async startProviderLink(request, response, next) {
+      try {
+        const secure = config.nodeEnv === 'production';
+        const browserBinding = getOrSetBrowserBinding(
+          request,
+          response,
+          secure,
+        );
+        const authorizationUrl = await authService.startProviderLink({
+          provider: request.params.provider,
+          browserBinding,
+          sessionId: request.auth.id,
+          userId: request.auth.userId,
+        });
+        response.redirect(authorizationUrl);
+      } catch (error) {
+        next(error);
+      }
+    },
+
+    async completeProviderLink(request, response, next) {
+      try {
+        const browserBinding = readCookie(request, AUTH_BROWSER_BINDING_COOKIE);
+        const result = await authService.completeProviderLink({
+          provider: request.params.provider,
+          code: request.query.code,
+          state: request.query.state,
+          browserBinding,
+          sessionId: request.auth.id,
+          userId: request.auth.userId,
+        });
+        const secure = config.nodeEnv === 'production';
+        clearBrowserBinding(response, secure);
+        sendData(response, result);
+      } catch (error) {
+        next(error);
+      }
+    },
+
+    async unlinkProvider(request, response, next) {
+      try {
+        const result = await authService.unlinkProvider({
+          provider: request.params.provider,
+          userId: request.auth.userId,
+        });
+        sendData(response, result);
+      } catch (error) {
+        next(error);
+      }
+    },
+
     login(request, response, next) {
       passport.authenticate(
         'local',

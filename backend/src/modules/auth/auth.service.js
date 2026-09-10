@@ -48,6 +48,23 @@ const providerLinkRequiredError = () =>
     'Sign in to your existing account before linking this provider.',
   );
 
+const providerIdentityConflictError = () =>
+  new AppError(
+    409,
+    'PROVIDER_IDENTITY_CONFLICT',
+    'This provider account is already linked to another account.',
+  );
+
+const providerNotFoundError = () =>
+  new AppError(404, 'IDENTITY_NOT_FOUND', 'The linked identity was not found.');
+
+const lastSignInMethodError = () =>
+  new AppError(
+    409,
+    'LAST_SIGN_IN_METHOD',
+    'Keep another sign-in method before unlinking this provider.',
+  );
+
 const acceptedVerificationResponse = () => ({ accepted: true });
 
 function tokenHash(token) {
@@ -102,6 +119,23 @@ export function createAuthService({
       expiresAt: new Date(now() + PASSWORD_RESET_TTL_MS),
     });
     return token;
+  }
+
+  function getExternalProvider(provider) {
+    if (provider === 'google') return googleProvider;
+    if (provider === 'facebook') return facebookProvider;
+    return null;
+  }
+
+  function validateProvider(provider) {
+    const client = getExternalProvider(provider);
+    if (!client)
+      throw new AppError(
+        400,
+        'PROVIDER_INVALID',
+        'The requested authentication provider is not supported.',
+      );
+    return client;
   }
 
   return {
@@ -461,6 +495,130 @@ export function createAuthService({
 
       const session = await this.createSession(user.id);
       return { user: publicUser(user), token: session.token };
+    },
+
+    async listLinkedProviders(userId) {
+      return repository.listIdentities(userId);
+    },
+
+    async startProviderLink({ provider, browserBinding, sessionId, userId }) {
+      const providerClient = validateProvider(provider);
+      if (
+        typeof browserBinding !== 'string' ||
+        typeof sessionId !== 'string' ||
+        typeof userId !== 'string'
+      ) {
+        throw new AppError(
+          400,
+          'PROVIDER_CALLBACK_INVALID',
+          'The provider link request is invalid.',
+        );
+      }
+      const user = await repository.findUserById(userId);
+      if (!user?.email_verified_at) {
+        throw new AppError(
+          403,
+          'EMAIL_VERIFICATION_REQUIRED',
+          'Email verification is required to link a provider.',
+        );
+      }
+
+      const state = createOpaqueToken(AUTH_CALLBACK_STATE_BYTES);
+      await transaction(async (client) =>
+        repository.createAuthCallbackState(client, {
+          stateHash: hashOpaqueToken(state),
+          provider,
+          purpose: 'link',
+          sessionId,
+          browserBindingHash: hashOpaqueToken(browserBinding),
+          expiresAt: new Date(now() + AUTH_CALLBACK_STATE_TTL_MS),
+        }),
+      );
+      return providerClient.authorizationUrl({ state });
+    },
+
+    async completeProviderLink({
+      provider,
+      code,
+      state,
+      browserBinding,
+      sessionId,
+      userId,
+    }) {
+      const providerClient = validateProvider(provider);
+      if (
+        typeof code !== 'string' ||
+        typeof state !== 'string' ||
+        typeof browserBinding !== 'string' ||
+        typeof sessionId !== 'string' ||
+        typeof userId !== 'string'
+      ) {
+        throw new AppError(
+          400,
+          'PROVIDER_CALLBACK_INVALID',
+          'The provider callback is invalid.',
+        );
+      }
+
+      const callbackState = await transaction((client) =>
+        repository.consumeAuthCallbackState(client, {
+          stateHash: hashOpaqueToken(state),
+          provider,
+          purpose: 'link',
+          browserBindingHash: hashOpaqueToken(browserBinding),
+          sessionId,
+        }),
+      );
+      if (!callbackState) {
+        throw new AppError(
+          400,
+          'PROVIDER_CALLBACK_INVALID',
+          'The provider callback is invalid or expired.',
+        );
+      }
+
+      const profile = await providerClient.authenticateCode({
+        code,
+        nonce: state,
+      });
+      const email = normalizeEmail(profile.email);
+      if (!email || !profile.subject) {
+        throw new AppError(
+          401,
+          'PROVIDER_AUTHENTICATION_FAILED',
+          'Provider authentication could not be completed.',
+        );
+      }
+
+      const existing = await repository.findIdentity(provider, profile.subject);
+      if (existing && existing.user_id !== userId)
+        throw providerIdentityConflictError();
+      if (!existing) {
+        await transaction((client) =>
+          repository.createIdentity(client, {
+            userId,
+            provider,
+            providerSubject: profile.subject,
+          }),
+        );
+      }
+      return { provider };
+    },
+
+    async unlinkProvider({ provider, userId }) {
+      validateProvider(provider);
+      const user = await repository.findUserById(userId);
+      const identities = await repository.listIdentities(userId);
+      if (!identities.some((identity) => identity.provider === provider))
+        throw providerNotFoundError();
+      if (!user?.password_hash && identities.length <= 1)
+        throw lastSignInMethodError();
+
+      const removed = await transaction((client) =>
+        repository.deleteIdentity(client, userId, provider),
+      );
+      if (!removed) throw providerNotFoundError();
+      return { provider };
     },
 
     csrfToken(token, secret = '') {

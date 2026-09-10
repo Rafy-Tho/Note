@@ -42,7 +42,7 @@ Add mandatory email verification, secure password reset, Google and Facebook sig
 - [x] Revoke all sessions atomically after a successful password reset.
 - [x] Implement Google authorization-code callback validation.
 - [x] Implement Facebook authorization-code callback validation.
-- [ ] Implement provider resolution and authenticated linking.
+- [x] Implement provider resolution and authenticated linking.
 - [ ] Preserve the existing opaque PostgreSQL session and CSRF behavior.
 
 ## Frontend
@@ -61,6 +61,7 @@ Add mandatory email verification, secure password reset, Google and Facebook sig
 - Password reset API coverage, Argon2id replacement, session revocation, and provider-only account behavior are implemented.
 - Google authorization URL, callback claim validation, browser binding, account resolution, and no-automatic-merge coverage are implemented.
 - Facebook authorization URL, Graph profile validation, browser binding, account resolution, and session coverage are implemented.
+- Authenticated identity listing, session-bound linking, collision protection, and safe unlinking coverage are implemented.
 - Full backend tests pass: 61 tests.
 - Targeted ESLint passes for the authentication implementation and tests. Repository backend lint remains blocked by the pre-existing `backend/test/api/organization.test.js:191` error.
 
@@ -70,10 +71,10 @@ Add mandatory email verification, secure password reset, Google and Facebook sig
 - [x] Test password hashing and complete session revocation after reset.
 - [ ] Test verification resend rate limits and mail failures.
 - [ ] Test provider state, redirect, subject, issuer, audience, expiry, and verified-email validation.
-- [ ] Test provider identity collisions and no automatic email-based merging.
+- [x] Test provider identity collisions and no automatic email-based merging.
 - [ ] Test unverified users cannot access private notes.
 - [x] Test successful Google/Facebook sign-in creates the normal session.
-- [ ] Test authenticated linking and safe unlinking rules.
+- [x] Test authenticated linking and safe unlinking rules.
 - [ ] Add API, integration, frontend, and Playwright journeys.
 - [ ] Verify provider secrets, codes, tokens, and verification tokens are never logged or returned.
 

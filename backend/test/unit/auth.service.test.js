@@ -407,4 +407,26 @@ describe('authentication service', () => {
       emailVerified: true,
     });
   });
+
+  it('prevents unlinking the last provider-only sign-in method', async () => {
+    const repository = {
+      findUserById: vi.fn(async () => ({
+        id: 'user-1',
+        email: 'user@example.com',
+        password_hash: null,
+        email_verified_at: new Date('2026-09-10T00:00:00Z'),
+      })),
+      listIdentities: vi.fn(async () => [{ provider: 'google' }]),
+      deleteIdentity: vi.fn(),
+    };
+    const service = createAuthService({
+      repository,
+      googleProvider: {},
+    });
+
+    await expect(
+      service.unlinkProvider({ provider: 'google', userId: 'user-1' }),
+    ).rejects.toMatchObject({ code: 'LAST_SIGN_IN_METHOD' });
+    expect(repository.deleteIdentity).not.toHaveBeenCalled();
+  });
 });

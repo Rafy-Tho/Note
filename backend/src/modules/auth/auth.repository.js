@@ -12,6 +12,16 @@ export function createAuthRepository(database = { query }) {
       return result.rows[0] ?? null;
     },
 
+    async findUserById(userId) {
+      const result = await database.query(
+        `SELECT id, email, password_hash, email_verified_at
+         FROM users
+         WHERE id = $1`,
+        [userId],
+      );
+      return result.rows[0] ?? null;
+    },
+
     async createUser(client, email, passwordHash) {
       const result = await client.query(
         `INSERT INTO users (email, password_hash)
@@ -207,6 +217,27 @@ export function createAuthRepository(database = { query }) {
         [provider, providerSubject],
       );
       return result.rows[0] ?? null;
+    },
+
+    async listIdentities(userId) {
+      const result = await database.query(
+        `SELECT provider, created_at
+         FROM auth_identities
+         WHERE user_id = $1
+         ORDER BY provider`,
+        [userId],
+      );
+      return result.rows;
+    },
+
+    async deleteIdentity(client, userId, provider) {
+      const result = await client.query(
+        `DELETE FROM auth_identities
+         WHERE user_id = $1 AND provider = $2
+         RETURNING provider`,
+        [userId, provider],
+      );
+      return result.rowCount === 1;
     },
 
     async createExternalUser(client, email) {

@@ -66,6 +66,28 @@ export function createAuthRouter({ authService, config }) {
     authRateLimiter(),
     controller.completeFacebookSignIn,
   );
+  expressRouter.get(
+    '/identities',
+    requireAuthentication,
+    controller.listLinkedProviders,
+  );
+  expressRouter.get(
+    '/:provider/link/start',
+    requireAuthentication,
+    controller.startProviderLink,
+  );
+  expressRouter.get(
+    '/:provider/link/callback',
+    requireAuthentication,
+    authRateLimiter(),
+    controller.completeProviderLink,
+  );
+  expressRouter.delete(
+    '/identities/:provider',
+    requireAuthentication,
+    createCsrfMiddleware({ authService, csrfSecret: config.csrfSecret }),
+    controller.unlinkProvider,
+  );
   expressRouter.get('/session', controller.getSession);
 
   expressRouter.post(

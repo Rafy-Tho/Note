@@ -75,6 +75,18 @@ function createFakeAuthService(verified = true) {
         },
       };
     },
+    async listLinkedProviders() {
+      return [{ provider: 'google', created_at: '2026-09-10T00:00:00Z' }];
+    },
+    async startProviderLink() {
+      return 'https://accounts.google.com/o/oauth2/v2/auth?state=link-state';
+    },
+    async completeProviderLink({ provider }) {
+      return { provider };
+    },
+    async unlinkProvider({ provider }) {
+      return { provider };
+    },
     async verifyCredentials({ email, password }) {
       if (password !== 'correct-password') return null;
       const user = users.get(email);
@@ -311,5 +323,31 @@ describe('authentication API', () => {
     expect(callback.status).toBe(200);
     expect(callback.body.data.authenticated).toBe(true);
     expect(callback.body.data).not.toHaveProperty('token');
+  });
+
+  it('lists, links, and unlinks providers from an authenticated session', async () => {
+    const { app } = createTestApp();
+    const agent = request.agent(app);
+    await agent
+      .post('/api/v1/auth/register')
+      .send({ email: 'user@example.com', password: 'correct-password' });
+    const login = await agent
+      .post('/api/v1/auth/login')
+      .send({ email: 'user@example.com', password: 'correct-password' });
+
+    const identities = await agent.get('/api/v1/auth/identities');
+    const start = await agent.get('/api/v1/auth/google/link/start');
+    const callback = await agent
+      .get('/api/v1/auth/google/link/callback')
+      .query({ code: 'authorization-code', state: 'link-state' });
+    const unlink = await agent
+      .delete('/api/v1/auth/identities/google')
+      .set('x-csrf-token', login.body.data.csrfToken);
+
+    expect(identities.status).toBe(200);
+    expect(identities.body.data.identities[0].provider).toBe('google');
+    expect(start.status).toBe(302);
+    expect(callback.body.data).toEqual({ provider: 'google' });
+    expect(unlink.body.data).toEqual({ provider: 'google' });
   });
 });
