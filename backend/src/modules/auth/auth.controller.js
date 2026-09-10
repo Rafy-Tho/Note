@@ -168,6 +168,49 @@ export function createAuthController({ authService, config }) {
       }
     },
 
+    async startFacebookSignIn(request, response, next) {
+      try {
+        const secure = config.nodeEnv === 'production';
+        const browserBinding = getOrSetBrowserBinding(
+          request,
+          response,
+          secure,
+        );
+        const authorizationUrl = await authService.startFacebookSignIn({
+          browserBinding,
+        });
+        response.redirect(authorizationUrl);
+      } catch (error) {
+        next(error);
+      }
+    },
+
+    async completeFacebookSignIn(request, response, next) {
+      try {
+        const browserBinding = readCookie(request, AUTH_BROWSER_BINDING_COOKIE);
+        const result = await authService.completeFacebookSignIn({
+          code: request.query.code,
+          state: request.query.state,
+          browserBinding,
+        });
+        const secure = config.nodeEnv === 'production';
+        setSessionCookie(
+          response,
+          config.sessionCookieName,
+          result.token,
+          secure,
+        );
+        clearBrowserBinding(response, secure);
+        sendData(response, {
+          authenticated: true,
+          user: result.user,
+          csrfToken: authService.csrfToken(result.token, config.csrfSecret),
+        });
+      } catch (error) {
+        next(error);
+      }
+    },
+
     login(request, response, next) {
       passport.authenticate(
         'local',

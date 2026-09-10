@@ -47,6 +47,20 @@ export function getConfig(env = process.env) {
       'GOOGLE_REDIRECT_URI is required in production.';
   }
 
+  if (nodeEnv === 'production' && !env.FACEBOOK_CLIENT_ID) {
+    errors.FACEBOOK_CLIENT_ID = 'FACEBOOK_CLIENT_ID is required in production.';
+  }
+
+  if (nodeEnv === 'production' && !env.FACEBOOK_CLIENT_SECRET) {
+    errors.FACEBOOK_CLIENT_SECRET =
+      'FACEBOOK_CLIENT_SECRET is required in production.';
+  }
+
+  if (nodeEnv === 'production' && !env.FACEBOOK_REDIRECT_URI) {
+    errors.FACEBOOK_REDIRECT_URI =
+      'FACEBOOK_REDIRECT_URI is required in production.';
+  }
+
   if (Object.keys(errors).length > 0) {
     const error = new Error('Invalid application configuration.');
     error.code = 'CONFIGURATION_ERROR';
@@ -68,5 +82,9 @@ export function getConfig(env = process.env) {
     googleClientId: env.GOOGLE_CLIENT_ID ?? '',
     googleClientSecret: env.GOOGLE_CLIENT_SECRET ?? '',
     googleRedirectUri: env.GOOGLE_REDIRECT_URI ?? '',
+    facebookClientId: env.FACEBOOK_CLIENT_ID ?? '',
+    facebookClientSecret: env.FACEBOOK_CLIENT_SECRET ?? '',
+    facebookRedirectUri: env.FACEBOOK_REDIRECT_URI ?? '',
+    facebookGraphVersion: env.FACEBOOK_GRAPH_VERSION ?? 'v20.0',
   };
 }

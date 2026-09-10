@@ -60,6 +60,12 @@ export function createAuthRouter({ authService, config }) {
     authRateLimiter(),
     controller.completeGoogleSignIn,
   );
+  expressRouter.get('/facebook/start', controller.startFacebookSignIn);
+  expressRouter.get(
+    '/facebook/callback',
+    authRateLimiter(),
+    controller.completeFacebookSignIn,
+  );
   expressRouter.get('/session', controller.getSession);
 
   expressRouter.post(

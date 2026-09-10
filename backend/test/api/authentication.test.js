@@ -62,6 +62,19 @@ function createFakeAuthService(verified = true) {
         },
       };
     },
+    async startFacebookSignIn() {
+      return 'https://www.facebook.com/v20.0/dialog/oauth?state=test-state';
+    },
+    async completeFacebookSignIn() {
+      return {
+        token: 'session-user-1',
+        user: {
+          id: 'user-1',
+          email: 'user@example.com',
+          emailVerified: true,
+        },
+      };
+    },
     async verifyCredentials({ email, password }) {
       if (password !== 'correct-password') return null;
       const user = users.get(email);
@@ -279,6 +292,22 @@ describe('authentication API', () => {
         expect.stringContaining('note_app_oauth_binding'),
       ]),
     );
+    expect(callback.status).toBe(200);
+    expect(callback.body.data.authenticated).toBe(true);
+    expect(callback.body.data).not.toHaveProperty('token');
+  });
+
+  it('starts Facebook sign-in with a browser binding and creates the normal session', async () => {
+    const { app } = createTestApp();
+    const agent = request.agent(app);
+
+    const start = await agent.get('/api/v1/auth/facebook/start');
+    const callback = await agent
+      .get('/api/v1/auth/facebook/callback')
+      .query({ code: 'authorization-code', state: 'test-state' });
+
+    expect(start.status).toBe(302);
+    expect(start.headers.location).toContain('facebook.com');
     expect(callback.status).toBe(200);
     expect(callback.body.data.authenticated).toBe(true);
     expect(callback.body.data).not.toHaveProperty('token');

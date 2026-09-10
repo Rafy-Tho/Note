@@ -25,6 +25,10 @@ describe('getConfig', () => {
       googleClientId: '',
       googleClientSecret: '',
       googleRedirectUri: '',
+      facebookClientId: '',
+      facebookClientSecret: '',
+      facebookRedirectUri: '',
+      facebookGraphVersion: 'v20.0',
     });
   });
 
@@ -47,6 +51,11 @@ describe('getConfig', () => {
         GOOGLE_CLIENT_ID: 'GOOGLE_CLIENT_ID is required in production.',
         GOOGLE_CLIENT_SECRET: 'GOOGLE_CLIENT_SECRET is required in production.',
         GOOGLE_REDIRECT_URI: 'GOOGLE_REDIRECT_URI is required in production.',
+        FACEBOOK_CLIENT_ID: 'FACEBOOK_CLIENT_ID is required in production.',
+        FACEBOOK_CLIENT_SECRET:
+          'FACEBOOK_CLIENT_SECRET is required in production.',
+        FACEBOOK_REDIRECT_URI:
+          'FACEBOOK_REDIRECT_URI is required in production.',
       });
     }
   });

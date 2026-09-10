@@ -368,4 +368,43 @@ describe('authentication service', () => {
     ).rejects.toMatchObject({ code: 'PROVIDER_LINK_REQUIRED' });
     expect(repository.createExternalUser).not.toHaveBeenCalled();
   });
+
+  it('resolves a linked Facebook identity into the normal session', async () => {
+    const repository = {
+      consumeAuthCallbackState: vi.fn(async () => ({ id: 'state-1' })),
+      findIdentity: vi.fn(async () => ({
+        user_id: 'user-1',
+        email: 'user@example.com',
+        email_verified_at: new Date('2026-09-10T00:00:00Z'),
+        password_hash: null,
+      })),
+      createSession: vi.fn(async () => ({ id: 'session-1' })),
+    };
+    const service = createAuthService({
+      repository,
+      facebookProvider: {
+        authenticateCode: vi.fn(async () => ({
+          subject: 'facebook-subject',
+          email: 'user@example.com',
+        })),
+      },
+      transaction: vi.fn(async (work) => work({})),
+    });
+
+    const result = await service.completeFacebookSignIn({
+      code: 'authorization-code',
+      state: 'callback-state-value',
+      browserBinding: 'browser-binding',
+    });
+
+    expect(repository.findIdentity).toHaveBeenCalledWith(
+      'facebook',
+      'facebook-subject',
+    );
+    expect(result.user).toEqual({
+      id: 'user-1',
+      email: 'user@example.com',
+      emailVerified: true,
+    });
+  });
 });
