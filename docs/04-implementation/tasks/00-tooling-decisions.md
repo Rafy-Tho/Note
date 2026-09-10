@@ -45,7 +45,7 @@ Confirm the development tools and dependencies before creating application sourc
 
 - Runtime: `express`, `pg`, `argon2`, `csrf-sync`, `express-rate-limit`, `jose` for provider ID-token validation, plus the selected Google/Facebook provider clients and Brevo mail adapter after the authentication expansion spike.
 - Session handling: implement the application-owned PostgreSQL session middleware; provider adapters must not introduce a second session format or persist raw session identifiers.
-- Frontend: React, React DOM, Vite, and the required Tiptap packages.
+- Frontend: React, React DOM, React Router DOM, Vite, and the required Tiptap packages.
 - Development: Vitest, Supertest, Playwright, ESLint, Prettier, and `node-pg-migrate`.
 - Exact versions and license review must be recorded when the package manifest is created; do not install dependencies before that review.
 

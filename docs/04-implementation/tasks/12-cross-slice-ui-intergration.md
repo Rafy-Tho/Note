@@ -16,6 +16,8 @@ Integrate and harden the UI delivered by the vertical feature slices into a prod
 - `10-search.md`
 - `11-organization-favorites-archive.md`
 
+The URL-driven routing and authentication-context follow-up is tracked in `12A-frontend-routing-and-context.md`.
+
 ## Shared UI Integration
 
 - [x] Complete dashboard and navigation.
@@ -23,6 +25,18 @@ Integrate and harden the UI delivered by the vertical feature slices into a prod
 - [x] Add keyboard navigation and focus management.
 - [x] Add accessible save and error feedback.
 - [ ] Verify consistent loading, empty, success, and error states across slices.
+
+## Routing Follow-Up
+
+- [x] Add the shared `AuthProvider` and `useAuth` contract.
+- [x] Add public and protected React Router guards.
+- [x] Add `AuthLayout` and `AppLayout`.
+- [x] Add stable authentication URLs.
+- [x] Add stable workspace section and selected-note URLs.
+- [x] Move workspace view, note, tag, and search state to route parameters and search parameters.
+- [ ] Verify browser back/forward behavior and unsaved-change protection.
+
+See `12A-frontend-routing-and-context.md` for the route map, implementation structure, acceptance criteria, and required tests.
 
 ## Integration and Tests
 

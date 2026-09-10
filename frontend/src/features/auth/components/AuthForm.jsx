@@ -3,6 +3,7 @@ import { ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { Alert } from '../../../components/Alert/Alert.jsx';
 import { authApi } from '../api/authApi.js';
 import { validateCredentials } from '../authValidation.js';
+import { useAuth } from '../context/AuthContext.jsx';
 import styles from './AuthForm.module.css';
 
 export function AuthForm({
@@ -11,7 +12,9 @@ export function AuthForm({
   initialToken = '',
   verificationRequired = false,
   verificationEmail = '',
+  onModeChange,
 }) {
+  const { login } = useAuth();
   const [mode, setMode] = useState(
     initialToken ? initialMode : verificationRequired ? 'verify' : initialMode,
   );
@@ -29,8 +32,9 @@ export function AuthForm({
   const isReset = mode === 'reset';
   const isForgot = mode === 'forgot';
 
-  function switchMode(nextMode) {
+  function switchMode(nextMode, options = {}) {
     setMode(nextMode);
+    onModeChange?.(nextMode, options);
     setError(null);
     setFieldErrors({});
     setSuccess(null);
@@ -97,7 +101,7 @@ export function AuthForm({
         setSuccess('Password reset. Sign in with your new password.');
         setPassword('');
         setToken('');
-        setMode('login');
+        switchMode('login');
       } catch (requestError) {
         setError(requestError.message);
       } finally {
@@ -117,15 +121,19 @@ export function AuthForm({
         setEmail(validation.credentials.email);
         setPassword('');
         setCanResendVerification(false);
-        setMode('verify');
+        switchMode('verify', {
+          verificationEmail: validation.credentials.email,
+        });
         setSuccess(
           'Account created. Check your email, then verify your address to open your workspace.',
         );
       } else {
-        const nextSession = await authApi.login(validation.credentials);
+        const nextSession = await login(validation.credentials);
         if (!nextSession.user.emailVerified) {
           setEmail(validation.credentials.email);
-          setMode('verify');
+          switchMode('verify', {
+            verificationEmail: validation.credentials.email,
+          });
           setSuccess('Verify your email before opening private notes.');
         } else {
           onAuthenticated(nextSession);
@@ -321,7 +329,7 @@ export function AuthForm({
               setError(null);
               try {
                 await authApi.resendVerification(verificationEmail || email);
-                setMode('verify');
+                switchMode('verify', { verificationEmail: email });
                 setSuccess(
                   'If the account is eligible, a new verification code is on its way.',
                 );

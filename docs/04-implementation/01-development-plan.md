@@ -118,6 +118,12 @@ Complete shared dashboard and navigation behavior, responsive desktop/tablet/mob
 
 **Gate:** The core workflow is usable and accessible on supported desktop and mobile browsers.
 
+## Step 13A - Frontend Routing and Application Context
+
+Implement shared authentication context, React Router route guards, application layouts, authentication URLs, and URL-driven workspace navigation. Track the detailed route map, component boundaries, URL state ownership, and tests in `tasks/12A-frontend-routing-and-context.md`.
+
+**Gate:** Authentication and every supported workspace section are reachable through stable URLs, protected correctly, and preserve unsaved-change behavior.
+
 ## Step 14 - Test and Harden
 
 Run unit, integration, API, authorization, rich-text security, autosave, end-to-end, accessibility, performance, backup, and recovery tests. Fix critical defects and regressions.

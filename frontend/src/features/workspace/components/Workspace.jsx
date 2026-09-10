@@ -1,10 +1,22 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import {
+  useBlocker,
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom';
 import { authApi } from '../../auth/api/authApi.js';
 import { notesApi } from '../../notes/api/notesApi.js';
+import { useAuth } from '../../auth/context/AuthContext.jsx';
 import { useWorkspaceMutations } from '../hooks/useWorkspaceMutations.js';
-import { workspaceQueryKeys, useWorkspaceQueries } from '../hooks/useWorkspaceQueries.js';
+import {
+  workspaceQueryKeys,
+  useWorkspaceQueries,
+} from '../hooks/useWorkspaceQueries.js';
 import { useAutosave } from '../hooks/useAutosave.js';
+import { collectionPath, notePath, viewFromPath } from '../routing.js';
 import { WorkspaceCollection } from './WorkspaceCollection.jsx';
 import { WorkspaceEditor } from './WorkspaceEditor.jsx';
 import { WorkspaceHeader } from './WorkspaceHeader.jsx';
@@ -13,19 +25,31 @@ import styles from './Workspace.module.css';
 
 const EMPTY_DOCUMENT = { type: 'doc', content: [] };
 
-export function Workspace({ session, onSignOut }) {
-  const [view, setView] = useState('notes');
-  const [selectedTagId, setSelectedTagId] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchPage, setSearchPage] = useState(1);
+export function Workspace() {
+  const { session, logout } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const params = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const view = viewFromPath(location.pathname);
+  const selectedTagId = params.tagId ?? '';
+  const searchQuery = searchParams.get('q') ?? '';
+  const searchPage = Math.max(Number(searchParams.get('page') ?? 1), 1);
   const [selected, setSelected] = useState(null);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [mobilePane, setMobilePane] = useState('collection');
+  const [mobilePane, setMobilePane] = useState(
+    params.noteId ? 'editor' : 'collection',
+  );
   const closeMenuRef = useRef(null);
   const queryClient = useQueryClient();
-  const queries = useWorkspaceQueries({ view, selectedTagId, searchQuery, searchPage });
+  const queries = useWorkspaceQueries({
+    view,
+    selectedTagId,
+    searchQuery,
+    searchPage,
+  });
   const mutations = useWorkspaceMutations();
   const saveNote = useCallback(
     (snapshot) =>
@@ -60,8 +84,35 @@ export function Workspace({ session, onSignOut }) {
   const availableTags = queries.tags.data ?? [];
   const identities = queries.identities.data ?? [];
   const trashNotes = queries.trash.data ?? [];
-  const searchData = queries.search.data ?? { data: [], pagination: { total: 0 } };
+  const searchData = queries.search.data ?? {
+    data: [],
+    pagination: { total: 0 },
+  };
   const isBusy = busy || isSaving;
+  const collectionNotes =
+    view === 'favorites'
+      ? (queries.favorites.data ?? [])
+      : view === 'archive'
+        ? (queries.archive.data ?? [])
+        : (queries.tagNotes.data ?? []);
+  const collectionLoading =
+    view === 'favorites'
+      ? queries.favorites.isLoading
+      : view === 'archive'
+        ? queries.archive.isLoading
+        : queries.tagNotes.isLoading;
+  const blocker = useBlocker(isDirty && !isSaving);
+
+  useEffect(() => {
+    if (blocker.state !== 'blocked') return;
+    if (
+      window.confirm(
+        'You have unsaved changes. Leave this note without saving?',
+      )
+    )
+      blocker.proceed();
+    else blocker.reset();
+  }, [blocker]);
 
   useEffect(() => {
     if (!mobileMenuOpen) return undefined;
@@ -74,8 +125,48 @@ export function Workspace({ session, onSignOut }) {
   }, [mobileMenuOpen]);
 
   useEffect(() => {
-    if (queries.notes.isSuccess && selected === null) setSelected(notes[0] ?? null);
-  }, [notes, queries.notes.isSuccess, selected]);
+    if (queries.isInitialLoading) return;
+    if (!params.noteId) {
+      setSelected(view === 'notes' ? (notes[0] ?? null) : null);
+      return;
+    }
+
+    const routeNote = [...notes, ...collectionNotes, ...trashNotes].find(
+      (note) => note.id === params.noteId,
+    );
+    if (routeNote) {
+      setSelected(routeNote);
+      return;
+    }
+
+    let active = true;
+    queryClient
+      .fetchQuery({
+        queryKey: workspaceQueryKeys.note(params.noteId),
+        queryFn: () => notesApi.get(params.noteId),
+      })
+      .then((note) => {
+        if (active) setSelected(note);
+      })
+      .catch((requestError) => {
+        if (active) setError(requestError.message);
+      });
+    return () => {
+      active = false;
+    };
+  }, [
+    collectionNotes,
+    notes,
+    params.noteId,
+    queryClient,
+    queries.isInitialLoading,
+    trashNotes,
+    view,
+  ]);
+
+  useEffect(() => {
+    setMobilePane(params.noteId ? 'editor' : 'collection');
+  }, [params.noteId]);
 
   function changeDraft(field, value) {
     updateDraft(field, value);
@@ -87,16 +178,29 @@ export function Workspace({ session, onSignOut }) {
   }
 
   function canLeaveDraft() {
-    return !isDirty || window.confirm('You have unsaved changes. Leave this note without saving?');
+    return (
+      !isDirty ||
+      window.confirm(
+        'You have unsaved changes. Leave this note without saving?',
+      )
+    );
   }
 
   async function createNote() {
-    if (isDirty && !window.confirm('You have unsaved changes. Create a new note anyway?')) return;
+    if (
+      isDirty &&
+      !window.confirm('You have unsaved changes. Create a new note anyway?')
+    )
+      return;
     setBusy(true);
     setError(null);
     try {
-      const note = await mutations.createNote.mutateAsync({ title: '', contentJson: EMPTY_DOCUMENT });
+      const note = await mutations.createNote.mutateAsync({
+        title: '',
+        contentJson: EMPTY_DOCUMENT,
+      });
       setSelected(note);
+      navigate(`/workspace/notes/${note.id}`);
       setMobilePane('editor');
       setMobileMenuOpen(false);
     } catch (requestError) {
@@ -107,21 +211,25 @@ export function Workspace({ session, onSignOut }) {
   }
 
   function selectNote(note) {
-    if (isSaving || !canLeaveDraft()) return;
+    if (isSaving) return;
     setSelected(note);
+    navigate(notePath(view, note.id, selectedTagId));
     setMobilePane('editor');
   }
 
   function switchView(nextView) {
-    if (nextView === view) {
-      setMobileMenuOpen(false);
-      return;
-    }
-    if (isSaving || !canLeaveDraft()) return;
-    setView(nextView);
-    setSelected(nextView === 'notes' ? notes[0] ?? null : null);
+    if (isSaving) return;
+    navigate(collectionPath(nextView));
     setMobilePane('collection');
     setMobileMenuOpen(false);
+  }
+
+  function updateSearchQuery(query) {
+    const nextParams = new window.URLSearchParams(searchParams);
+    if (query) nextParams.set('q', query);
+    else nextParams.delete('q');
+    nextParams.set('page', '1');
+    setSearchParams(nextParams, { replace: true });
   }
 
   async function submitSearch(event, page = 1) {
@@ -131,7 +239,9 @@ export function Workspace({ session, onSignOut }) {
       setError('Enter search text.');
       return;
     }
-    setSearchPage(page);
+    const nextParams = new window.URLSearchParams(searchParams);
+    nextParams.set('page', String(page));
+    setSearchParams(nextParams, { replace: true });
     setError(null);
     try {
       await queries.searchNotes(query, page);
@@ -141,14 +251,14 @@ export function Workspace({ session, onSignOut }) {
   }
 
   async function openSearchResult(result) {
-    if (isSaving || !canLeaveDraft()) return;
+    if (isSaving) return;
     setBusy(true);
     try {
       const note = await queryClient.fetchQuery({
         queryKey: workspaceQueryKeys.note(result.id),
         queryFn: () => notesApi.get(result.id),
       });
-      setView('notes');
+      navigate(`/workspace/notes/${result.id}`);
       setSelected(note);
       setMobilePane('editor');
     } catch (requestError) {
@@ -159,10 +269,12 @@ export function Workspace({ session, onSignOut }) {
   }
 
   async function trashCurrentNote() {
-    if (!draft || isSaving || !window.confirm('Move this note to Trash?')) return;
+    if (!draft || isSaving || !window.confirm('Move this note to Trash?'))
+      return;
     setBusy(true);
     try {
       await mutations.trashNote.mutateAsync(draft.id);
+      navigate('/workspace/notes');
       setSelected(notes.find((note) => note.id !== draft.id) ?? null);
       setMobilePane('collection');
     } catch (requestError) {
@@ -176,7 +288,7 @@ export function Workspace({ session, onSignOut }) {
     setBusy(true);
     try {
       const restored = await mutations.restoreNote.mutateAsync(note.id);
-      setView('notes');
+      navigate(`/workspace/notes/${restored.id}`);
       setSelected(restored);
       setMobilePane('editor');
     } catch (requestError) {
@@ -189,8 +301,13 @@ export function Workspace({ session, onSignOut }) {
   async function setNoteFavorite(note, isFavorite) {
     setBusy(true);
     try {
-      const updated = await mutations.favoriteNote.mutateAsync({ noteId: note.id, favorite: isFavorite });
-      setSelected((current) => (current?.id === updated.id ? updated : current));
+      const updated = await mutations.favoriteNote.mutateAsync({
+        noteId: note.id,
+        favorite: isFavorite,
+      });
+      setSelected((current) =>
+        current?.id === updated.id ? updated : current,
+      );
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -201,8 +318,16 @@ export function Workspace({ session, onSignOut }) {
   async function changeArchive(note) {
     setBusy(true);
     try {
-      const updated = await mutations.archiveNote.mutateAsync({ noteId: note.id, archived: note.state === 'archived' });
-      setSelected(updated.state === 'active' ? updated : null);
+      const updated = await mutations.archiveNote.mutateAsync({
+        noteId: note.id,
+        archived: note.state === 'archived',
+      });
+      navigate(
+        updated.state === 'active'
+          ? `/workspace/notes/${updated.id}`
+          : `/workspace/archive/${updated.id}`,
+      );
+      setSelected(updated);
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -213,7 +338,10 @@ export function Workspace({ session, onSignOut }) {
   async function assignNotebook(notebookId) {
     if (!draft) return;
     try {
-      const updated = await mutations.assignNotebook.mutateAsync({ noteId: draft.id, notebookId: notebookId || null });
+      const updated = await mutations.assignNotebook.mutateAsync({
+        noteId: draft.id,
+        notebookId: notebookId || null,
+      });
       replaceDraft(updated);
       setSelected(updated);
     } catch (requestError) {
@@ -224,7 +352,9 @@ export function Workspace({ session, onSignOut }) {
   async function createNotebook(event) {
     event.preventDefault();
     try {
-      await mutations.createNotebook.mutateAsync(event.currentTarget.elements.notebookName.value);
+      await mutations.createNotebook.mutateAsync(
+        event.currentTarget.elements.notebookName.value,
+      );
       event.currentTarget.reset();
     } catch (requestError) {
       setError(requestError.message);
@@ -235,14 +365,22 @@ export function Workspace({ session, onSignOut }) {
     const name = window.prompt('Rename notebook', notebook.name);
     if (!name || name === notebook.name) return;
     try {
-      await mutations.renameNotebook.mutateAsync({ notebookId: notebook.id, name });
+      await mutations.renameNotebook.mutateAsync({
+        notebookId: notebook.id,
+        name,
+      });
     } catch (requestError) {
       setError(requestError.message);
     }
   }
 
   async function deleteNotebook(notebook) {
-    if (!window.confirm(`Delete notebook "${notebook.name}"? Notes will be unassigned.`)) return;
+    if (
+      !window.confirm(
+        `Delete notebook "${notebook.name}"? Notes will be unassigned.`,
+      )
+    )
+      return;
     try {
       await mutations.deleteNotebook.mutateAsync(notebook.id);
       if (draft?.notebookId === notebook.id) await assignNotebook('');
@@ -252,7 +390,8 @@ export function Workspace({ session, onSignOut }) {
   }
 
   async function permanentlyDelete(note) {
-    if (!window.confirm('Permanently delete this note? This cannot be undone.')) return;
+    if (!window.confirm('Permanently delete this note? This cannot be undone.'))
+      return;
     try {
       await mutations.permanentlyDelete.mutateAsync(note.id);
     } catch (requestError) {
@@ -278,8 +417,7 @@ export function Workspace({ session, onSignOut }) {
     if (!canLeaveDraft()) return;
     setBusy(true);
     try {
-      await authApi.logout();
-      onSignOut();
+      await logout();
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -310,18 +448,31 @@ export function Workspace({ session, onSignOut }) {
   }
 
   if (queries.isInitialLoading) {
-    return <main className={styles.loading} aria-live="polite">Loading your notes...</main>;
+    return (
+      <main className={styles.loading} aria-live="polite">
+        Loading your notes...
+      </main>
+    );
   }
 
   const initialError = queries.initialError?.message ?? error;
-  const collectionNotes = view === 'favorites' ? queries.favorites.data ?? [] : view === 'archive' ? queries.archive.data ?? [] : queries.tagNotes.data ?? [];
-  const collectionLoading = view === 'favorites' ? queries.favorites.isLoading : view === 'archive' ? queries.archive.isLoading : queries.tagNotes.isLoading;
-
   return (
     <main className={styles.workspace} aria-labelledby="workspace-title">
-      <WorkspaceHeader email={session.user.email} menuOpen={mobileMenuOpen} onOpenMenu={() => setMobileMenuOpen(true)} styles={styles} />
+      <WorkspaceHeader
+        email={session.user.email}
+        menuOpen={mobileMenuOpen}
+        onOpenMenu={() => setMobileMenuOpen(true)}
+        styles={styles}
+      />
       <div className={styles.layout}>
-        {mobileMenuOpen && <button className={styles.drawerBackdrop} type="button" aria-label="Close navigation" onClick={() => setMobileMenuOpen(false)} />}
+        {mobileMenuOpen && (
+          <button
+            className={styles.drawerBackdrop}
+            type="button"
+            aria-label="Close navigation"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        )}
         <WorkspaceSidebar
           styles={styles}
           open={mobileMenuOpen}
@@ -348,7 +499,15 @@ export function Workspace({ session, onSignOut }) {
           collectionLoading={collectionLoading}
           trashNotes={trashNotes}
           trashLoading={queries.trash.isLoading}
-          search={{ query: searchQuery, results: searchData.data ?? [], status: queries.search.isFetching ? 'loading' : 'ready', page: searchPage, total: searchData.pagination?.total ?? 0, onQueryChange: setSearchQuery, onSubmit: submitSearch }}
+          search={{
+            query: searchQuery,
+            results: searchData.data ?? [],
+            status: queries.search.isFetching ? 'loading' : 'ready',
+            page: searchPage,
+            total: searchData.pagination?.total ?? 0,
+            onQueryChange: updateSearchQuery,
+            onSubmit: submitSearch,
+          }}
           error={initialError}
           initialLoadFailed={Boolean(queries.initialError)}
           busy={isBusy}
@@ -358,7 +517,7 @@ export function Workspace({ session, onSignOut }) {
           onOpenNote={openSearchResult}
           onRestore={restoreNote}
           onPermanentDelete={permanentlyDelete}
-          onTagChange={setSelectedTagId}
+          onTagChange={(tagId) => navigate(collectionPath('tags', tagId))}
           onSearchOpen={openSearchResult}
         />
         <WorkspaceEditor
@@ -370,7 +529,7 @@ export function Workspace({ session, onSignOut }) {
           saveStatus={saveStatus}
           conflict={conflict}
           busy={isBusy}
-          onBack={() => setMobilePane('collection')}
+          onBack={() => navigate(collectionPath(view, selectedTagId))}
           onSave={() => void saveDraft()}
           onReload={reloadServerCopy}
           onTrash={trashCurrentNote}
