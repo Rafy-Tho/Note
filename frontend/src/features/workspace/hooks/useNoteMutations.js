@@ -24,7 +24,12 @@ export function useNoteMutations() {
 
   const createNote = useMutation({
     mutationFn: (note) => notesApi.create(note),
-    onSuccess: () => refresh(queryClient, workspaceQueryKeys.notes),
+    onSuccess: () =>
+      refresh(
+        queryClient,
+        workspaceQueryKeys.notes,
+        workspaceQueryKeys.sidebarCounts,
+      ),
   });
 
   const updateNote = useMutation({
@@ -55,38 +60,68 @@ export function useNoteMutations() {
   const trashNote = useMutation({
     mutationFn: (noteId) => notesApi.trash(noteId),
     onSuccess: () =>
-      refresh(queryClient, workspaceQueryKeys.notes, workspaceQueryKeys.trash),
+      refresh(
+        queryClient,
+        workspaceQueryKeys.notes,
+        workspaceQueryKeys.trash,
+        workspaceQueryKeys.sidebarCounts,
+      ),
   });
 
   const restoreNote = useMutation({
     mutationFn: (noteId) => notesApi.restore(noteId),
     onSuccess: () =>
-      refresh(queryClient, workspaceQueryKeys.notes, workspaceQueryKeys.trash),
+      refresh(
+        queryClient,
+        workspaceQueryKeys.notes,
+        workspaceQueryKeys.trash,
+        workspaceQueryKeys.sidebarCounts,
+      ),
   });
 
   const permanentlyDelete = useMutation({
     mutationFn: (noteId) => notesApi.permanentlyDelete(noteId),
-    onSuccess: () => refresh(queryClient, workspaceQueryKeys.trash),
+    onSuccess: () =>
+      refresh(
+        queryClient,
+        workspaceQueryKeys.trash,
+        workspaceQueryKeys.sidebarCounts,
+      ),
   });
 
   const favoriteNote = useMutation({
     mutationFn: ({ noteId, favorite }) =>
       favorite ? notesApi.favorite(noteId) : notesApi.unfavorite(noteId),
     onSuccess: () =>
-      refresh(queryClient, workspaceQueryKeys.notes, workspaceQueryKeys.favorites),
+      refresh(
+        queryClient,
+        workspaceQueryKeys.notes,
+        workspaceQueryKeys.favorites,
+        workspaceQueryKeys.sidebarCounts,
+      ),
   });
 
   const archiveNote = useMutation({
     mutationFn: ({ noteId, archived }) =>
       archived ? notesApi.unarchive(noteId) : notesApi.archive(noteId),
     onSuccess: () =>
-      refresh(queryClient, workspaceQueryKeys.notes, workspaceQueryKeys.archive),
+      refresh(
+        queryClient,
+        workspaceQueryKeys.notes,
+        workspaceQueryKeys.archive,
+        workspaceQueryKeys.sidebarCounts,
+      ),
   });
 
   const assignNotebook = useMutation({
     mutationFn: ({ noteId, notebookId }) =>
       notesApi.assignNotebook(noteId, notebookId),
-    onSuccess: () => refresh(queryClient, workspaceQueryKeys.notes),
+    onSuccess: () =>
+      refresh(
+        queryClient,
+        workspaceQueryKeys.notes,
+        workspaceQueryKeys.sidebarCounts,
+      ),
   });
 
   return {

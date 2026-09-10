@@ -131,6 +131,9 @@ export function NoteOrganizationControls({
     try {
       const result = await tagsApi.assign(note.id, tagId);
       onTagsChange(result.tags);
+      await queryClient.invalidateQueries({
+        queryKey: ['workspace', 'sidebar-counts'],
+      });
       setSelectedTagId('');
       notify('Tag added.');
     } catch (requestError) {
@@ -149,6 +152,9 @@ export function NoteOrganizationControls({
     try {
       const tag = await tagsApi.create(name);
       await queryClient.invalidateQueries({ queryKey: ['workspace', 'tags'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['workspace', 'sidebar-counts'],
+      });
       await assignTag(tag.id);
       setNewTagName('');
       setShowNewTag(false);
@@ -163,6 +169,9 @@ export function NoteOrganizationControls({
     try {
       const result = await tagsApi.remove(note.id, tagId);
       onTagsChange(result.tags);
+      await queryClient.invalidateQueries({
+        queryKey: ['workspace', 'sidebar-counts'],
+      });
       notify('Tag removed.');
     } catch (requestError) {
       setError(requestError.message);
@@ -171,7 +180,11 @@ export function NoteOrganizationControls({
 
   return (
     <div className={styles.organizationControls}>
-      <div className={styles.organizationButtons} role="group" aria-label="Note organization">
+      <div
+        className={styles.organizationButtons}
+        role="group"
+        aria-label="Note organization"
+      >
         <button
           className={`${styles.organizationButton} ${openPanel === 'notebooks' ? styles.organizationButtonActive : ''}`}
           type="button"
@@ -191,12 +204,17 @@ export function NoteOrganizationControls({
         >
           <Tag className="icon" size={14} aria-hidden="true" />
           <span>Tags</span>
-          {tags.length > 0 && <span className={styles.organizationCount}>{tags.length}</span>}
+          {tags.length > 0 && (
+            <span className={styles.organizationCount}>{tags.length}</span>
+          )}
         </button>
       </div>
 
       {openPanel && (
-        <div className={styles.organizationPanel} aria-label={`${openPanel} controls`}>
+        <div
+          className={styles.organizationPanel}
+          aria-label={`${openPanel} controls`}
+        >
           {error && <Alert>{error}</Alert>}
           {openPanel === 'notebooks' ? (
             <>
@@ -231,14 +249,36 @@ export function NoteOrganizationControls({
               >
                 <option value="">No notebook</option>
                 {notebooks.map((notebook) => (
-                  <option value={notebook.id} key={notebook.id}>{notebook.name}</option>
+                  <option value={notebook.id} key={notebook.id}>
+                    {notebook.name}
+                  </option>
                 ))}
               </select>
               {showNewNotebook && (
-                <form className={styles.organizationForm} onSubmit={createNotebook}>
-                  <label className={styles.visuallyHidden} htmlFor={`new-notebook-${note.id}`}>New notebook name</label>
-                  <input id={`new-notebook-${note.id}`} name="notebookName" placeholder="New notebook" autoComplete="off" disabled={busy} />
-                  <button className={styles.secondaryButton} type="submit" disabled={busy}>Create</button>
+                <form
+                  className={styles.organizationForm}
+                  onSubmit={createNotebook}
+                >
+                  <label
+                    className={styles.visuallyHidden}
+                    htmlFor={`new-notebook-${note.id}`}
+                  >
+                    New notebook name
+                  </label>
+                  <input
+                    id={`new-notebook-${note.id}`}
+                    name="notebookName"
+                    placeholder="New notebook"
+                    autoComplete="off"
+                    disabled={busy}
+                  />
+                  <button
+                    className={styles.secondaryButton}
+                    type="submit"
+                    disabled={busy}
+                  >
+                    Create
+                  </button>
                 </form>
               )}
             </>
@@ -246,14 +286,34 @@ export function NoteOrganizationControls({
             <>
               <div className={styles.organizationPanelHeader}>
                 <span className={styles.contextLabel}>Manage notebooks</span>
-                <button className={styles.textButton} type="button" onClick={() => setOpenPanel('notebooks')}>Back</button>
+                <button
+                  className={styles.textButton}
+                  type="button"
+                  onClick={() => setOpenPanel('notebooks')}
+                >
+                  Back
+                </button>
               </div>
               <div className={styles.notebookManage}>
                 {notebooks.map((notebook) => (
                   <div className={styles.notebookItem} key={notebook.id}>
                     <span>{notebook.name}</span>
-                    <button className={styles.textButton} type="button" onClick={() => openRename(notebook)} disabled={busy}>Rename</button>
-                    <button className={`${styles.textButton} ${styles.textDanger}`} type="button" onClick={() => openDelete(notebook)} disabled={busy}>Delete</button>
+                    <button
+                      className={styles.textButton}
+                      type="button"
+                      onClick={() => openRename(notebook)}
+                      disabled={busy}
+                    >
+                      Rename
+                    </button>
+                    <button
+                      className={`${styles.textButton} ${styles.textDanger}`}
+                      type="button"
+                      onClick={() => openDelete(notebook)}
+                      disabled={busy}
+                    >
+                      Delete
+                    </button>
                   </div>
                 ))}
               </div>
@@ -262,36 +322,87 @@ export function NoteOrganizationControls({
             <>
               <div className={styles.organizationPanelHeader}>
                 <span className={styles.contextLabel}>Tags</span>
-                {tagsLoading && <span className={styles.tagMeta}>Loading...</span>}
-                <button className={styles.contextButton} type="button" onClick={() => setShowNewTag((current) => !current)} disabled={disabled}>
+                {tagsLoading && (
+                  <span className={styles.tagMeta}>Loading...</span>
+                )}
+                <button
+                  className={styles.contextButton}
+                  type="button"
+                  onClick={() => setShowNewTag((current) => !current)}
+                  disabled={disabled}
+                >
                   <Plus className="icon" size={14} aria-hidden="true" />
                   <span>New</span>
                 </button>
               </div>
               <div className={styles.tagList} aria-live="polite">
-                {tags.length === 0 ? <span className={styles.tagMeta}>No tags assigned.</span> : tags.map((tag) => (
-                  <span className={styles.tagChip} key={tag.id}>
-                    {tag.name}
-                    <button type="button" aria-label={`Remove ${tag.name} tag`} onClick={() => void removeTag(tag.id)} disabled={disabled}>
-                      <X className="icon" size={13} aria-hidden="true" />
-                    </button>
-                  </span>
-                ))}
+                {tags.length === 0 ? (
+                  <span className={styles.tagMeta}>No tags assigned.</span>
+                ) : (
+                  tags.map((tag) => (
+                    <span className={styles.tagChip} key={tag.id}>
+                      {tag.name}
+                      <button
+                        type="button"
+                        aria-label={`Remove ${tag.name} tag`}
+                        onClick={() => void removeTag(tag.id)}
+                        disabled={disabled}
+                      >
+                        <X className="icon" size={13} aria-hidden="true" />
+                      </button>
+                    </span>
+                  ))
+                )}
               </div>
               <div className={styles.organizationTagAssign}>
-                <select className={styles.contextSelect} aria-label="Existing tags" value={selectedTagId} onChange={(event) => setSelectedTagId(event.target.value)} disabled={disabled || tagsLoading}>
+                <select
+                  className={styles.contextSelect}
+                  aria-label="Existing tags"
+                  value={selectedTagId}
+                  onChange={(event) => setSelectedTagId(event.target.value)}
+                  disabled={disabled || tagsLoading}
+                >
                   <option value="">Choose a tag</option>
-                  {availableTags.filter((tag) => !assignedTagIds.has(tag.id)).map((tag) => (
-                    <option value={tag.id} key={tag.id}>{tag.name}</option>
-                  ))}
+                  {availableTags
+                    .filter((tag) => !assignedTagIds.has(tag.id))
+                    .map((tag) => (
+                      <option value={tag.id} key={tag.id}>
+                        {tag.name}
+                      </option>
+                    ))}
                 </select>
-                <button className={styles.secondaryButton} type="button" onClick={() => void assignTag(selectedTagId)} disabled={disabled || !selectedTagId}>Add tag</button>
+                <button
+                  className={styles.secondaryButton}
+                  type="button"
+                  onClick={() => void assignTag(selectedTagId)}
+                  disabled={disabled || !selectedTagId}
+                >
+                  Add tag
+                </button>
               </div>
               {showNewTag && (
                 <form className={styles.organizationForm} onSubmit={createTag}>
-                  <label className={styles.visuallyHidden} htmlFor={`new-tag-${note.id}`}>New tag name</label>
-                  <input id={`new-tag-${note.id}`} value={newTagName} onChange={(event) => setNewTagName(event.target.value)} placeholder="New tag" autoComplete="off" disabled={disabled} />
-                  <button className={styles.secondaryButton} type="submit" disabled={disabled}>Create</button>
+                  <label
+                    className={styles.visuallyHidden}
+                    htmlFor={`new-tag-${note.id}`}
+                  >
+                    New tag name
+                  </label>
+                  <input
+                    id={`new-tag-${note.id}`}
+                    value={newTagName}
+                    onChange={(event) => setNewTagName(event.target.value)}
+                    placeholder="New tag"
+                    autoComplete="off"
+                    disabled={disabled}
+                  />
+                  <button
+                    className={styles.secondaryButton}
+                    type="submit"
+                    disabled={disabled}
+                  >
+                    Create
+                  </button>
                 </form>
               )}
             </>
@@ -305,11 +416,40 @@ export function NoteOrganizationControls({
           description="Choose a clear name for this notebook."
           onClose={() => setRenameTarget(null)}
           initialFocusRef={renameInputRef}
-          actions={<><button className={styles.secondaryButton} type="button" onClick={() => setRenameTarget(null)}>Cancel</button><button className={styles.primaryButton} type="submit" form="rename-notebook-form" disabled={busy}>Rename</button></>}
+          actions={
+            <>
+              <button
+                className={styles.secondaryButton}
+                type="button"
+                onClick={() => setRenameTarget(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className={styles.primaryButton}
+                type="submit"
+                form="rename-notebook-form"
+                disabled={busy}
+              >
+                Rename
+              </button>
+            </>
+          }
         >
           <form id="rename-notebook-form" onSubmit={renameNotebook}>
-            <label className={styles.visuallyHidden} htmlFor="rename-notebook-name">Notebook name</label>
-            <input ref={renameInputRef} id="rename-notebook-name" value={renameName} onChange={(event) => setRenameName(event.target.value)} autoComplete="off" />
+            <label
+              className={styles.visuallyHidden}
+              htmlFor="rename-notebook-name"
+            >
+              Notebook name
+            </label>
+            <input
+              ref={renameInputRef}
+              id="rename-notebook-name"
+              value={renameName}
+              onChange={(event) => setRenameName(event.target.value)}
+              autoComplete="off"
+            />
           </form>
         </Dialog>
       )}
@@ -318,7 +458,24 @@ export function NoteOrganizationControls({
           title={`Delete ${deleteTarget.name}?`}
           description="Notes in this notebook will remain in your workspace without a notebook."
           onClose={() => setDeleteTarget(null)}
-          actions={<><button className={styles.secondaryButton} type="button" onClick={() => setDeleteTarget(null)}>Cancel</button><button className={styles.dangerButton} type="button" onClick={() => void deleteNotebook()}>Delete notebook</button></>}
+          actions={
+            <>
+              <button
+                className={styles.secondaryButton}
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className={styles.dangerButton}
+                type="button"
+                onClick={() => void deleteNotebook()}
+              >
+                Delete notebook
+              </button>
+            </>
+          }
         />
       )}
     </div>

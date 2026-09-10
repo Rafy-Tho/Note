@@ -1,13 +1,26 @@
 import { useRef, useState } from 'react';
-import { ChevronDown, ChevronRight, MoreHorizontal, Plus, Tag } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  ChevronDown,
+  ChevronRight,
+  MoreHorizontal,
+  Plus,
+  Tag,
+} from 'lucide-react';
 import { Alert } from '../../../components/common/Alert/Alert.jsx';
 import { Dialog } from '../../../components/common/Dialog/Dialog.jsx';
 import { useToast } from '../../../components/common/Toast/Toast.jsx';
 import { tagsApi } from '../../tags/services/tagsApi.js';
 import { useWorkspaceTagsQuery } from '../hooks/useWorkspaceQueries.js';
 
-export function WorkspaceTagSection({ styles, selectedTagId, onSelectTag }) {
+export function WorkspaceTagSection({
+  styles,
+  counts = [],
+  selectedTagId,
+  onSelectTag,
+}) {
   const tagsQuery = useWorkspaceTagsQuery();
+  const queryClient = useQueryClient();
   const { notify } = useToast();
   const renameInputRef = useRef(null);
   const [expanded, setExpanded] = useState(true);
@@ -18,6 +31,7 @@ export function WorkspaceTagSection({ styles, selectedTagId, onSelectTag }) {
   const [renameName, setRenameName] = useState('');
   const [deleteTarget, setDeleteTarget] = useState(null);
   const tags = tagsQuery.data ?? [];
+  const countById = new Map(counts.map((item) => [item.id, item.count]));
   const busy = tagsQuery.isFetching;
 
   function openRename(tag) {
@@ -34,6 +48,9 @@ export function WorkspaceTagSection({ styles, selectedTagId, onSelectTag }) {
     try {
       await tagsApi.create(name);
       await tagsQuery.refetch();
+      await queryClient.invalidateQueries({
+        queryKey: ['workspace', 'sidebar-counts'],
+      });
       setCreateOpen(false);
       notify('Tag created.');
     } catch (requestError) {
@@ -49,6 +66,9 @@ export function WorkspaceTagSection({ styles, selectedTagId, onSelectTag }) {
     try {
       await tagsApi.rename(renameTarget.id, name);
       await tagsQuery.refetch();
+      await queryClient.invalidateQueries({
+        queryKey: ['workspace', 'sidebar-counts'],
+      });
       setRenameTarget(null);
       notify('Tag renamed.');
     } catch (requestError) {
@@ -62,6 +82,9 @@ export function WorkspaceTagSection({ styles, selectedTagId, onSelectTag }) {
     try {
       await tagsApi.delete(deleteTarget.id);
       await tagsQuery.refetch();
+      await queryClient.invalidateQueries({
+        queryKey: ['workspace', 'sidebar-counts'],
+      });
       setDeleteTarget(null);
       notify('Tag deleted.');
     } catch (requestError) {
@@ -79,7 +102,11 @@ export function WorkspaceTagSection({ styles, selectedTagId, onSelectTag }) {
           aria-controls="workspace-sidebar-tags"
           onClick={() => setExpanded((current) => !current)}
         >
-          {expanded ? <ChevronDown className="icon" size={14} aria-hidden="true" /> : <ChevronRight className="icon" size={14} aria-hidden="true" />}
+          {expanded ? (
+            <ChevronDown className="icon" size={14} aria-hidden="true" />
+          ) : (
+            <ChevronRight className="icon" size={14} aria-hidden="true" />
+          )}
           <Tag className="icon" size={14} aria-hidden="true" />
           <span>Tags</span>
         </button>
@@ -108,23 +135,50 @@ export function WorkspaceTagSection({ styles, selectedTagId, onSelectTag }) {
                 <button
                   className={`${styles.sidebarTagButton} ${selectedTagId === tag.id ? styles.sidebarTagSelected : ''}`}
                   type="button"
+                  aria-label={`${tag.name}, ${countById.get(tag.id) ?? 0} notes`}
                   onClick={() => onSelectTag(tag.id)}
                 >
                   <span>{tag.name}</span>
+                  <span className={styles.countBadge} aria-hidden="true">
+                    {countById.get(tag.id) ?? 0}
+                  </span>
                 </button>
                 <button
                   className={styles.sidebarTagMenuButton}
                   type="button"
                   aria-label={`Manage ${tag.name} tag`}
                   aria-expanded={menuTagId === tag.id}
-                  onClick={() => setMenuTagId((current) => (current === tag.id ? null : tag.id))}
+                  onClick={() =>
+                    setMenuTagId((current) =>
+                      current === tag.id ? null : tag.id,
+                    )
+                  }
                 >
-                  <MoreHorizontal className="icon" size={14} aria-hidden="true" />
+                  <MoreHorizontal
+                    className="icon"
+                    size={14}
+                    aria-hidden="true"
+                  />
                 </button>
                 {menuTagId === tag.id && (
                   <div className={styles.sidebarTagMenu} role="menu">
-                    <button type="button" role="menuitem" onClick={() => openRename(tag)}>Rename</button>
-                    <button type="button" role="menuitem" onClick={() => { setMenuTagId(null); setDeleteTarget(tag); }}>Delete</button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => openRename(tag)}
+                    >
+                      Rename
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setMenuTagId(null);
+                        setDeleteTarget(tag);
+                      }}
+                    >
+                      Delete
+                    </button>
                   </div>
                 )}
               </div>
@@ -137,11 +191,33 @@ export function WorkspaceTagSection({ styles, selectedTagId, onSelectTag }) {
           title="Create tag"
           description="Use a short name that will be easy to find in the sidebar."
           onClose={() => setCreateOpen(false)}
-          actions={<><button className={styles.secondaryButton} type="button" onClick={() => setCreateOpen(false)}>Cancel</button><button className={styles.primaryButton} type="submit" form="sidebar-create-tag">Create tag</button></>}
+          actions={
+            <>
+              <button
+                className={styles.secondaryButton}
+                type="button"
+                onClick={() => setCreateOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className={styles.primaryButton}
+                type="submit"
+                form="sidebar-create-tag"
+              >
+                Create tag
+              </button>
+            </>
+          }
         >
           <form id="sidebar-create-tag" onSubmit={createTag}>
             <label htmlFor="sidebar-tag-name">Tag name</label>
-            <input id="sidebar-tag-name" name="tagName" autoComplete="off" autoFocus />
+            <input
+              id="sidebar-tag-name"
+              name="tagName"
+              autoComplete="off"
+              autoFocus
+            />
           </form>
         </Dialog>
       )}
@@ -151,11 +227,34 @@ export function WorkspaceTagSection({ styles, selectedTagId, onSelectTag }) {
           description="Choose a new name for this tag."
           onClose={() => setRenameTarget(null)}
           initialFocusRef={renameInputRef}
-          actions={<><button className={styles.secondaryButton} type="button" onClick={() => setRenameTarget(null)}>Cancel</button><button className={styles.primaryButton} type="submit" form="sidebar-rename-tag">Rename</button></>}
+          actions={
+            <>
+              <button
+                className={styles.secondaryButton}
+                type="button"
+                onClick={() => setRenameTarget(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className={styles.primaryButton}
+                type="submit"
+                form="sidebar-rename-tag"
+              >
+                Rename
+              </button>
+            </>
+          }
         >
           <form id="sidebar-rename-tag" onSubmit={renameTag}>
             <label htmlFor="sidebar-rename-tag-name">Tag name</label>
-            <input ref={renameInputRef} id="sidebar-rename-tag-name" value={renameName} onChange={(event) => setRenameName(event.target.value)} autoComplete="off" />
+            <input
+              ref={renameInputRef}
+              id="sidebar-rename-tag-name"
+              value={renameName}
+              onChange={(event) => setRenameName(event.target.value)}
+              autoComplete="off"
+            />
           </form>
         </Dialog>
       )}
@@ -164,7 +263,24 @@ export function WorkspaceTagSection({ styles, selectedTagId, onSelectTag }) {
           title={`Delete ${deleteTarget.name}?`}
           description="The tag will be removed from the sidebar and all notes. Notes will not be deleted."
           onClose={() => setDeleteTarget(null)}
-          actions={<><button className={styles.secondaryButton} type="button" onClick={() => setDeleteTarget(null)}>Cancel</button><button className={styles.dangerButton} type="button" onClick={() => void deleteTag()}>Delete tag</button></>}
+          actions={
+            <>
+              <button
+                className={styles.secondaryButton}
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className={styles.dangerButton}
+                type="button"
+                onClick={() => void deleteTag()}
+              >
+                Delete tag
+              </button>
+            </>
+          }
         />
       )}
     </section>

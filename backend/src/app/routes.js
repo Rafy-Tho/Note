@@ -11,6 +11,7 @@ import {
 } from '../modules/tags/tags.routes.js';
 import { createSearchRouter } from '../modules/search/search.routes.js';
 import { createNotebooksRouter } from '../modules/notebooks/notebooks.routes.js';
+import { createSidebarCountsRouter } from '../modules/workspace/sidebarCounts.routes.js';
 
 export function configureRoutes(
   app,
@@ -22,6 +23,7 @@ export function configureRoutes(
     tagsService,
     searchService,
     notebooksService,
+    sidebarCountsService,
   },
 ) {
   app.use('/api/v1/health', createHealthRouter({ databaseCheck }));
@@ -45,6 +47,14 @@ export function configureRoutes(
   app.use(
     '/api/v1/notebooks',
     createNotebooksRouter({ authService, config, service: notebooksService }),
+  );
+  app.use(
+    '/api/v1/workspace/sidebar-counts',
+    createSidebarCountsRouter({
+      authService,
+      config,
+      service: sidebarCountsService,
+    }),
   );
   app.use(
     '/api/v1/tags',

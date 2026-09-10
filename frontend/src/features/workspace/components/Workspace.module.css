@@ -168,6 +168,25 @@
   align-items: center;
   gap: 9px;
 }
+.navMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.countBadge {
+  min-width: 18px;
+  padding: 1px 5px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  text-align: center;
+  font: 10px var(--font-code);
+  line-height: 16px;
+}
+.sidebarCountsError {
+  margin: 8px 10px 0;
+  color: var(--color-text-muted);
+  font-size: 10px;
+}
 .navButton:hover,
 .navButton[aria-current='page'] {
   border-color: var(--color-border);
@@ -231,10 +250,17 @@
   min-width: 0;
   overflow: hidden;
   padding: 8px 8px 8px 28px;
+  border: 1px solid transparent;
   color: var(--color-text-muted);
+  background: transparent;
   font-size: 11px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.sidebarNotebookLabel:hover {
+  border-color: var(--color-border);
+  color: var(--color-text);
+  background: var(--color-surface);
 }
 .sidebarTagRow {
   position: relative;

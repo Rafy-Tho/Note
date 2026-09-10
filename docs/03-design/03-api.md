@@ -144,6 +144,31 @@ limit   optional page size, default 20, maximum 100
 
 Trashed notes are not returned by this endpoint. An empty query returns a validation error and never performs an unrestricted search.
 
+## Workspace Sidebar Counts
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/workspace/sidebar-counts` | Return ownership-scoped counts for sidebar navigation. |
+
+The response uses the standard data envelope:
+
+```json
+{
+  "data": {
+    "notes": 3,
+    "favorites": 1,
+    "archive": 2,
+    "trash": 1,
+    "notebooks": 2,
+    "tags": 3,
+    "notebookCounts": [{ "id": "notebook-id", "count": 2 }],
+    "tagCounts": [{ "id": "tag-id", "count": 4 }]
+  }
+}
+```
+
+`notes` counts Active notes, `favorites` counts Active or Archived favorite notes, `archive` counts Archived notes, and `trash` counts Trashed notes. `notebooks` counts Active or Archived notes assigned to any notebook, while `tags` counts distinct Active or Archived notes with at least one tag. `notebookCounts` and `tagCounts` include Active and Archived notes only. Every count is scoped to the authenticated user. Search has no count.
+
 ## Note Update and Autosave
 
 `PATCH /notes/:noteId` accepts only supported fields:

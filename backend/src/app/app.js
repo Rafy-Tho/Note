@@ -17,6 +17,8 @@ import { createTagsRepository } from '../modules/tags/tags.repository.js';
 import { createTagsService } from '../modules/tags/tags.service.js';
 import { createNotebooksRepository } from '../modules/notebooks/notebooks.repository.js';
 import { createNotebooksService } from '../modules/notebooks/notebooks.service.js';
+import { createSidebarCountsRepository } from '../modules/workspace/sidebarCounts.repository.js';
+import { createSidebarCountsService } from '../modules/workspace/sidebarCounts.service.js';
 
 export function createApp({
   databaseCheck,
@@ -39,6 +41,7 @@ export function createApp({
   tagsService,
   searchService,
   notebooksService,
+  sidebarCountsService,
 } = {}) {
   const app = express();
   const resolvedTagsService =
@@ -46,6 +49,11 @@ export function createApp({
   const resolvedNotebooksService =
     notebooksService ??
     createNotebooksService({ repository: createNotebooksRepository() });
+  const resolvedSidebarCountsService =
+    sidebarCountsService ??
+    createSidebarCountsService({
+      repository: createSidebarCountsRepository(),
+    });
 
   app.disable('x-powered-by');
   configureMiddleware(app, { logger });
@@ -57,6 +65,7 @@ export function createApp({
     tagsService: resolvedTagsService,
     searchService,
     notebooksService: resolvedNotebooksService,
+    sidebarCountsService: resolvedSidebarCountsService,
   });
   extendRoutes(app);
 

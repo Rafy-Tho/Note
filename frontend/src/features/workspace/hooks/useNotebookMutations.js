@@ -13,18 +13,33 @@ export function useNotebookMutations() {
 
   const createNotebook = useMutation({
     mutationFn: (name) => notebooksApi.create(name),
-    onSuccess: () => refresh(queryClient, workspaceQueryKeys.notebooks),
+    onSuccess: () =>
+      refresh(
+        queryClient,
+        workspaceQueryKeys.notebooks,
+        workspaceQueryKeys.sidebarCounts,
+      ),
   });
 
   const renameNotebook = useMutation({
     mutationFn: ({ notebookId, name }) => notebooksApi.rename(notebookId, name),
-    onSuccess: () => refresh(queryClient, workspaceQueryKeys.notebooks),
+    onSuccess: () =>
+      refresh(
+        queryClient,
+        workspaceQueryKeys.notebooks,
+        workspaceQueryKeys.sidebarCounts,
+      ),
   });
 
   const deleteNotebook = useMutation({
     mutationFn: (notebookId) => notebooksApi.remove(notebookId),
     onSuccess: () =>
-      refresh(queryClient, workspaceQueryKeys.notebooks, workspaceQueryKeys.notes),
+      refresh(
+        queryClient,
+        workspaceQueryKeys.notebooks,
+        workspaceQueryKeys.notes,
+        workspaceQueryKeys.sidebarCounts,
+      ),
   });
 
   return { createNotebook, renameNotebook, deleteNotebook };

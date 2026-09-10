@@ -29,7 +29,10 @@ export function Workspace() {
   const selectedNotebookId = params.notebookId ?? '';
   const mobilePane = mobilePaneFromNoteId(params.noteId);
   const [collectionOpen, setCollectionOpen] = useState(!params.noteId);
-  const [editorState, setEditorState] = useState({ isDirty: false, isSaving: false });
+  const [editorState, setEditorState] = useState({
+    isDirty: false,
+    isSaving: false,
+  });
   const editorStateRef = useRef(editorState);
   const allowBlockedNavigationRef = useRef(false);
   const pendingNavigationRef = useRef(null);
@@ -57,7 +60,8 @@ export function Workspace() {
   const onEditorStateChange = useCallback((nextState) => {
     editorStateRef.current = nextState;
     setEditorState((current) =>
-      current.isDirty === nextState.isDirty && current.isSaving === nextState.isSaving
+      current.isDirty === nextState.isDirty &&
+      current.isSaving === nextState.isSaving
         ? current
         : nextState,
     );
@@ -74,7 +78,8 @@ export function Workspace() {
   }, []);
 
   const allowNextNavigation = useCallback(() => {
-    if (editorStateRef.current.isDirty) allowBlockedNavigationRef.current = true;
+    if (editorStateRef.current.isDirty)
+      allowBlockedNavigationRef.current = true;
   }, []);
 
   const getEditorState = useCallback(() => editorStateRef.current, []);
@@ -88,7 +93,14 @@ export function Workspace() {
         navigate(notePath(view, note.id, selectedTagId));
       });
     },
-    [allowNextNavigation, confirmNavigation, navigate, params.noteId, selectedTagId, view],
+    [
+      allowNextNavigation,
+      confirmNavigation,
+      navigate,
+      params.noteId,
+      selectedTagId,
+      view,
+    ],
   );
 
   const switchView = useCallback(
@@ -144,18 +156,15 @@ export function Workspace() {
     [allowNextNavigation, confirmNavigation, navigate],
   );
 
-  const requestLeave = useCallback(
-    (onConfirm = () => {}) => {
-      if (!editorStateRef.current.isDirty) {
-        onConfirm();
-        return true;
-      }
-      pendingNavigationRef.current = onConfirm;
-      setConfirmOpen(true);
-      return false;
-    },
-    [],
-  );
+  const requestLeave = useCallback((onConfirm = () => {}) => {
+    if (!editorStateRef.current.isDirty) {
+      onConfirm();
+      return true;
+    }
+    pendingNavigationRef.current = onConfirm;
+    setConfirmOpen(true);
+    return false;
+  }, []);
 
   function cancelNavigation() {
     blockedNavigationRef.current?.reset();
@@ -184,6 +193,7 @@ export function Workspace() {
         styles={styles}
         view={view}
         selectedTagId={selectedTagId}
+        selectedNotebookId={selectedNotebookId}
         collectionOpen={collectionOpen}
         onOpenCollection={() =>
           setCollectionOpen((current) => (params.noteId ? !current : true))
@@ -192,6 +202,7 @@ export function Workspace() {
         canLeaveDraft={requestLeave}
         onSwitchView={switchView}
         onSelectTag={openTag}
+        onSelectNotebook={openNotebook}
       >
         <WorkspaceCollection
           styles={styles}
@@ -228,10 +239,18 @@ export function Workspace() {
           onClose={cancelNavigation}
           actions={
             <>
-              <button className={styles.secondaryButton} type="button" onClick={cancelNavigation}>
+              <button
+                className={styles.secondaryButton}
+                type="button"
+                onClick={cancelNavigation}
+              >
                 Stay
               </button>
-              <button className={styles.dangerButton} type="button" onClick={acceptNavigation}>
+              <button
+                className={styles.dangerButton}
+                type="button"
+                onClick={acceptNavigation}
+              >
                 Leave note
               </button>
             </>

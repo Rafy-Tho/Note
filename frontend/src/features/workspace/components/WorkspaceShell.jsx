@@ -3,14 +3,17 @@ import { useAuth } from '../../auth/context/AuthContext.jsx';
 import { ToastProvider } from '../../../components/common/Toast/Toast.jsx';
 import { WorkspaceHeader } from './WorkspaceHeader.jsx';
 import { WorkspaceSidebar } from './WorkspaceSidebar.jsx';
+import { useWorkspaceSidebarCountsQuery } from '../hooks/useWorkspaceQueries.js';
 
 export function WorkspaceShell({
   styles,
   view,
   selectedTagId,
+  selectedNotebookId,
   canLeaveDraft,
   onSwitchView,
   onSelectTag,
+  onSelectNotebook,
   collectionOpen,
   onOpenCollection,
   onCloseCollection,
@@ -21,6 +24,7 @@ export function WorkspaceShell({
   const [navigationCollapsed, setNavigationCollapsed] = useState(false);
   const [collectionCollapsed, setCollectionCollapsed] = useState(false);
   const closeMenuRef = useRef(null);
+  const sidebarCountsQuery = useWorkspaceSidebarCountsQuery();
 
   useEffect(() => {
     if (!menuOpen && !collectionOpen) return undefined;
@@ -91,10 +95,14 @@ export function WorkspaceShell({
           closeMenuRef={closeMenuRef}
           view={view}
           selectedTagId={selectedTagId}
+          selectedNotebookId={selectedNotebookId}
+          sidebarCounts={sidebarCountsQuery.data}
+          sidebarCountsError={sidebarCountsQuery.error}
           canLeaveDraft={canLeaveDraft}
           onClose={() => setMenuOpen(false)}
           onSwitchView={switchView}
           onSelectTag={onSelectTag}
+          onSelectNotebook={onSelectNotebook}
         />
         {children}
       </div>

@@ -4,6 +4,7 @@ import { notesApi } from '../../notes/services/notesApi.js';
 import { searchApi } from '../../search/services/searchApi.js';
 import { tagsApi } from '../../tags/services/tagsApi.js';
 import { notebooksApi } from '../../notebooks/services/notebooksApi.js';
+import { workspaceApi } from '../services/workspaceApi.js';
 
 export const workspaceQueryKeys = {
   notes: ['workspace', 'notes'],
@@ -16,6 +17,7 @@ export const workspaceQueryKeys = {
   identities: ['workspace', 'identities'],
   note: (noteId) => ['workspace', 'note', noteId],
   search: (query, page) => ['workspace', 'search', query, page],
+  sidebarCounts: ['workspace', 'sidebar-counts'],
 };
 
 const NOTES_PAGE_SIZE = 20;
@@ -101,6 +103,13 @@ export function useWorkspaceNotebooksQuery() {
   });
 }
 
+export function useWorkspaceSidebarCountsQuery() {
+  return useQuery({
+    queryKey: workspaceQueryKeys.sidebarCounts,
+    queryFn: ({ signal }) => workspaceApi.getSidebarCounts({ signal }),
+  });
+}
+
 export function useWorkspaceNoteQuery(noteId) {
   return useQuery({
     queryKey: workspaceQueryKeys.note(noteId),
@@ -115,7 +124,7 @@ export function useWorkspaceIdentitiesQuery() {
     queryKey: workspaceQueryKeys.identities,
     queryFn: async ({ signal }) => {
       const result = await authApi.listLinkedProviders({ signal });
-      return Array.isArray(result) ? result : result.identities ?? [];
+      return Array.isArray(result) ? result : (result.identities ?? []);
     },
   });
 }

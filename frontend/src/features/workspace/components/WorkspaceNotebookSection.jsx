@@ -1,12 +1,25 @@
 import { useRef, useState } from 'react';
-import { ChevronDown, ChevronRight, Folder, MoreHorizontal, Plus } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronRight,
+  Folder,
+  MoreHorizontal,
+  Plus,
+} from 'lucide-react';
 import { Alert } from '../../../components/common/Alert/Alert.jsx';
 import { Dialog } from '../../../components/common/Dialog/Dialog.jsx';
 import { useToast } from '../../../components/common/Toast/Toast.jsx';
 import { useNotebookMutations } from '../hooks/useNotebookMutations.js';
 import { useWorkspaceNotebooksQuery } from '../hooks/useWorkspaceQueries.js';
 
-export function WorkspaceNotebookSection({ styles, expanded: expandedProp, onExpandedChange }) {
+export function WorkspaceNotebookSection({
+  styles,
+  counts = [],
+  expanded: expandedProp,
+  onExpandedChange,
+  selectedNotebookId,
+  onSelectNotebook,
+}) {
   const notebooksQuery = useWorkspaceNotebooksQuery();
   const notebookMutations = useNotebookMutations();
   const { notify } = useToast();
@@ -19,6 +32,7 @@ export function WorkspaceNotebookSection({ styles, expanded: expandedProp, onExp
   const [renameName, setRenameName] = useState('');
   const [deleteTarget, setDeleteTarget] = useState(null);
   const notebooks = notebooksQuery.data ?? [];
+  const countById = new Map(counts.map((item) => [item.id, item.count]));
   const expanded = expandedProp ?? localExpanded;
   const busy =
     notebooksQuery.isFetching ||
@@ -92,7 +106,11 @@ export function WorkspaceNotebookSection({ styles, expanded: expandedProp, onExp
             onExpandedChange?.(nextExpanded);
           }}
         >
-          {expanded ? <ChevronDown className="icon" size={14} aria-hidden="true" /> : <ChevronRight className="icon" size={14} aria-hidden="true" />}
+          {expanded ? (
+            <ChevronDown className="icon" size={14} aria-hidden="true" />
+          ) : (
+            <ChevronRight className="icon" size={14} aria-hidden="true" />
+          )}
           <Folder className="icon" size={14} aria-hidden="true" />
           <span>Notebooks</span>
         </button>
@@ -118,23 +136,54 @@ export function WorkspaceNotebookSection({ styles, expanded: expandedProp, onExp
           ) : (
             notebooks.map((notebook) => (
               <div className={styles.sidebarTagRow} key={notebook.id}>
-                <span className={styles.sidebarNotebookLabel}>
+                <button
+                  className={`${styles.sidebarNotebookLabel} ${selectedNotebookId === notebook.id ? styles.sidebarTagSelected : ''}`}
+                  type="button"
+                  aria-label={`${notebook.name}, ${countById.get(notebook.id) ?? 0} notes`}
+                  onClick={() => onSelectNotebook(notebook.id)}
+                >
                   <Folder className="icon" size={13} aria-hidden="true" />
-                  {notebook.name}
-                </span>
+                  <span>{notebook.name}</span>
+                  <span className={styles.countBadge} aria-hidden="true">
+                    {countById.get(notebook.id) ?? 0}
+                  </span>
+                </button>
                 <button
                   className={styles.sidebarTagMenuButton}
                   type="button"
                   aria-label={`Manage ${notebook.name} notebook`}
                   aria-expanded={menuNotebookId === notebook.id}
-                  onClick={() => setMenuNotebookId((current) => (current === notebook.id ? null : notebook.id))}
+                  onClick={() =>
+                    setMenuNotebookId((current) =>
+                      current === notebook.id ? null : notebook.id,
+                    )
+                  }
                 >
-                  <MoreHorizontal className="icon" size={14} aria-hidden="true" />
+                  <MoreHorizontal
+                    className="icon"
+                    size={14}
+                    aria-hidden="true"
+                  />
                 </button>
                 {menuNotebookId === notebook.id && (
                   <div className={styles.sidebarTagMenu} role="menu">
-                    <button type="button" role="menuitem" onClick={() => openRename(notebook)}>Rename</button>
-                    <button type="button" role="menuitem" onClick={() => { setMenuNotebookId(null); setDeleteTarget(notebook); }}>Delete</button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => openRename(notebook)}
+                    >
+                      Rename
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setMenuNotebookId(null);
+                        setDeleteTarget(notebook);
+                      }}
+                    >
+                      Delete
+                    </button>
                   </div>
                 )}
               </div>
@@ -147,11 +196,33 @@ export function WorkspaceNotebookSection({ styles, expanded: expandedProp, onExp
           title="Create notebook"
           description="Create a notebook to group related notes."
           onClose={() => setCreateOpen(false)}
-          actions={<><button className={styles.secondaryButton} type="button" onClick={() => setCreateOpen(false)}>Cancel</button><button className={styles.primaryButton} type="submit" form="sidebar-create-notebook">Create notebook</button></>}
+          actions={
+            <>
+              <button
+                className={styles.secondaryButton}
+                type="button"
+                onClick={() => setCreateOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className={styles.primaryButton}
+                type="submit"
+                form="sidebar-create-notebook"
+              >
+                Create notebook
+              </button>
+            </>
+          }
         >
           <form id="sidebar-create-notebook" onSubmit={createNotebook}>
             <label htmlFor="sidebar-notebook-name">Notebook name</label>
-            <input id="sidebar-notebook-name" name="notebookName" autoComplete="off" autoFocus />
+            <input
+              id="sidebar-notebook-name"
+              name="notebookName"
+              autoComplete="off"
+              autoFocus
+            />
           </form>
         </Dialog>
       )}
@@ -161,11 +232,34 @@ export function WorkspaceNotebookSection({ styles, expanded: expandedProp, onExp
           description="Choose a new name for this notebook."
           onClose={() => setRenameTarget(null)}
           initialFocusRef={renameInputRef}
-          actions={<><button className={styles.secondaryButton} type="button" onClick={() => setRenameTarget(null)}>Cancel</button><button className={styles.primaryButton} type="submit" form="sidebar-rename-notebook">Rename</button></>}
+          actions={
+            <>
+              <button
+                className={styles.secondaryButton}
+                type="button"
+                onClick={() => setRenameTarget(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className={styles.primaryButton}
+                type="submit"
+                form="sidebar-rename-notebook"
+              >
+                Rename
+              </button>
+            </>
+          }
         >
           <form id="sidebar-rename-notebook" onSubmit={renameNotebook}>
             <label htmlFor="sidebar-rename-notebook-name">Notebook name</label>
-            <input ref={renameInputRef} id="sidebar-rename-notebook-name" value={renameName} onChange={(event) => setRenameName(event.target.value)} autoComplete="off" />
+            <input
+              ref={renameInputRef}
+              id="sidebar-rename-notebook-name"
+              value={renameName}
+              onChange={(event) => setRenameName(event.target.value)}
+              autoComplete="off"
+            />
           </form>
         </Dialog>
       )}
@@ -174,7 +268,24 @@ export function WorkspaceNotebookSection({ styles, expanded: expandedProp, onExp
           title={`Delete ${deleteTarget.name}?`}
           description="Notes in this notebook will remain in your workspace without a notebook."
           onClose={() => setDeleteTarget(null)}
-          actions={<><button className={styles.secondaryButton} type="button" onClick={() => setDeleteTarget(null)}>Cancel</button><button className={styles.dangerButton} type="button" onClick={() => void deleteNotebook()}>Delete notebook</button></>}
+          actions={
+            <>
+              <button
+                className={styles.secondaryButton}
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+              >
+                Cancel
+              </button>
+              <button
+                className={styles.dangerButton}
+                type="button"
+                onClick={() => void deleteNotebook()}
+              >
+                Delete notebook
+              </button>
+            </>
+          }
         />
       )}
     </section>

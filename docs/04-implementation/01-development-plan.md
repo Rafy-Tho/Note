@@ -166,6 +166,12 @@ Make the navigation sidebar and notes collection independently slide over the ed
 
 **Gate:** Both auxiliary workspace panes open and close accessibly on supported small screens, only one drawer is open at a time, and desktop/mobile checks pass.
 
+## Step 13I - Sidebar Note Counts
+
+Add ownership-safe aggregate counts to the workspace sidebar for Notes, Favorites, Archive, Trash, the parent Notebooks and Tags navigation items, and each owned notebook and tag. Parent Notebooks and Tags counts represent matching notes, not the number of child items. Do not add a count to Search. Track the detailed scope, API contract, checklist, and acceptance criteria in `tasks/13I-sidebar-note-counts.md`.
+
+**Gate:** Sidebar counts match their destination views, refresh after related mutations, remain accessible and responsive, and backend/frontend checks pass without exposing cross-user data.
+
 ## Step 14 - Test and Harden
 
 Run unit, integration, API, authorization, rich-text security, autosave, end-to-end, accessibility, performance, backup, and recovery tests. Fix critical defects and regressions.

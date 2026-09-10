@@ -12,10 +12,10 @@
 | Field | Value |
 | --- | --- |
 | Current phase | Implementation |
-| Current step | Step 13H - Workspace Dual-Pane Drawers |
+| Current step | Step 13I - Sidebar Note Counts |
 | Overall status | In Progress |
 | Blocker | None for the completed bootstrap and database gates. |
-| Last updated | 2026-09-10 |
+| Last updated | 2026-09-11 |
 
 ## Implementation Progress
 
@@ -44,6 +44,7 @@
 | 13F | Workspace dialogs and toast feedback | In Progress | Native browser prompts are removed and workspace feedback is accessible and consistent. | Added shared dialog and workspace toast primitives, migrated link, rename, dirty-navigation, destructive-action, and account confirmation flows, and added feedback helper tests. Frontend lint passes; Vitest passes with 7 files and 18 tests; production build passes with the existing large-bundle warning. Browser verification remains blocked by the unavailable local Chromium executable. See `tasks/13F-workspace-dialogs-and-toast-feedback.md`. |
 | 13G | Sidebar tag and notebook management | In Progress | Owned tags and notebooks are browseable and manageable from the responsive sidebar without visual clutter or cross-user access. | Added ownership-safe tag rename/delete service and API behavior, shared frontend tag CRUD methods, expandable sidebar tag and notebook sections, create/rename/delete dialogs, and search-projection refresh behavior. Verification and browser coverage remain pending. See `tasks/13G-sidebar-tag-management.md`. |
 | 13H | Workspace dual-pane drawers | In Progress | Navigation and notes collection can slide over the editor accessibly on small screens. | Added coordinated navigation/collection drawer state, mobile Notes toggle, mutually exclusive slide-in panes, shared backdrop/Escape closing, and preserved URL/draft guard behavior. Frontend lint, Vitest (8 files, 19 tests), and build pass. Browser verification remains blocked by the unavailable local Chromium executable. See `tasks/13H-workspace-dual-pane-drawers.md`. |
+| 13I | Sidebar note counts | In Progress | Sidebar counts match authorized destination views and refresh after related mutations. | Added protected `GET /api/v1/workspace/sidebar-counts` with ownership-scoped aggregate queries, top-level and notebook/tag counts, accessible sidebar badges, mutation invalidation, API/repository/frontend tests, frontend build, and backend/frontend lint. Browser verification remains pending because the local Chromium executable is unavailable. See `tasks/13I-sidebar-note-counts.md`. |
 | 14 | Testing and hardening | Not Started | No critical security, data-loss, or regression issue remains. | |
 | 15 | Deployment preparation | Not Started | Deployment and recovery procedures work. | |
 
