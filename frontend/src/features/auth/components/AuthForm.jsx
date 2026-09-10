@@ -5,16 +5,28 @@ import { authApi } from '../api/authApi.js';
 import { validateCredentials } from '../authValidation.js';
 import styles from './AuthForm.module.css';
 
-export function AuthForm({ onAuthenticated }) {
-  const [mode, setMode] = useState('login');
+export function AuthForm({
+  onAuthenticated,
+  initialMode = 'login',
+  initialToken = '',
+  verificationRequired = false,
+  verificationEmail = '',
+}) {
+  const [mode, setMode] = useState(
+    initialToken ? initialMode : verificationRequired ? 'verify' : initialMode,
+  );
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [token, setToken] = useState(initialToken);
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
   const [success, setSuccess] = useState(null);
   const isRegister = mode === 'register';
+  const isVerify = mode === 'verify';
+  const isReset = mode === 'reset';
+  const isForgot = mode === 'forgot';
 
   function switchMode(nextMode) {
     setMode(nextMode);
@@ -23,10 +35,71 @@ export function AuthForm({ onAuthenticated }) {
     setSuccess(null);
   }
 
+  function providerError(requestError) {
+    if (requestError.code === 'PROVIDER_LINK_REQUIRED') {
+      return 'This provider is linked to another account. Sign in first, then link it from your workspace.';
+    }
+    if (requestError.code === 'PROVIDER_UNAVAILABLE') {
+      return 'This sign-in provider is temporarily unavailable. Try again later.';
+    }
+    return requestError.message;
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
     setError(null);
     setSuccess(null);
+    if (isVerify) {
+      setBusy(true);
+      try {
+        await authApi.verifyEmail(token.trim());
+        setSuccess('Email verified. You can now sign in to your workspace.');
+        setMode('login');
+        setToken('');
+      } catch (requestError) {
+        setError(requestError.message);
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+
+    if (isForgot) {
+      if (!email.trim()) {
+        setFieldErrors({ email: 'Enter your account email.' });
+        return;
+      }
+      setBusy(true);
+      try {
+        await authApi.requestPasswordReset(email.trim());
+        setSuccess('If that account can reset a password, a reset link is on its way.');
+      } catch (requestError) {
+        setError(requestError.message);
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+
+    if (isReset) {
+      const validation = validateCredentials({ email: 'reset@example.com', password });
+      setFieldErrors({ password: validation.fields.password });
+      if (validation.fields.password) return;
+      setBusy(true);
+      try {
+        await authApi.confirmPasswordReset(token.trim(), password);
+        setSuccess('Password reset. Sign in with your new password.');
+        setPassword('');
+        setToken('');
+        setMode('login');
+      } catch (requestError) {
+        setError(requestError.message);
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+
     const validation = validateCredentials({ email, password });
     setFieldErrors(validation.fields);
     if (Object.keys(validation.fields).length > 0) return;
@@ -39,10 +112,17 @@ export function AuthForm({ onAuthenticated }) {
         setPassword('');
         setSuccess('Account created. Sign in to unlock your workspace.');
       } else {
-        onAuthenticated(await authApi.login(validation.credentials));
+        const nextSession = await authApi.login(validation.credentials);
+        if (!nextSession.user.emailVerified) {
+          setEmail(validation.credentials.email);
+          setMode('verify');
+          setSuccess('Verify your email before opening private notes.');
+        } else {
+          onAuthenticated(nextSession);
+        }
       }
     } catch (requestError) {
-      setError(requestError.message);
+      setError(providerError(requestError));
       setFieldErrors(requestError.fields ?? {});
     } finally {
       setBusy(false);
@@ -51,6 +131,7 @@ export function AuthForm({ onAuthenticated }) {
 
   return (
     <section className={styles.panel} aria-labelledby="auth-title">
+      {!isForgot && !isReset && !isVerify && (
       <div
         className={styles.tabs}
         role="tablist"
@@ -75,16 +156,34 @@ export function AuthForm({ onAuthenticated }) {
           Create Account
         </button>
       </div>
+      )}
       <div className={styles.heading}>
         <p className={styles.eyebrow}>Private workspace</p>
         <h1 id="auth-title">
-          {isRegister ? 'Create your vault' : 'Sign in to your vault'}
+          {isVerify
+            ? 'Verify your email'
+            : isForgot
+              ? 'Reset your password'
+              : isReset
+                ? 'Choose a new password'
+                : isRegister
+                  ? 'Create your vault'
+                  : 'Sign in to your vault'}
         </h1>
-        <p>Private, client-encrypted personal note workspace.</p>
+        <p>
+          {isVerify
+            ? 'Email verification is required before private notes are available.'
+            : isForgot
+              ? 'We will send a generic recovery response for every address.'
+              : isReset
+                ? 'Use a valid reset link to replace your password.'
+                : 'Private, client-encrypted personal note workspace.'}
+        </p>
       </div>
       <form className={styles.form} onSubmit={handleSubmit} noValidate>
         {success && <Alert tone="success">{success}</Alert>}
         {error && <Alert>{error}</Alert>}
+        {!isVerify && !isReset && (
         <div className={styles.field}>
           <label htmlFor="email">Account Email</label>
           <input
@@ -103,6 +202,8 @@ export function AuthForm({ onAuthenticated }) {
             <small id="email-error">{fieldErrors.email}</small>
           )}
         </div>
+        )}
+        {(!isForgot || isReset) && !isVerify && (
         <div className={styles.field}>
           <div className={styles.labelRow}>
             <label htmlFor="password">Master Key / Password</label>
@@ -142,6 +243,34 @@ export function AuthForm({ onAuthenticated }) {
             <small id="password-error">{fieldErrors.password}</small>
           )}
         </div>
+        )}
+        {isVerify && (
+          <div className={styles.field}>
+            <label htmlFor="verification-token">Verification Token</label>
+            <input
+              id="verification-token"
+              name="verification-token"
+              type="text"
+              autoComplete="one-time-code"
+              value={token}
+              onChange={(event) => setToken(event.target.value)}
+              disabled={busy}
+            />
+          </div>
+        )}
+        {isReset && (
+          <div className={styles.field}>
+            <label htmlFor="reset-token">Reset Token</label>
+            <input
+              id="reset-token"
+              name="reset-token"
+              type="text"
+              value={token}
+              onChange={(event) => setToken(event.target.value)}
+              disabled={busy}
+            />
+          </div>
+        )}
         {isRegister && (
           <div className={styles.requirements}>
             <strong>Password requirements</strong>
@@ -152,21 +281,65 @@ export function AuthForm({ onAuthenticated }) {
         <button className={styles.primaryButton} type="submit" disabled={busy}>
           {busy
             ? 'Working...'
-            : isRegister
+            : isVerify
+              ? 'Verify Email'
+              : isForgot
+                ? 'Send Reset Link'
+                : isReset
+                  ? 'Reset Password'
+                  : isRegister
               ? 'Create Account'
               : 'Unlock Workspace'}
           {!busy && <ArrowRight className="icon" size={16} aria-hidden="true" />}
         </button>
+        {isVerify && (
+          <button
+            className={styles.secondaryButton}
+            type="button"
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              setError(null);
+              try {
+                await authApi.resendVerification(verificationEmail || email);
+                setSuccess('If the account is eligible, a new verification link is on its way.');
+              } catch (requestError) {
+                setError(requestError.message);
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            Resend verification email
+          </button>
+        )}
+        {!isVerify && !isReset && (
         <p className={styles.switchCopy}>
-          {isRegister ? 'Already have a vault?' : "Don't have a vault yet?"}{' '}
+          {isForgot ? 'Remembered your password?' : isRegister ? 'Already have a vault?' : "Don't have a vault yet?"}{' '}
           <button
             className={styles.textButton}
             type="button"
-            onClick={() => switchMode(isRegister ? 'login' : 'register')}
+            onClick={() => switchMode(isForgot ? 'login' : isRegister ? 'login' : 'register')}
           >
-            {isRegister ? 'Sign in here' : 'Create a new one'}
+            {isForgot ? 'Sign in here' : isRegister ? 'Sign in here' : 'Create a new one'}
           </button>
         </p>
+        )}
+        {mode === 'login' && (
+          <>
+            <button className={styles.secondaryButton} type="button" onClick={() => switchMode('forgot')}>
+              Forgot password?
+            </button>
+            <div className={styles.providerActions}>
+              <button className={styles.secondaryButton} type="button" onClick={() => authApi.startProviderSignIn('google')}>
+                Continue with Google
+              </button>
+              <button className={styles.secondaryButton} type="button" onClick={() => authApi.startProviderSignIn('facebook')}>
+                Continue with Facebook
+              </button>
+            </div>
+          </>
+        )}
       </form>
     </section>
   );

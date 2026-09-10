@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.102.8",
     "@tiptap/extension-code-block": "^3.0.9",
     "@tiptap/extension-link": "^3.0.9",
     "@tiptap/extension-list": "^3.0.9",

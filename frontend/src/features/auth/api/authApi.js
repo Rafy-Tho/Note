@@ -59,6 +59,47 @@ export function createAuthApi() {
         body: JSON.stringify(credentials),
       });
     },
+    async verifyEmail(token) {
+      return request('/auth/email/verify', {
+        method: 'POST',
+        body: JSON.stringify({ token }),
+      });
+    },
+    async resendVerification(email) {
+      return request('/auth/email/verification/resend', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      });
+    },
+    async requestPasswordReset(email) {
+      return request('/auth/password/reset/request', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      });
+    },
+    async confirmPasswordReset(token, password) {
+      return request('/auth/password/reset/confirm', {
+        method: 'POST',
+        body: JSON.stringify({ token, password }),
+      });
+    },
+    startProviderSignIn(provider) {
+      window.location.assign(`${apiBase}/auth/${provider}/start`);
+    },
+    async startProviderLink(provider) {
+      const result = await this.request(`/auth/identities/${provider}/link`, {
+        method: 'POST',
+      });
+      window.location.assign(result.authorizationUrl);
+    },
+    async listLinkedProviders() {
+      return this.request('/auth/identities');
+    },
+    async unlinkProvider(provider) {
+      return this.request(`/auth/identities/${provider}`, {
+        method: 'DELETE',
+      });
+    },
     async login(credentials) {
       const session = await request('/auth/login', {
         method: 'POST',

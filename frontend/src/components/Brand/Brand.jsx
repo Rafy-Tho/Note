@@ -1,14 +1,10 @@
+import noteAppMark from '../../assets/icons/note-app-mark.svg';
 import styles from './Brand.module.css';
 
 export function Brand() {
   return (
     <div className={styles.brand} aria-label="Note App">
-      <div className={styles.mark} aria-hidden="true">
-        <span />
-        <span />
-        <span />
-        <i />
-      </div>
+      <img className={styles.mark} src={noteAppMark} alt="" aria-hidden="true" />
       <span>Note App</span>
     </div>
   );

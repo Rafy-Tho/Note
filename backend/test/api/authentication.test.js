@@ -350,4 +350,39 @@ describe('authentication API', () => {
     expect(callback.body.data).toEqual({ provider: 'google' });
     expect(unlink.body.data).toEqual({ provider: 'google' });
   });
+
+  it('requires CSRF protection when starting the documented provider-link flow', async () => {
+    const { app } = createTestApp();
+    const agent = request.agent(app);
+    await agent
+      .post('/api/v1/auth/register')
+      .send({ email: 'user@example.com', password: 'correct-password' });
+    const login = await agent
+      .post('/api/v1/auth/login')
+      .send({ email: 'user@example.com', password: 'correct-password' });
+
+    const blocked = await agent.post('/api/v1/auth/identities/google/link');
+    const started = await agent
+      .post('/api/v1/auth/identities/google/link')
+      .set('x-csrf-token', login.body.data.csrfToken);
+
+    expect(blocked.status).toBe(403);
+    expect(blocked.body.error.code).toBe('CSRF_INVALID');
+    expect(started.status).toBe(200);
+    expect(started.body.data.authorizationUrl).toContain('accounts.google.com');
+  });
+
+  it('rate limits verification resend requests', async () => {
+    const { app } = createTestApp();
+    const responses = await Promise.all(
+      Array.from({ length: 11 }, () =>
+        request(app)
+          .post('/api/v1/auth/email/verification/resend')
+          .send({ email: 'user@example.com' }),
+      ),
+    );
+
+    expect(responses.at(-1).status).toBe(429);
+    expect(responses.at(-1).body.error.code).toBe('RATE_LIMITED');
+  });
 });

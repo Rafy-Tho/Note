@@ -94,6 +94,38 @@
   color: var(--color-text);
   background: var(--color-surface);
 }
+.accountControls {
+  display: grid;
+  gap: 7px;
+  margin-top: 22px;
+  padding: 14px 8px;
+  border-top: 1px solid var(--color-border);
+}
+.accountHint {
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+.identityRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--color-text);
+  font-size: 11px;
+  text-transform: capitalize;
+}
+.identityButton {
+  padding: 7px 8px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  background: transparent;
+  text-align: left;
+  font-size: 11px;
+  text-transform: capitalize;
+}
+.identityButton:hover {
+  border-color: var(--color-interaction);
+  color: var(--color-text);
+}
 .signOutButton {
   margin-top: auto;
   border-top: 1px solid var(--color-border);

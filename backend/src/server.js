@@ -7,7 +7,7 @@ const app = createApp();
 const server = app.listen(port, () => {
   console.log(`API listening on port ${port}`);
 });
-
+console.log(getConfig());
 function shutdown() {
   server.close(() => {
     closeDatabase().finally(() => process.exit(0));

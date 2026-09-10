@@ -48,6 +48,15 @@ function clearBrowserBinding(response, secure) {
   });
 }
 
+function redirectProviderFailure(request, response, config, error) {
+  if (!request.get('accept')?.includes('text/html')) return false;
+  const code = error.code ?? 'PROVIDER_CALLBACK_INVALID';
+  response.redirect(
+    `${config.appUrl}/?authError=${encodeURIComponent(code)}`,
+  );
+  return true;
+}
+
 export function createAuthController({ authService, config }) {
   passport.use(
     new LocalStrategy(
@@ -158,13 +167,18 @@ export function createAuthController({ authService, config }) {
           secure,
         );
         clearBrowserBinding(response, secure);
+        if (request.get('accept')?.includes('text/html')) {
+          response.redirect(config.appUrl);
+          return;
+        }
         sendData(response, {
           authenticated: true,
           user: result.user,
           csrfToken: authService.csrfToken(result.token, config.csrfSecret),
         });
       } catch (error) {
-        next(error);
+        if (!redirectProviderFailure(request, response, config, error))
+          next(error);
       }
     },
 
@@ -201,13 +215,18 @@ export function createAuthController({ authService, config }) {
           secure,
         );
         clearBrowserBinding(response, secure);
+        if (request.get('accept')?.includes('text/html')) {
+          response.redirect(config.appUrl);
+          return;
+        }
         sendData(response, {
           authenticated: true,
           user: result.user,
           csrfToken: authService.csrfToken(result.token, config.csrfSecret),
         });
       } catch (error) {
-        next(error);
+        if (!redirectProviderFailure(request, response, config, error))
+          next(error);
       }
     },
 
@@ -236,7 +255,11 @@ export function createAuthController({ authService, config }) {
           sessionId: request.auth.id,
           userId: request.auth.userId,
         });
-        response.redirect(authorizationUrl);
+        if (request.method === 'POST') {
+          sendData(response, { authorizationUrl });
+        } else {
+          response.redirect(authorizationUrl);
+        }
       } catch (error) {
         next(error);
       }
@@ -255,9 +278,14 @@ export function createAuthController({ authService, config }) {
         });
         const secure = config.nodeEnv === 'production';
         clearBrowserBinding(response, secure);
+        if (request.get('accept')?.includes('text/html')) {
+          response.redirect(config.appUrl);
+          return;
+        }
         sendData(response, result);
       } catch (error) {
-        next(error);
+        if (!redirectProviderFailure(request, response, config, error))
+          next(error);
       }
     },
 

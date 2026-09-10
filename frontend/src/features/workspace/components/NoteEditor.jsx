@@ -51,7 +51,13 @@ export function NoteEditor({ content, onChange }) {
   useEffect(() => {
     if (!editor || JSON.stringify(editor.getJSON()) === JSON.stringify(content))
       return;
+    const { from, to } = editor.state.selection;
     editor.commands.setContent(content, false);
+    const documentSize = editor.state.doc.content.size;
+    editor.commands.setTextSelection({
+      from: Math.min(from, documentSize),
+      to: Math.min(to, documentSize),
+    });
   }, [content, editor]);
 
   if (!editor) return null;

@@ -43,15 +43,15 @@ Add mandatory email verification, secure password reset, Google and Facebook sig
 - [x] Implement Google authorization-code callback validation.
 - [x] Implement Facebook authorization-code callback validation.
 - [x] Implement provider resolution and authenticated linking.
-- [ ] Preserve the existing opaque PostgreSQL session and CSRF behavior.
+- [x] Preserve the existing opaque PostgreSQL session and CSRF behavior.
 
 ## Frontend
 
-- [ ] Add Google and Facebook sign-in actions.
-- [ ] Add verification-required and verification-success screens.
-- [ ] Add resend-verification feedback and failure states.
-- [ ] Add authenticated provider-linking controls.
-- [ ] Handle provider cancellation, callback failure, collision, and retry states.
+- [x] Add Google and Facebook sign-in actions.
+- [x] Add verification-required and verification-success screens.
+- [x] Add resend-verification feedback and failure states.
+- [x] Add authenticated provider-linking controls.
+- [x] Handle provider cancellation, callback failure, collision, and retry states.
 
 ## Tests and Evidence
 
@@ -62,17 +62,17 @@ Add mandatory email verification, secure password reset, Google and Facebook sig
 - Google authorization URL, callback claim validation, browser binding, account resolution, and no-automatic-merge coverage are implemented.
 - Facebook authorization URL, Graph profile validation, browser binding, account resolution, and session coverage are implemented.
 - Authenticated identity listing, session-bound linking, collision protection, and safe unlinking coverage are implemented.
-- Full backend tests pass: 61 tests.
+- Full backend tests pass: 76 tests.
 - Targeted ESLint passes for the authentication implementation and tests. Repository backend lint remains blocked by the pre-existing `backend/test/api/organization.test.js:191` error.
 
-- [ ] Test valid, invalid, expired, and reused verification tokens.
+- [x] Test valid, invalid, expired, and reused verification tokens.
 - [x] Test generic reset responses for registered and unknown email addresses.
-- [ ] Test valid, invalid, expired, reused, and over-attempted password-reset tokens.
+- [x] Test valid, invalid, expired, reused, and over-attempted password-reset tokens.
 - [x] Test password hashing and complete session revocation after reset.
-- [ ] Test verification resend rate limits and mail failures.
-- [ ] Test provider state, redirect, subject, issuer, audience, expiry, and verified-email validation.
+- [x] Test verification resend rate limits and mail failures.
+- [x] Test provider state, redirect, subject, issuer, audience, expiry, and verified-email validation.
 - [x] Test provider identity collisions and no automatic email-based merging.
-- [ ] Test unverified users cannot access private notes.
+- [x] Test unverified users cannot access private notes.
 - [x] Test successful Google/Facebook sign-in creates the normal session.
 - [x] Test authenticated linking and safe unlinking rules.
 - [ ] Add API, integration, frontend, and Playwright journeys.

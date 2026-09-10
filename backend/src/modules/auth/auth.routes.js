@@ -76,6 +76,12 @@ export function createAuthRouter({ authService, config }) {
     requireAuthentication,
     controller.startProviderLink,
   );
+  expressRouter.post(
+    '/identities/:provider/link',
+    requireAuthentication,
+    createCsrfMiddleware({ authService, csrfSecret: config.csrfSecret }),
+    controller.startProviderLink,
+  );
   expressRouter.get(
     '/:provider/link/callback',
     requireAuthentication,
