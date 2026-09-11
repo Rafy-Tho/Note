@@ -7,6 +7,7 @@
 - Cross-user ownership tests for every protected operation
 - Component tests for important UI behavior and state transitions
 - Playwright journeys for registration, authentication, notes, autosave, organization, search, trash, and restore
+- Browser coverage for public privacy-policy access, registration-form linking, and navigation back to authentication
 - Rich-text sanitization and malicious markup tests
 - Autosave failure, retry, and stale revision tests
 - Accessibility, responsive, performance, backup, and recovery checks

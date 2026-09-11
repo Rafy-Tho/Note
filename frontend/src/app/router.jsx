@@ -5,9 +5,14 @@ import { ProtectedRoute } from '../features/auth/components/ProtectedRoute.jsx';
 import { PublicRoute } from '../features/auth/components/PublicRoute.jsx';
 import { AuthPage } from '../pages/AuthPage.jsx';
 import { NotFoundPage } from '../pages/NotFoundPage.jsx';
+import { PrivacyPolicyPage } from '../pages/PrivacyPolicyPage.jsx';
 import { WorkspacePage } from '../pages/WorkspacePage.jsx';
 
 export const router = createBrowserRouter([
+  {
+    element: <AuthLayout />,
+    children: [{ path: '/privacy-policy', element: <PrivacyPolicyPage /> }],
+  },
   {
     element: <PublicRoute />,
     children: [

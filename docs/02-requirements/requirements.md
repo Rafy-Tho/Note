@@ -13,6 +13,13 @@
 - Unverified social email claims cannot create or locate an account automatically; explicit linking binds only the authenticated user's confirmed provider identity.
 - Verification and password-reset tokens are single-use, expiring, rate-limited, and never exposed.
 
+## Privacy and Public Access
+
+- Visitors can open `/privacy-policy` without an account or session.
+- Registration provides a visible link to the privacy policy before account creation.
+- The privacy policy accurately describes account data, workspace data, necessary cookies, service providers, operational logs, security controls, retention limitations, and the absence of self-service account deletion and export in the MVP.
+- The privacy policy does not claim end-to-end or client-side encryption while note content is stored server-side.
+
 ## Notes and Organization
 
 - Users can create blank or populated notes and edit supported rich text.

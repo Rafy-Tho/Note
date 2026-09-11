@@ -2,6 +2,8 @@
 
 - A user cannot read or modify another user's account, note, notebook, tag, search result, or collection.
 - Registration, verification, sign-in, sign-out, provider callbacks, and password reset enforce their security rules.
+- An unauthenticated visitor can open `/privacy-policy`, and the registration form visibly links to it before account creation.
+- The privacy policy does not make unsupported claims about encryption, tracking, retention, deletion, or data export.
 - Local registration creates exactly one user and one local auth account; local login and password reset continue to work from that auth account.
 - A known provider account logs into its linked user, while a new verified provider account creates exactly one user and one social auth account.
 - A provider callback with an email matching an existing user does not create a second user or session and directs the user through explicit authenticated linking.

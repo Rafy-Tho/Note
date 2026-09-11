@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Alert } from '../../../components/common/Alert/Alert.jsx';
 import { authApi } from '../services/authApi.js';
 import { validateCredentials } from '../validation/authValidation.js';
@@ -202,7 +203,7 @@ export function AuthForm({
               ? 'We will send a generic recovery response for every address.'
               : isReset
                 ? 'Use a valid reset link to replace your password.'
-                : 'Private, client-encrypted personal note workspace.'}
+                : 'Private personal note workspace with access-controlled server storage.'}
         </p>
       </div>
       <form className={styles.form} onSubmit={handleSubmit} noValidate>
@@ -305,6 +306,12 @@ export function AuthForm({
             <span>At least 12 characters</span>
             <span>Password is hashed before storage</span>
           </div>
+        )}
+        {isRegister && (
+          <p className={styles.legalCopy}>
+            Review the <Link to="/privacy-policy">Privacy Policy</Link> before
+            creating your account.
+          </p>
         )}
         <button className={styles.primaryButton} type="submit" disabled={busy}>
           {busy

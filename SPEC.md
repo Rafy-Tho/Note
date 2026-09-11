@@ -11,6 +11,7 @@ Note App is a secure personal note-taking web application. Users can create, edi
 - Notebooks, tags, favorites, archive, trash, restore, and permanent deletion.
 - Search across owned active and archived notes by title, content, and tags.
 - Responsive browser access with accessible loading, empty, success, and failure states.
+- A public privacy policy linked from account registration and authentication screens.
 
 Profile management, sharing, collaboration, attachments, offline synchronization, AI features, native mobile applications, Telegram authentication, account deletion, and data export are outside the MVP.
 

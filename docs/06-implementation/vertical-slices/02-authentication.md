@@ -9,6 +9,7 @@
 - Google and Facebook callbacks and authenticated provider linking
 - Authenticated context, protected routes, ownership-scoped data access, and safe not-found behavior
 - Authentication screens, route guards, and session-aware navigation
+- Public privacy policy page and registration-form link
 
 ## Data Model
 
@@ -30,7 +31,7 @@ Sign-in and linking use the same provider-registered redirect URI. The server-si
 
 ## Gate
 
-Users can authenticate safely, verified users can access private notes, provider collisions and unverified automatic email matching are rejected, same-email social login never duplicates a user, linked users can use both local and social methods, and User A cannot access User B data.
+Users can authenticate safely, verified users can access private notes, provider collisions and unverified automatic email matching are rejected, same-email social login never duplicates a user, linked users can use both local and social methods, User A cannot access User B data, and visitors can review an accurate privacy policy before registration.
 
 ## Status
 

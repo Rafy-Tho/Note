@@ -137,6 +137,20 @@
   color: var(--color-primary);
   content: '✓';
 }
+.legalCopy {
+  margin: -5px 0 0;
+  color: var(--color-text-muted);
+  text-align: center;
+  font:
+    11px/1.5 'JetBrains Mono',
+    monospace;
+}
+.legalCopy a {
+  color: var(--color-interaction);
+}
+.legalCopy a:hover {
+  color: var(--color-focus);
+}
 .primaryButton {
   display: flex;
   justify-content: center;

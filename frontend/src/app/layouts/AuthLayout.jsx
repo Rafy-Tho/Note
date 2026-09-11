@@ -20,7 +20,7 @@ export function AuthLayout() {
         </div>
         <div className={styles.footer}>
           <span /> Strict private storage protocol
-          <span /> No telemetry · No trackers
+          <span /> No ad trackers · Operational logs only
         </div>
       </aside>
       <div className={styles.preview}>
@@ -81,16 +81,16 @@ export function AuthLayout() {
                 </code>
                 <div className={styles.miniFooter}>
                   <span>LN 42, COL 88 · UTF-8 Markdown</span>
-                  <b>E2EE Verified · AES-256</b>
+                  <b>Access Controlled Storage</b>
                 </div>
               </div>
             </div>
           </div>
           <div className={styles.callouts}>
             <div>
-              <b>01 // Zero Knowledge</b>
+              <b>01 // Access Controls</b>
               <span>
-                Private notes are encrypted locally before persistent commit.
+                Private notes are protected by account access controls.
               </span>
             </div>
             <div>
@@ -107,7 +107,7 @@ export function AuthLayout() {
         </div>
         <div className={styles.previewFooter}>
           <span>Strict Private Storage Protocol</span>
-          <span>No telemetry · No trackers · Single tenant</span>
+          <span>No ad trackers · Operational logs only</span>
         </div>
       </div>
     </main>
