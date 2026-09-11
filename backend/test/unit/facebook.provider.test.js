@@ -51,7 +51,7 @@ describe('Facebook provider', () => {
     ).toEqual(expect.any(String));
   });
 
-  it('rejects profiles without a verified email', async () => {
+  it('accepts a granted email without requiring the account verified flag', async () => {
     const fetchImpl = vi
       .fn()
       .mockResolvedValueOnce({
@@ -65,6 +65,27 @@ describe('Facebook provider', () => {
           email: 'user@example.com',
           verified: false,
         }),
+      });
+    const provider = createFacebookProvider({ ...providerConfig, fetchImpl });
+
+    await expect(
+      provider.authenticateCode({ code: 'authorization-code' }),
+    ).resolves.toEqual({
+      subject: 'facebook-subject',
+      email: 'user@example.com',
+    });
+  });
+
+  it('rejects profiles without an email address', async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ access_token: 'user-access-token' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: 'facebook-subject' }),
       });
     const provider = createFacebookProvider({ ...providerConfig, fetchImpl });
 

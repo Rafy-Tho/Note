@@ -95,8 +95,7 @@ export function createFacebookProvider({
       const profile = await profileResponse.json().catch(() => null);
       if (
         typeof profile?.id !== 'string' ||
-        typeof profile.email !== 'string' ||
-        profile.verified !== true
+        typeof profile.email !== 'string'
       ) {
         throw providerResponseError();
       }

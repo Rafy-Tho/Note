@@ -15,7 +15,7 @@
 | Slice | Status | Evidence |
 | --- | --- | --- |
 | Project foundation | Complete | Frontend/backend bootstrap, migrations, lint, formatting, API, unit, and database checks pass. |
-| Authentication and authorization | In Progress | Auth expansion, sessions, provider callbacks, ownership helpers, and automated checks exist; browser and complete resource integration remain pending. |
+| Authentication and authorization | In Progress | Auth expansion, sessions, provider callbacks, ownership helpers, and automated checks exist; Facebook profile validation now accepts the granted email claim without requiring the account-level `verified` flag; browser and complete resource integration remain pending. Backend lint and all 86 automated tests pass. |
 | Notes and writing | In Progress | Core note journey passes; rich text, autosave, and trash browser verification remain pending. |
 | Notebooks and organization | In Progress | Notebook, movement, favorites, archive, dialogs, drawers, and counts implemented; final browser verification remains pending. |
 | Tags | In Progress | Tag CRUD, assignment, sidebar management, and projection refresh behavior implemented; browser verification remains pending. |
