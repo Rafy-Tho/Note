@@ -12,6 +12,9 @@ export function createSidebarCountsRouter({
     authService,
     cookieName: config.sessionCookieName,
     csrfSecret: config.csrfSecret,
+    cookieSecure: config.cookieSecure,
+    cookieSameSite: config.cookieSameSite,
+    nodeEnv: config.nodeEnv,
   });
   const controller = createSidebarCountsController({
     service:

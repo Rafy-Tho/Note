@@ -5,6 +5,7 @@ import { AppError, notFoundError } from '../../src/common/errors/errors.js';
 
 const config = {
   nodeEnv: 'test',
+  requireSameOriginHeaders: false,
   sessionCookieName: 'note_app_session',
   csrfSecret: 'csrf-test-secret',
 };
@@ -516,18 +517,37 @@ describe('notes API', () => {
     const foreignTag = await userRequest(app, 'b', 'post', '/api/v1/tags')
       .set('x-csrf-token', 'test')
       .send({ name: 'Private' });
-    await userRequest(app, 'a', 'post', `/api/v1/notes/${note.body.data.id}/tags`)
+    await userRequest(
+      app,
+      'a',
+      'post',
+      `/api/v1/notes/${note.body.data.id}/tags`,
+    )
       .set('x-csrf-token', 'test')
       .send({ tagId: tag.body.data.id });
 
-    const renamed = await userRequest(app, 'a', 'patch', `/api/v1/tags/${tag.body.data.id}`)
+    const renamed = await userRequest(
+      app,
+      'a',
+      'patch',
+      `/api/v1/tags/${tag.body.data.id}`,
+    )
       .set('x-csrf-token', 'test')
       .send({ name: 'Planning' });
-    const foreignRename = await userRequest(app, 'a', 'patch', `/api/v1/tags/${foreignTag.body.data.id}`)
+    const foreignRename = await userRequest(
+      app,
+      'a',
+      'patch',
+      `/api/v1/tags/${foreignTag.body.data.id}`,
+    )
       .set('x-csrf-token', 'test')
       .send({ name: 'Other' });
-    const deleted = await userRequest(app, 'a', 'delete', `/api/v1/tags/${tag.body.data.id}`)
-      .set('x-csrf-token', 'test');
+    const deleted = await userRequest(
+      app,
+      'a',
+      'delete',
+      `/api/v1/tags/${tag.body.data.id}`,
+    ).set('x-csrf-token', 'test');
     const tags = await userRequest(app, 'a', 'get', '/api/v1/tags');
 
     expect(renamed.body.data.name).toBe('Planning');

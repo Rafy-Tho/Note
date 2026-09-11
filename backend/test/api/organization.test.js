@@ -5,6 +5,7 @@ import { AppError, notFoundError } from '../../src/common/errors/errors.js';
 
 const config = {
   nodeEnv: 'test',
+  requireSameOriginHeaders: false,
   sessionCookieName: 'note_app_session',
   csrfSecret: 'csrf-test-secret',
 };

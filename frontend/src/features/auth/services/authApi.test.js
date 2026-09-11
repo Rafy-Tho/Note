@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createAuthApi } from './authApi.js';
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
 
 function response(body, ok = true, status = 200) {
   return {
@@ -33,6 +36,43 @@ describe('auth API client', () => {
     expect(fetchMock.mock.calls[1][1].headers).toMatchObject({
       'x-csrf-token': 'csrf-token',
     });
+  });
+
+  it('starts provider linking with POST and redirects to the returned URL', async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        response({
+          data: {
+            authenticated: true,
+            user: { id: 'user-1', emailVerified: true },
+            csrfToken: 'csrf-token',
+          },
+        }),
+      )
+      .mockResolvedValueOnce(
+        response({
+          data: {
+            authorizationUrl: 'https://accounts.google.com/link',
+          },
+        }),
+      );
+    const assign = vi.fn();
+    vi.stubGlobal('window', { location: { assign } });
+    const api = createAuthApi();
+
+    await api.getSession();
+    await api.startProviderLink('google');
+
+    expect(fetchMock.mock.calls[1][0]).toBe(
+      '/api/v1/auth/identities/google/link',
+    );
+    expect(fetchMock.mock.calls[1][1]).toMatchObject({
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'x-csrf-token': 'csrf-token' },
+    });
+    expect(assign).toHaveBeenCalledWith('https://accounts.google.com/link');
   });
 
   it('maps generic reset and verification failures without exposing response internals', async () => {

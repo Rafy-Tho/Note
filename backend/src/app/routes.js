@@ -24,10 +24,14 @@ export function configureRoutes(
     searchService,
     notebooksService,
     sidebarCountsService,
+    rateLimitStores,
   },
 ) {
   app.use('/api/v1/health', createHealthRouter({ databaseCheck }));
-  app.use('/api/v1/auth', createAuthRouter({ authService, config }));
+  app.use(
+    '/api/v1/auth',
+    createAuthRouter({ authService, config, rateLimitStores }),
+  );
   app.use(
     '/api/v1/notes',
     createNotesRouter({ authService, config, service: notesService }),

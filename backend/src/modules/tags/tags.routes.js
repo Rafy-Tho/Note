@@ -8,6 +8,9 @@ function createRouter({ authService, config }) {
     authService,
     cookieName: config.sessionCookieName,
     csrfSecret: config.csrfSecret,
+    cookieSecure: config.cookieSecure,
+    cookieSameSite: config.cookieSameSite,
+    nodeEnv: config.nodeEnv,
   });
 }
 

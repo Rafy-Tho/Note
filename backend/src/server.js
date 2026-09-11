@@ -2,8 +2,9 @@ import { getConfig } from './config/env.js';
 import { closeDatabase } from './db/pool.js';
 import { createApp } from './app/app.js';
 
-const { port } = getConfig();
-const app = createApp();
+const config = getConfig();
+const app = createApp({ config });
+const { port } = config;
 const server = app.listen(port, () => {
   console.log(`API listening on port ${port}`);
 });

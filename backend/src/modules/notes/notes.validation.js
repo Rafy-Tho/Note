@@ -1,3 +1,4 @@
+import { URL } from 'node:url';
 import { validationError } from '../../common/errors/errors.js';
 import {
   assertObject,
@@ -7,6 +8,9 @@ import {
 
 const NOTE_STATES = ['active', 'archived'];
 const EMPTY_DOCUMENT = { type: 'doc', content: [] };
+const MAX_DOCUMENT_DEPTH = 100;
+const MAX_DOCUMENT_NODES = 10_000;
+const MAX_TEXT_LENGTH = 100_000;
 
 function assertTitle(title) {
   if (typeof title !== 'string' || title.length > 500)
@@ -39,8 +43,25 @@ function assertContentJson(contentJson) {
     'listItem',
     'codeBlock',
   ]);
+  const allowedNodeAttrs = new Map([
+    ['doc', new Set()],
+    ['paragraph', new Set()],
+    ['heading', new Set(['level'])],
+    ['text', new Set()],
+    ['bulletList', new Set()],
+    ['orderedList', new Set(['start'])],
+    ['listItem', new Set()],
+    ['codeBlock', new Set(['language'])],
+  ]);
+  let nodeCount = 0;
+  let textLength = 0;
 
-  function visit(node, parentType = null) {
+  function visit(node, parentType = null, depth = 0) {
+    nodeCount += 1;
+    if (nodeCount > MAX_DOCUMENT_NODES || depth > MAX_DOCUMENT_DEPTH) {
+      fields.contentJson = 'Contains too many nested document nodes.';
+      return;
+    }
     if (!node || typeof node !== 'object' || Array.isArray(node)) {
       fields.contentJson = 'Contains an invalid document node.';
       return;
@@ -48,6 +69,25 @@ function assertContentJson(contentJson) {
     if (!allowedNodes.has(node.type)) {
       fields.contentJson = 'Contains an unsupported document node.';
       return;
+    }
+    if (node.attrs !== undefined) {
+      if (
+        !node.attrs ||
+        typeof node.attrs !== 'object' ||
+        Array.isArray(node.attrs)
+      ) {
+        fields.contentJson = 'Contains invalid node attributes.';
+        return;
+      }
+      const allowedAttrs = allowedNodeAttrs.get(node.type);
+      if (
+        [...Object.keys(node.attrs)].some(
+          (attribute) => !allowedAttrs.has(attribute),
+        )
+      ) {
+        fields.contentJson = 'Contains unsupported node attributes.';
+        return;
+      }
     }
     if (node.marks !== undefined) {
       if (!Array.isArray(node.marks)) {
@@ -59,7 +99,20 @@ function assertContentJson(contentJson) {
           fields.contentJson = 'Contains unsupported text formatting.';
           return;
         }
+        if (mark.type !== 'link' && mark.attrs !== undefined) {
+          fields.contentJson = 'Contains unsupported text formatting.';
+          return;
+        }
         if (mark.type === 'link') {
+          if (
+            !mark.attrs ||
+            typeof mark.attrs !== 'object' ||
+            Array.isArray(mark.attrs) ||
+            Object.keys(mark.attrs).some((attribute) => attribute !== 'href')
+          ) {
+            fields.contentJson = 'Contains an unsafe link.';
+            return;
+          }
           const href = mark.attrs?.href;
           if (
             typeof href !== 'string' ||
@@ -69,12 +122,29 @@ function assertContentJson(contentJson) {
             fields.contentJson = 'Contains an unsafe link.';
             return;
           }
+          try {
+            const parsed = new URL(href);
+            if (!['http:', 'https:', 'mailto:'].includes(parsed.protocol)) {
+              fields.contentJson = 'Contains an unsafe link.';
+              return;
+            }
+          } catch {
+            fields.contentJson = 'Contains an unsafe link.';
+            return;
+          }
         }
       }
     }
     if (node.type === 'text' && typeof node.text !== 'string') {
       fields.contentJson = 'Contains invalid text content.';
       return;
+    }
+    if (node.type === 'text') {
+      textLength += node.text.length;
+      if (textLength > MAX_TEXT_LENGTH) {
+        fields.contentJson = 'Contains too much text.';
+        return;
+      }
     }
     if (node.type === 'heading') {
       if (
@@ -99,7 +169,7 @@ function assertContentJson(contentJson) {
         fields.contentJson = 'Contains invalid child nodes.';
         return;
       }
-      node.content.forEach((child) => visit(child, node.type));
+      node.content.forEach((child) => visit(child, node.type, depth + 1));
     }
     if (node.type === 'text' && parentType === 'doc') {
       fields.contentJson = 'Text must be inside a text block.';

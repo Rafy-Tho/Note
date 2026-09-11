@@ -11,13 +11,36 @@ export function readCookie(request, name) {
     const separator = part.indexOf('=');
     if (separator < 0) continue;
     const key = part.slice(0, separator).trim();
-    if (key === name)
-      return decodeURIComponent(part.slice(separator + 1).trim());
+    if (key === name) {
+      try {
+        return decodeURIComponent(part.slice(separator + 1).trim());
+      } catch {
+        return null;
+      }
+    }
   }
   return null;
 }
 
-export function createSessionMiddleware({ authService, cookieName }) {
+export function getCookieSecurity({
+  nodeEnv,
+  cookieSecure,
+  cookieSameSite,
+} = {}) {
+  return {
+    secure: cookieSecure ?? nodeEnv === 'production',
+    sameSite: cookieSameSite ?? 'lax',
+    path: '/',
+  };
+}
+
+export function createSessionMiddleware({
+  authService,
+  cookieName,
+  cookieSecure,
+  cookieSameSite,
+  nodeEnv,
+}) {
   return async (request, response, next) => {
     try {
       const token = readCookie(request, cookieName);
@@ -27,8 +50,7 @@ export function createSessionMiddleware({ authService, cookieName }) {
       } else if (token) {
         response.clearCookie(cookieName, {
           httpOnly: true,
-          sameSite: 'lax',
-          path: '/',
+          ...getCookieSecurity({ nodeEnv, cookieSecure, cookieSameSite }),
         });
       }
       next();
@@ -60,9 +82,24 @@ export function requireVerifiedEmail(request, _response, next) {
   next();
 }
 
-export function createProtectedRouter({ authService, cookieName, csrfSecret }) {
+export function createProtectedRouter({
+  authService,
+  cookieName,
+  csrfSecret,
+  cookieSecure,
+  cookieSameSite,
+  nodeEnv,
+}) {
   const router = Router();
-  router.use(createSessionMiddleware({ authService, cookieName }));
+  router.use(
+    createSessionMiddleware({
+      authService,
+      cookieName,
+      cookieSecure,
+      cookieSameSite,
+      nodeEnv,
+    }),
+  );
   router.use(requireAuthentication);
   router.use(requireVerifiedEmail);
   router.use(createCsrfMiddleware({ authService, csrfSecret }));

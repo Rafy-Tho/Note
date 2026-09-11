@@ -7,6 +7,7 @@ const validEnvironment = {
   DATABASE_URL: 'postgres://localhost/note_app',
   SESSION_SECRET: 'session-secret',
   CSRF_SECRET: 'csrf-secret',
+  CORS_ORIGIN: '',
 };
 
 describe('getConfig', () => {
@@ -18,8 +19,21 @@ describe('getConfig', () => {
       sessionSecret: 'session-secret',
       authCodeSecret: 'session-secret',
       sessionCookieName: 'note_app_session',
+      cookieSecure: false,
+      cookieSameSite: 'lax',
+      allowCrossSiteCookies: false,
+      requireSameOriginHeaders: true,
       csrfSecret: 'csrf-secret',
       corsOrigin: '',
+      corsOrigins: [],
+      requestBodyLimit: '1mb',
+      apiRateLimitWindowMs: 900000,
+      apiRateLimitMax: 300,
+      authRateLimitWindowMs: 900000,
+      authRateLimitMax: 10,
+      rateLimitStoreMode: 'memory',
+      backendInstanceCount: 1,
+      trustProxy: false,
       brevoApiKey: '',
       brevoFromEmail: '',
       brevoFromName: '',
@@ -32,6 +46,76 @@ describe('getConfig', () => {
       facebookRedirectUri: '',
       facebookGraphVersion: 'v20.0',
     });
+  });
+
+  it('defaults development CORS to the local frontend when empty', () => {
+    const config = getConfig({
+      ...validEnvironment,
+      NODE_ENV: 'development',
+      CORS_ORIGIN: '',
+    });
+
+    expect(config.corsOrigin).toBe('http://localhost:5173');
+    expect(config.corsOrigins).toEqual(['http://localhost:5173']);
+    expect(config.requireSameOriginHeaders).toBe(false);
+  });
+
+  it('preserves supported trust proxy modes', () => {
+    expect(
+      getConfig({ ...validEnvironment, TRUST_PROXY: 'false' }).trustProxy,
+    ).toBe(false);
+    expect(
+      getConfig({ ...validEnvironment, TRUST_PROXY: 'true' }).trustProxy,
+    ).toBe(true);
+    expect(
+      getConfig({ ...validEnvironment, TRUST_PROXY: '2' }).trustProxy,
+    ).toBe(2);
+  });
+
+  it('rejects malformed trust proxy values', () => {
+    expect(() =>
+      getConfig({ ...validEnvironment, TRUST_PROXY: '1.5' }),
+    ).toThrow('Invalid application configuration.');
+
+    try {
+      getConfig({ ...validEnvironment, TRUST_PROXY: '' });
+    } catch (error) {
+      expect(error.fields.TRUST_PROXY).toBe(
+        'TRUST_PROXY must be true, false, or a non-negative integer.',
+      );
+    }
+  });
+
+  it('normalizes rate-limit store mode and instance count', () => {
+    expect(
+      getConfig({
+        ...validEnvironment,
+        RATE_LIMIT_STORE: 'shared',
+        BACKEND_INSTANCE_COUNT: '2',
+      }),
+    ).toMatchObject({
+      rateLimitStoreMode: 'shared',
+      backendInstanceCount: 2,
+    });
+  });
+
+  it('rejects process-local rate limiting for multiple production instances', () => {
+    const environment = {
+      NODE_ENV: 'production',
+      BACKEND_INSTANCE_COUNT: '2',
+      RATE_LIMIT_STORE: 'memory',
+    };
+    expect(() => getConfig(environment)).toThrow(
+      'Invalid application configuration.',
+    );
+
+    try {
+      getConfig(environment);
+    } catch (error) {
+      expect(error.fields.RATE_LIMIT_STORE).toBe(
+        'RATE_LIMIT_STORE=shared is required when BACKEND_INSTANCE_COUNT is greater than 1 in production.',
+      );
+    }
   });
 
   it('rejects missing production configuration', () => {
@@ -47,6 +131,7 @@ describe('getConfig', () => {
         DATABASE_URL: 'DATABASE_URL is required.',
         SESSION_SECRET: 'SESSION_SECRET is required outside development.',
         CSRF_SECRET: 'CSRF_SECRET is required outside development.',
+        CORS_ORIGIN: 'CORS_ORIGIN is required in production.',
         BREVO_API_KEY: 'BREVO_API_KEY is required in production.',
         BREVO_FROM_EMAIL: 'BREVO_FROM_EMAIL is required in production.',
         BREVO_FROM_NAME: 'BREVO_FROM_NAME is required in production.',
@@ -61,5 +146,58 @@ describe('getConfig', () => {
           'FACEBOOK_REDIRECT_URI is required in production.',
       });
     }
+  });
+
+  it('rejects SameSite=None without explicit cross-site cookie mode', () => {
+    expect(() =>
+      getConfig({
+        ...validEnvironment,
+        CORS_ORIGIN: 'http://frontend.test',
+        COOKIE_SECURE: 'true',
+        COOKIE_SAME_SITE: 'none',
+      }),
+    ).toThrow('Invalid application configuration.');
+
+    try {
+      getConfig({
+        ...validEnvironment,
+        CORS_ORIGIN: 'http://frontend.test',
+        COOKIE_SECURE: 'true',
+        COOKIE_SAME_SITE: 'none',
+      });
+    } catch (error) {
+      expect(error.fields.COOKIE_SAME_SITE).toBe(
+        'COOKIE_SAME_SITE=none requires ALLOW_CROSS_SITE_COOKIES=true.',
+      );
+    }
+  });
+
+  it('requires strict origin checks and configured origins in cross-site mode', () => {
+    expect(() =>
+      getConfig({
+        ...validEnvironment,
+        COOKIE_SECURE: 'true',
+        COOKIE_SAME_SITE: 'none',
+        ALLOW_CROSS_SITE_COOKIES: 'true',
+        REQUIRE_SAME_ORIGIN_HEADERS: 'false',
+      }),
+    ).toThrow('Invalid application configuration.');
+
+    expect(
+      getConfig({
+        ...validEnvironment,
+        CORS_ORIGIN: 'http://frontend.test',
+        COOKIE_SECURE: 'true',
+        COOKIE_SAME_SITE: 'none',
+        ALLOW_CROSS_SITE_COOKIES: 'true',
+        REQUIRE_SAME_ORIGIN_HEADERS: 'true',
+      }),
+    ).toMatchObject({
+      cookieSameSite: 'none',
+      cookieSecure: true,
+      allowCrossSiteCookies: true,
+      requireSameOriginHeaders: true,
+      corsOrigins: ['http://frontend.test'],
+    });
   });
 });

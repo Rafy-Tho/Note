@@ -39,6 +39,22 @@ export function validateEmailBody(body) {
   return email;
 }
 
+export function validateOAuthCallback(query) {
+  const fields = {};
+  const code = query?.code;
+  const state = query?.state;
+
+  if (typeof code !== 'string' || code.length < 1 || code.length > 2048) {
+    fields.code = 'Must be a valid provider authorization code.';
+  }
+  if (typeof state !== 'string' || state.length < 1 || state.length > 512) {
+    fields.state = 'Must be a valid provider state value.';
+  }
+  if (Object.keys(fields).length > 0) throw validationError(fields);
+
+  return { code, state };
+}
+
 export function validateVerificationCodeBody(body) {
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
     throw validationError({ body: 'Must be an object.' });
@@ -57,7 +73,12 @@ export function validatePasswordResetBody(body) {
   }
 
   const fields = {};
-  if (typeof body.token !== 'string' || body.token.length < 20) {
+  if (
+    typeof body.token !== 'string' ||
+    body.token.length < 20 ||
+    body.token.length > 512 ||
+    !/^[A-Za-z0-9_-]+$/.test(body.token)
+  ) {
     fields.token = 'Must be a valid password reset token.';
   }
   if (

@@ -17,9 +17,17 @@ export function assertUuid(value, field) {
   }
 }
 
+function parseScalarNumber(value, fallback) {
+  if (value === undefined) return fallback;
+  if (typeof value !== 'string' && typeof value !== 'number') {
+    return Number.NaN;
+  }
+  return Number(value);
+}
+
 export function assertPagination(query) {
-  const page = query.page === undefined ? 1 : Number(query.page);
-  const limit = query.limit === undefined ? 20 : Number(query.limit);
+  const page = parseScalarNumber(query.page, 1);
+  const limit = parseScalarNumber(query.limit, 20);
   const fields = {};
 
   if (!Number.isInteger(page) || page < 1)

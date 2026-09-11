@@ -8,6 +8,9 @@ export function createSearchRouter({ authService, config, service } = {}) {
     authService,
     cookieName: config.sessionCookieName,
     csrfSecret: config.csrfSecret,
+    cookieSecure: config.cookieSecure,
+    cookieSameSite: config.cookieSameSite,
+    nodeEnv: config.nodeEnv,
   });
   const controller = createSearchController({
     service:

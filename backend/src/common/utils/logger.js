@@ -10,6 +10,9 @@ export function createLogger({ output = console } = {}) {
     info(message, metadata = {}) {
       output.info(JSON.stringify({ level: 'info', message, ...metadata }));
     },
+    warn(message, metadata = {}) {
+      output.warn(JSON.stringify({ level: 'warn', message, ...metadata }));
+    },
     error(message, error, metadata = {}) {
       output.error(
         JSON.stringify({

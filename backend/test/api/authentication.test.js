@@ -9,6 +9,7 @@ import {
 
 const config = {
   nodeEnv: 'test',
+  requireSameOriginHeaders: false,
   sessionCookieName: 'note_app_session',
   csrfSecret: 'csrf-test-secret',
 };
@@ -210,6 +211,9 @@ describe('authentication API', () => {
       emailVerified: false,
     });
     expect(login.body.data).not.toHaveProperty('token');
+    expect(login.headers['set-cookie'][0]).toContain('HttpOnly');
+    expect(login.headers['set-cookie'][0]).toContain('SameSite=Lax');
+    expect(login.headers['set-cookie'][0]).toContain('Path=/');
     expect((await agent.get('/api/v1/protected')).body).toEqual({
       data: { userId: 'user-1' },
     });
@@ -351,7 +355,9 @@ describe('authentication API', () => {
       .send({ email: 'user@example.com', password: 'correct-password' });
 
     const identities = await agent.get('/api/v1/auth/identities');
-    const start = await agent.get('/api/v1/auth/google/link/start');
+    const start = await agent
+      .post('/api/v1/auth/identities/google/link')
+      .set('x-csrf-token', login.body.data.csrfToken);
     const callback = await agent
       .get('/api/v1/auth/google/link/callback')
       .query({ code: 'authorization-code', state: 'link-state' });
@@ -361,7 +367,7 @@ describe('authentication API', () => {
 
     expect(identities.status).toBe(200);
     expect(identities.body.data.identities[0].provider).toBe('google');
-    expect(start.status).toBe(302);
+    expect(start.status).toBe(200);
     expect(callback.body.data).toEqual({ provider: 'google' });
     expect(unlink.body.data).toEqual({ provider: 'google' });
   });

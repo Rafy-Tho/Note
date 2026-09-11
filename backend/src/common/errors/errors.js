@@ -17,6 +17,22 @@ export function validationError(fields) {
   );
 }
 
+export function payloadTooLargeError() {
+  return new AppError(
+    413,
+    'PAYLOAD_TOO_LARGE',
+    'The request body is too large.',
+  );
+}
+
+export function unsupportedMediaTypeError() {
+  return new AppError(
+    415,
+    'UNSUPPORTED_MEDIA_TYPE',
+    'The request encoding is not supported.',
+  );
+}
+
 export function notFoundError() {
   return new AppError(
     404,

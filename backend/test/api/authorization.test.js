@@ -10,6 +10,7 @@ import { createProtectedRouter } from '../../src/modules/auth/auth.middleware.js
 
 const config = {
   nodeEnv: 'test',
+  requireSameOriginHeaders: false,
   sessionCookieName: 'note_app_session',
   csrfSecret: 'csrf-test-secret',
 };

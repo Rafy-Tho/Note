@@ -1,96 +1,85 @@
-import rateLimit from 'express-rate-limit';
 import { Router } from 'express';
 import {
   createSessionMiddleware,
   requireAuthentication,
+  requireVerifiedEmail,
 } from './auth.middleware.js';
 import { createCsrfMiddleware } from './auth.csrf.js';
 import { createAuthController } from './auth.controller.js';
+import { createAuthRateLimiter } from '../../common/middleware/rate-limit.js';
 
-function authRateLimiter() {
-  return rateLimit({
-    windowMs: 15 * 60 * 1000,
-    limit: 10,
-    standardHeaders: 'draft-7',
-    legacyHeaders: false,
-    statusCode: 429,
-    message: {
-      error: {
-        code: 'RATE_LIMITED',
-        message: 'Too many authentication attempts.',
-      },
-    },
-  });
-}
-
-export function createAuthRouter({ authService, config }) {
+export function createAuthRouter({ authService, config, rateLimitStores }) {
   const expressRouter = Router();
   const controller = createAuthController({ authService, config });
+  const authLimiter = createAuthRateLimiter(config, rateLimitStores);
   const sessionMiddleware = createSessionMiddleware({
     authService,
     cookieName: config.sessionCookieName,
+    cookieSecure: config.cookieSecure,
+    cookieSameSite: config.cookieSameSite,
+    nodeEnv: config.nodeEnv,
   });
 
   expressRouter.use(sessionMiddleware);
-  expressRouter.post('/register', authRateLimiter(), controller.register);
-  expressRouter.post('/login', authRateLimiter(), controller.login);
-  expressRouter.post(
-    '/email/verify',
-    authRateLimiter(),
-    controller.verifyEmail,
-  );
+  expressRouter.post('/register', authLimiter, controller.register);
+  expressRouter.post('/login', authLimiter, controller.login);
+  expressRouter.post('/email/verify', authLimiter, controller.verifyEmail);
   expressRouter.post(
     '/email/verification/resend',
-    authRateLimiter(),
+    authLimiter,
     controller.resendVerification,
   );
   expressRouter.post(
     '/password/reset/request',
-    authRateLimiter(),
+    authLimiter,
     controller.requestPasswordReset,
   );
   expressRouter.post(
     '/password/reset/confirm',
-    authRateLimiter(),
+    authLimiter,
     controller.confirmPasswordReset,
   );
-  expressRouter.get('/google/start', controller.startGoogleSignIn);
+  expressRouter.get('/google/start', authLimiter, controller.startGoogleSignIn);
   expressRouter.get(
     '/google/callback',
-    authRateLimiter(),
+    authLimiter,
     controller.completeGoogleSignIn,
   );
-  expressRouter.get('/facebook/start', controller.startFacebookSignIn);
+  expressRouter.get(
+    '/facebook/start',
+    authLimiter,
+    controller.startFacebookSignIn,
+  );
   expressRouter.get(
     '/facebook/callback',
-    authRateLimiter(),
+    authLimiter,
     controller.completeFacebookSignIn,
   );
   expressRouter.get(
     '/identities',
     requireAuthentication,
+    requireVerifiedEmail,
     controller.listLinkedProviders,
-  );
-  expressRouter.get(
-    '/:provider/link/start',
-    requireAuthentication,
-    controller.startProviderLink,
   );
   expressRouter.post(
     '/identities/:provider/link',
     requireAuthentication,
+    requireVerifiedEmail,
+    authLimiter,
     createCsrfMiddleware({ authService, csrfSecret: config.csrfSecret }),
     controller.startProviderLink,
   );
   expressRouter.get(
     '/:provider/link/callback',
     requireAuthentication,
-    authRateLimiter(),
+    requireVerifiedEmail,
+    authLimiter,
     controller.completeProviderLink,
   );
   expressRouter.delete(
     '/identities/:provider',
     requireAuthentication,
+    requireVerifiedEmail,
     createCsrfMiddleware({ authService, csrfSecret: config.csrfSecret }),
     controller.unlinkProvider,
   );

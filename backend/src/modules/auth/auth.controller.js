@@ -5,45 +5,40 @@ import { assertObject } from '../../common/validation/validation.js';
 import { publicUser } from './auth.constants.js';
 import { AUTH_BROWSER_BINDING_COOKIE } from './auth.constants.js';
 import { createOpaqueToken } from './auth.tokens.js';
-import { readCookie } from './auth.middleware.js';
+import { getCookieSecurity, readCookie } from './auth.middleware.js';
 import {
   validateCredentials,
   validateEmailBody,
+  validateOAuthCallback,
   validatePasswordResetBody,
   validateVerificationCodeBody,
 } from './auth.validation.js';
 
-function setSessionCookie(response, name, token, secure) {
+function setSessionCookie(response, name, token, config) {
   response.cookie(name, token, {
     httpOnly: true,
-    secure,
-    sameSite: 'lax',
-    path: '/',
+    ...getCookieSecurity(config),
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 }
 
-function getOrSetBrowserBinding(request, response, secure) {
+function getOrSetBrowserBinding(request, response, config) {
   const existing = readCookie(request, AUTH_BROWSER_BINDING_COOKIE);
   if (existing) return existing;
 
   const binding = createOpaqueToken();
   response.cookie(AUTH_BROWSER_BINDING_COOKIE, binding, {
     httpOnly: true,
-    secure,
-    sameSite: 'lax',
-    path: '/',
+    ...getCookieSecurity(config),
     maxAge: 10 * 60 * 1000,
   });
   return binding;
 }
 
-function clearBrowserBinding(response, secure) {
+function clearBrowserBinding(response, config) {
   response.clearCookie(AUTH_BROWSER_BINDING_COOKIE, {
     httpOnly: true,
-    secure,
-    sameSite: 'lax',
-    path: '/',
+    ...getCookieSecurity(config),
   });
 }
 
@@ -85,15 +80,15 @@ async function completeProviderSignInCallback({
 }) {
   try {
     const browserBinding = readCookie(request, AUTH_BROWSER_BINDING_COOKIE);
+    const callback = validateOAuthCallback(request.query);
     const result = await complete({
-      code: request.query.code,
-      state: request.query.state,
+      code: callback.code,
+      state: callback.state,
       browserBinding,
       sessionId: request.auth?.id,
       userId: request.auth?.userId,
     });
-    const secure = config.nodeEnv === 'production';
-    clearBrowserBinding(response, secure);
+    clearBrowserBinding(response, config);
 
     if (result.purpose === 'link') {
       if (request.get('accept')?.includes('text/html')) {
@@ -104,7 +99,7 @@ async function completeProviderSignInCallback({
       return;
     }
 
-    setSessionCookie(response, config.sessionCookieName, result.token, secure);
+    setSessionCookie(response, config.sessionCookieName, result.token, config);
     if (request.get('accept')?.includes('text/html')) {
       response.redirect(providerSignInRedirect(config));
       return;
@@ -141,7 +136,7 @@ export function createAuthController({ authService, config }) {
           response,
           config.sessionCookieName,
           result.token,
-          config.nodeEnv === 'production',
+          config,
         );
         sendData(response, {
           authenticated: true,
@@ -191,11 +186,10 @@ export function createAuthController({ authService, config }) {
 
     async startGoogleSignIn(request, response, next) {
       try {
-        const secure = config.nodeEnv === 'production';
         const browserBinding = getOrSetBrowserBinding(
           request,
           response,
-          secure,
+          config,
         );
         const authorizationUrl = await authService.startGoogleSignIn({
           browserBinding,
@@ -219,11 +213,10 @@ export function createAuthController({ authService, config }) {
 
     async startFacebookSignIn(request, response, next) {
       try {
-        const secure = config.nodeEnv === 'production';
         const browserBinding = getOrSetBrowserBinding(
           request,
           response,
-          secure,
+          config,
         );
         const authorizationUrl = await authService.startFacebookSignIn({
           browserBinding,
@@ -258,11 +251,10 @@ export function createAuthController({ authService, config }) {
 
     async startProviderLink(request, response, next) {
       try {
-        const secure = config.nodeEnv === 'production';
         const browserBinding = getOrSetBrowserBinding(
           request,
           response,
-          secure,
+          config,
         );
         const authorizationUrl = await authService.startProviderLink({
           provider: request.params.provider,
@@ -270,11 +262,7 @@ export function createAuthController({ authService, config }) {
           sessionId: request.auth.id,
           userId: request.auth.userId,
         });
-        if (request.method === 'POST') {
-          sendData(response, { authorizationUrl });
-        } else {
-          response.redirect(authorizationUrl);
-        }
+        sendData(response, { authorizationUrl });
       } catch (error) {
         next(error);
       }
@@ -283,16 +271,16 @@ export function createAuthController({ authService, config }) {
     async completeProviderLink(request, response, next) {
       try {
         const browserBinding = readCookie(request, AUTH_BROWSER_BINDING_COOKIE);
+        const callback = validateOAuthCallback(request.query);
         const result = await authService.completeProviderLink({
           provider: request.params.provider,
-          code: request.query.code,
-          state: request.query.state,
+          code: callback.code,
+          state: callback.state,
           browserBinding,
           sessionId: request.auth.id,
           userId: request.auth.userId,
         });
-        const secure = config.nodeEnv === 'production';
-        clearBrowserBinding(response, secure);
+        clearBrowserBinding(response, config);
         if (request.get('accept')?.includes('text/html')) {
           response.redirect(providerRedirect(config, result.provider));
           return;
@@ -328,12 +316,7 @@ export function createAuthController({ authService, config }) {
             'Invalid email or password.',
           );
         const { token } = await authService.createSession(user.id);
-        setSessionCookie(
-          response,
-          config.sessionCookieName,
-          token,
-          config.nodeEnv === 'production',
-        );
+        setSessionCookie(response, config.sessionCookieName, token, config);
         sendData(response, {
           authenticated: true,
           user: publicUser(user),
@@ -369,9 +352,7 @@ export function createAuthController({ authService, config }) {
         await authService.revokeSession(request.auth.token);
         response.clearCookie(config.sessionCookieName, {
           httpOnly: true,
-          secure: config.nodeEnv === 'production',
-          sameSite: 'lax',
-          path: '/',
+          ...getCookieSecurity(config),
         });
         response.status(204).send();
       } catch (error) {
