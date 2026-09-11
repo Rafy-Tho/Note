@@ -18,6 +18,7 @@
     "test:e2e": "playwright test --pass-with-no-tests",
     "db:migrate": "node --env-file-if-exists=.env node_modules/node-pg-migrate/bin/node-pg-migrate.js --migrations-dir backend/migrations up",
     "db:rollback": "node --env-file-if-exists=.env node_modules/node-pg-migrate/bin/node-pg-migrate.js --migrations-dir backend/migrations down",
+    "db:empty": "node --env-file-if-exists=.env backend/src/db/emptyDatabaseCli.js",
     "db:seed": "node --env-file-if-exists=.env backend/src/db/seed.js",
     "test:db": "node --env-file-if-exists=.env node_modules/vitest/vitest.mjs run backend/test/integration"
   },

@@ -62,7 +62,8 @@ function createFakeAuthService(verified = true) {
     async startGoogleSignIn() {
       return 'https://accounts.google.com/o/oauth2/v2/auth?state=test-state';
     },
-    async completeGoogleSignIn() {
+    async completeGoogleSignIn({ sessionId } = {}) {
+      if (sessionId) return { purpose: 'link', provider: 'google' };
       return {
         token: 'session-user-1',
         user: {
@@ -363,6 +364,50 @@ describe('authentication API', () => {
     expect(start.status).toBe(302);
     expect(callback.body.data).toEqual({ provider: 'google' });
     expect(unlink.body.data).toEqual({ provider: 'google' });
+  });
+
+  it('redirects a browser back with the linked provider result', async () => {
+    const { app } = createTestApp();
+    const agent = request.agent(app);
+    await agent
+      .post('/api/v1/auth/register')
+      .send({ email: 'user@example.com', password: 'correct-password' });
+    const login = await agent
+      .post('/api/v1/auth/login')
+      .send({ email: 'user@example.com', password: 'correct-password' });
+
+    const callback = await agent
+      .get('/api/v1/auth/google/link/callback')
+      .set('Accept', 'text/html')
+      .query({ code: 'authorization-code', state: 'link-state' });
+
+    expect(login.status).toBe(200);
+    expect(callback.status).toBe(302);
+    expect(callback.headers.location).toBe(
+      'http://localhost:5173/workspace/notes?authLinked=google',
+    );
+  });
+
+  it('completes a link through the normal provider callback route', async () => {
+    const { app } = createTestApp();
+    const agent = request.agent(app);
+    await agent
+      .post('/api/v1/auth/register')
+      .send({ email: 'user@example.com', password: 'correct-password' });
+    const login = await agent
+      .post('/api/v1/auth/login')
+      .send({ email: 'user@example.com', password: 'correct-password' });
+
+    const callback = await agent
+      .get('/api/v1/auth/google/callback')
+      .set('Accept', 'text/html')
+      .query({ code: 'authorization-code', state: 'link-state' });
+
+    expect(login.status).toBe(200);
+    expect(callback.status).toBe(302);
+    expect(callback.headers.location).toBe(
+      'http://localhost:5173/workspace/notes?authLinked=google',
+    );
   });
 
   it('requires CSRF protection when starting the documented provider-link flow', async () => {

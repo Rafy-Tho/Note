@@ -21,6 +21,20 @@ describe('Google provider', () => {
     expect(url.searchParams.get('nonce')).toBe('one-time-state');
   });
 
+  it('supports a separate redirect URI for provider linking', () => {
+    const provider = createGoogleProvider(providerConfig);
+    const url = new URL(
+      provider.authorizationUrl({
+        state: 'link-state',
+        redirectUri: 'https://api.example.com/api/v1/auth/google/link/callback',
+      }),
+    );
+
+    expect(url.searchParams.get('redirect_uri')).toBe(
+      'https://api.example.com/api/v1/auth/google/link/callback',
+    );
+  });
+
   it('exchanges the code and validates the verified ID-token claims', async () => {
     const fetchImpl = vi.fn(async () => ({
       ok: true,
@@ -49,10 +63,14 @@ describe('Google provider', () => {
     ).resolves.toEqual({
       subject: 'google-subject',
       email: 'user@example.com',
+      emailVerified: true,
     });
     expect(fetchImpl).toHaveBeenCalledWith(
       'https://oauth2.googleapis.com/token',
       expect.objectContaining({ method: 'POST' }),
+    );
+    expect(fetchImpl.mock.calls[0][1].body.get('redirect_uri')).toBe(
+      'https://api.example.com/api/v1/auth/google/callback',
     );
     expect(jwtVerifyImpl).toHaveBeenCalledWith(
       'signed-id-token',

@@ -29,15 +29,14 @@ export function createFacebookProvider({
   fetchImpl = globalThis.fetch,
 } = {}) {
   return {
-    authorizationUrl({ state }) {
-      if (!facebookClientId || !facebookRedirectUri)
-        throw providerUnavailableError();
+    authorizationUrl({ state, redirectUri = facebookRedirectUri }) {
+      if (!facebookClientId || !redirectUri) throw providerUnavailableError();
       const url = new URL(
         `${FACEBOOK_AUTHORIZATION_ENDPOINT}/${facebookGraphVersion}/dialog/oauth`,
       );
       url.search = new URLSearchParams({
         client_id: facebookClientId,
-        redirect_uri: facebookRedirectUri,
+        redirect_uri: redirectUri,
         response_type: 'code',
         scope: 'email',
         state,
@@ -45,8 +44,8 @@ export function createFacebookProvider({
       return url.toString();
     },
 
-    async authenticateCode({ code }) {
-      if (!facebookClientId || !facebookClientSecret || !facebookRedirectUri) {
+    async authenticateCode({ code, redirectUri = facebookRedirectUri }) {
+      if (!facebookClientId || !facebookClientSecret || !redirectUri) {
         throw providerUnavailableError();
       }
 
@@ -56,7 +55,7 @@ export function createFacebookProvider({
       tokenUrl.search = new URLSearchParams({
         client_id: facebookClientId,
         client_secret: facebookClientSecret,
-        redirect_uri: facebookRedirectUri,
+        redirect_uri: redirectUri,
         code,
       }).toString();
 
@@ -93,14 +92,16 @@ export function createFacebookProvider({
       if (!profileResponse.ok) throw providerResponseError();
 
       const profile = await profileResponse.json().catch(() => null);
-      if (
-        typeof profile?.id !== 'string' ||
-        typeof profile.email !== 'string'
-      ) {
+      if (typeof profile?.id !== 'string') {
         throw providerResponseError();
       }
 
-      return { subject: profile.id, email: profile.email };
+      return {
+        subject: profile.id,
+        email: typeof profile.email === 'string' ? profile.email : null,
+        emailVerified:
+          typeof profile.email === 'string' && profile.verified === true,
+      };
     },
   };
 }

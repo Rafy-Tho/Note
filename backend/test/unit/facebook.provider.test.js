@@ -22,6 +22,21 @@ describe('Facebook provider', () => {
     expect(url.searchParams.get('scope')).toBe('email');
   });
 
+  it('supports a separate redirect URI for provider linking', () => {
+    const provider = createFacebookProvider(providerConfig);
+    const url = new URL(
+      provider.authorizationUrl({
+        state: 'link-state',
+        redirectUri:
+          'https://api.example.com/api/v1/auth/facebook/link/callback',
+      }),
+    );
+
+    expect(url.searchParams.get('redirect_uri')).toBe(
+      'https://api.example.com/api/v1/auth/facebook/link/callback',
+    );
+  });
+
   it('exchanges the code and validates the verified Graph profile', async () => {
     const fetchImpl = vi
       .fn()
@@ -44,14 +59,18 @@ describe('Facebook provider', () => {
     ).resolves.toEqual({
       subject: 'facebook-subject',
       email: 'user@example.com',
+      emailVerified: true,
     });
     expect(fetchImpl).toHaveBeenCalledTimes(2);
+    expect(fetchImpl.mock.calls[0][0].searchParams.get('redirect_uri')).toBe(
+      'https://api.example.com/api/v1/auth/facebook/callback',
+    );
     expect(
       fetchImpl.mock.calls[1][0].searchParams.get('appsecret_proof'),
     ).toEqual(expect.any(String));
   });
 
-  it('accepts a granted email without requiring the account verified flag', async () => {
+  it('returns an unverified Facebook email for explicit linking policy', async () => {
     const fetchImpl = vi
       .fn()
       .mockResolvedValueOnce({
@@ -73,10 +92,11 @@ describe('Facebook provider', () => {
     ).resolves.toEqual({
       subject: 'facebook-subject',
       email: 'user@example.com',
+      emailVerified: false,
     });
   });
 
-  it('rejects profiles without an email address', async () => {
+  it('returns a provider subject when Facebook omits an email', async () => {
     const fetchImpl = vi
       .fn()
       .mockResolvedValueOnce({
@@ -91,6 +111,10 @@ describe('Facebook provider', () => {
 
     await expect(
       provider.authenticateCode({ code: 'authorization-code' }),
-    ).rejects.toMatchObject({ code: 'PROVIDER_AUTHENTICATION_FAILED' });
+    ).resolves.toEqual({
+      subject: 'facebook-subject',
+      email: null,
+      emailVerified: false,
+    });
   });
 });

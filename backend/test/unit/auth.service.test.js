@@ -7,8 +7,9 @@ describe('authentication service', () => {
       createUser: vi.fn(async () => ({
         id: 'user-1',
         email: 'user@example.com',
-        password_hash: 'hidden',
+        email_verified_at: null,
       })),
+      createAuthAccount: vi.fn(),
     };
     const password = {
       argon2id: 'argon2id',
@@ -25,10 +26,15 @@ describe('authentication service', () => {
     expect(password.hash).toHaveBeenCalledWith('correct-password', {
       type: 'argon2id',
     });
-    expect(repository.createUser).toHaveBeenCalledWith(
+    expect(repository.createUser).toHaveBeenCalledWith({}, 'user@example.com');
+    expect(repository.createAuthAccount).toHaveBeenCalledWith(
       {},
-      'user@example.com',
-      'argon-hash',
+      {
+        userId: 'user-1',
+        provider: 'local',
+        providerAccountId: 'user@example.com',
+        passwordHash: 'argon-hash',
+      },
     );
     expect(result).toEqual({
       id: 'user-1',
@@ -88,6 +94,7 @@ describe('authentication service', () => {
         email: 'user@example.com',
         email_verified_at: null,
       })),
+      createAuthAccount: vi.fn(),
       invalidateVerificationTokens: vi.fn(),
       createEmailVerificationToken: vi.fn(),
     };
@@ -342,15 +349,18 @@ describe('authentication service', () => {
   it('creates callback state and resolves a new Google identity into a session', async () => {
     const repository = {
       createAuthCallbackState: vi.fn(),
-      findIdentity: vi.fn(async () => null),
+      findAuthCallbackState: vi.fn(async () => ({
+        purpose: 'sign_in',
+        session_id: null,
+      })),
+      findAuthAccount: vi.fn(async () => null),
       findUserByEmail: vi.fn(async () => null),
       createExternalUser: vi.fn(async () => ({
         id: 'user-1',
         email: 'user@example.com',
-        password_hash: null,
         email_verified_at: new Date('2026-09-10T00:00:00Z'),
       })),
-      createIdentity: vi.fn(),
+      createAuthAccount: vi.fn(),
       consumeAuthCallbackState: vi.fn(async () => ({ id: 'state-1' })),
       createSession: vi.fn(async () => ({ id: 'session-1' })),
     };
@@ -359,6 +369,7 @@ describe('authentication service', () => {
       authenticateCode: vi.fn(async () => ({
         subject: 'google-subject',
         email: 'user@example.com',
+        emailVerified: true,
       })),
     };
     const service = createAuthService({
@@ -381,12 +392,12 @@ describe('authentication service', () => {
       {},
       'user@example.com',
     );
-    expect(repository.createIdentity).toHaveBeenCalledWith(
+    expect(repository.createAuthAccount).toHaveBeenCalledWith(
       {},
       expect.objectContaining({
         userId: 'user-1',
         provider: 'google',
-        providerSubject: 'google-subject',
+        providerAccountId: 'google-subject',
       }),
     );
     expect(result.user).toEqual({
@@ -399,8 +410,12 @@ describe('authentication service', () => {
 
   it('does not merge a Google identity into an existing email account', async () => {
     const repository = {
+      findAuthCallbackState: vi.fn(async () => ({
+        purpose: 'sign_in',
+        session_id: null,
+      })),
       consumeAuthCallbackState: vi.fn(async () => ({ id: 'state-1' })),
-      findIdentity: vi.fn(async () => null),
+      findAuthAccount: vi.fn(async () => null),
       findUserByEmail: vi.fn(async () => ({
         id: 'existing-user',
         email: 'user@example.com',
@@ -413,6 +428,7 @@ describe('authentication service', () => {
         authenticateCode: vi.fn(async () => ({
           subject: 'google-subject',
           email: 'user@example.com',
+          emailVerified: true,
         })),
       },
       transaction: vi.fn(async (work) => work({})),
@@ -428,10 +444,335 @@ describe('authentication service', () => {
     expect(repository.createExternalUser).not.toHaveBeenCalled();
   });
 
+  it('logs in the account that wins a concurrent Google account insert', async () => {
+    const duplicateError = new Error('duplicate email');
+    duplicateError.code = '23505';
+    const repository = {
+      findAuthCallbackState: vi.fn(async () => ({
+        purpose: 'sign_in',
+        session_id: null,
+      })),
+      consumeAuthCallbackState: vi.fn(async () => ({ id: 'state-1' })),
+      findAuthAccount: vi
+        .fn()
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({
+          user_id: 'user-1',
+          email: 'user@example.com',
+          email_verified_at: new Date('2026-09-10T00:00:00Z'),
+          password_hash: null,
+        }),
+      findUserByEmail: vi.fn(async () => null),
+      createExternalUser: vi.fn(async () => {
+        throw duplicateError;
+      }),
+      createAuthAccount: vi.fn(),
+      createSession: vi.fn(async () => ({ id: 'session-1' })),
+    };
+    const service = createAuthService({
+      repository,
+      googleProvider: {
+        authenticateCode: vi.fn(async () => ({
+          subject: 'google-subject',
+          email: 'user@example.com',
+          emailVerified: true,
+        })),
+      },
+      transaction: vi.fn(async (work) => work({})),
+    });
+
+    const result = await service.completeGoogleSignIn({
+      code: 'authorization-code',
+      state: 'callback-state-value',
+      browserBinding: 'browser-binding',
+    });
+
+    expect(result.user).toEqual({
+      id: 'user-1',
+      email: 'user@example.com',
+      emailVerified: true,
+    });
+    expect(repository.createSession).toHaveBeenCalledWith(
+      {},
+      expect.objectContaining({ userId: 'user-1' }),
+    );
+  });
+
+  it('does not create an account from an unverified provider email', async () => {
+    const repository = {
+      findAuthCallbackState: vi.fn(async () => ({
+        purpose: 'sign_in',
+        session_id: null,
+      })),
+      consumeAuthCallbackState: vi.fn(async () => ({ id: 'state-1' })),
+      findAuthAccount: vi.fn(async () => null),
+      findUserByEmail: vi.fn(),
+      createExternalUser: vi.fn(),
+    };
+    const service = createAuthService({
+      repository,
+      googleProvider: {
+        authenticateCode: vi.fn(async () => ({
+          subject: 'google-subject',
+          email: 'user@example.com',
+          emailVerified: false,
+        })),
+      },
+      transaction: vi.fn(async (work) => work({})),
+    });
+
+    await expect(
+      service.completeGoogleSignIn({
+        code: 'authorization-code',
+        state: 'callback-state-value',
+        browserBinding: 'browser-binding',
+      }),
+    ).rejects.toMatchObject({ code: 'PROVIDER_EMAIL_NOT_VERIFIED' });
+    expect(repository.findUserByEmail).not.toHaveBeenCalled();
+    expect(repository.createExternalUser).not.toHaveBeenCalled();
+  });
+
+  it('links Facebook by provider identity when its email differs', async () => {
+    const repository = {
+      findAuthCallbackState: vi.fn(async () => ({
+        purpose: 'link',
+        session_id: 'session-1',
+      })),
+      consumeAuthCallbackState: vi.fn(async () => ({ id: 'state-1' })),
+      findUserById: vi.fn(async () => ({
+        id: 'user-1',
+        email: 'user@example.com',
+        email_verified_at: new Date(),
+      })),
+      findAuthAccount: vi.fn(),
+      createAuthAccount: vi.fn(),
+    };
+    const service = createAuthService({
+      repository,
+      facebookProvider: {
+        authenticateCode: vi.fn(async () => ({
+          subject: 'facebook-subject',
+          email: 'different@example.com',
+          emailVerified: true,
+        })),
+      },
+      transaction: vi.fn(async (work) => work({})),
+    });
+
+    await expect(
+      service.completeProviderLink({
+        provider: 'facebook',
+        code: 'authorization-code',
+        state: 'callback-state-value',
+        browserBinding: 'browser-binding',
+        sessionId: 'session-1',
+        userId: 'user-1',
+      }),
+    ).resolves.toEqual({ provider: 'facebook' });
+    expect(repository.findAuthAccount).toHaveBeenCalledWith(
+      'facebook',
+      'facebook-subject',
+    );
+    expect(repository.createAuthAccount).toHaveBeenCalledWith(
+      {},
+      expect.objectContaining({
+        userId: 'user-1',
+        provider: 'facebook',
+        providerAccountId: 'facebook-subject',
+      }),
+    );
+  });
+
+  it('links Google when its verified email differs from the account', async () => {
+    const repository = {
+      findAuthCallbackState: vi.fn(async () => ({
+        purpose: 'link',
+        session_id: 'session-1',
+      })),
+      consumeAuthCallbackState: vi.fn(async () => ({ id: 'state-1' })),
+      findUserById: vi.fn(async () => ({
+        id: 'user-1',
+        email: 'User@Example.com',
+        email_verified_at: new Date(),
+      })),
+      findAuthAccount: vi.fn(async () => null),
+      createAuthAccount: vi.fn(),
+    };
+    const service = createAuthService({
+      repository,
+      googleProvider: {
+        authenticateCode: vi.fn(async () => ({
+          subject: 'google-subject',
+          email: 'different@example.com',
+          emailVerified: true,
+        })),
+      },
+      transaction: vi.fn(async (work) => work({})),
+    });
+
+    await expect(
+      service.completeProviderLink({
+        provider: 'google',
+        code: 'authorization-code',
+        state: 'callback-state-value',
+        browserBinding: 'browser-binding',
+        sessionId: 'session-1',
+        userId: 'user-1',
+      }),
+    ).resolves.toEqual({ provider: 'google' });
+    expect(repository.createAuthAccount).toHaveBeenCalledWith(
+      {},
+      expect.objectContaining({
+        userId: 'user-1',
+        provider: 'google',
+        providerAccountId: 'google-subject',
+      }),
+    );
+  });
+
+  it('links Facebook by provider identity without trusting an unverified email', async () => {
+    const repository = {
+      findAuthCallbackState: vi.fn(async () => ({
+        purpose: 'link',
+        session_id: 'session-1',
+      })),
+      consumeAuthCallbackState: vi.fn(async () => ({ id: 'state-1' })),
+      findUserById: vi.fn(async () => ({
+        id: 'user-1',
+        email: 'user@example.com',
+        email_verified_at: new Date(),
+      })),
+      findAuthAccount: vi.fn(async () => null),
+      createAuthAccount: vi.fn(),
+    };
+    const service = createAuthService({
+      repository,
+      facebookProvider: {
+        authenticateCode: vi.fn(async () => ({
+          subject: 'facebook-subject',
+          email: 'different@example.com',
+          emailVerified: false,
+        })),
+      },
+      transaction: vi.fn(async (work) => work({})),
+    });
+
+    await expect(
+      service.completeProviderLink({
+        provider: 'facebook',
+        code: 'authorization-code',
+        state: 'callback-state-value',
+        browserBinding: 'browser-binding',
+        sessionId: 'session-1',
+        userId: 'user-1',
+      }),
+    ).resolves.toEqual({ provider: 'facebook' });
+    expect(repository.createAuthAccount).toHaveBeenCalledWith(
+      {},
+      expect.objectContaining({
+        userId: 'user-1',
+        provider: 'facebook',
+        providerAccountId: 'facebook-subject',
+      }),
+    );
+  });
+
+  it('rejects automatic Facebook account creation without a verified email', async () => {
+    const repository = {
+      findAuthCallbackState: vi.fn(async () => ({
+        purpose: 'sign_in',
+        session_id: null,
+      })),
+      consumeAuthCallbackState: vi.fn(async () => ({ id: 'state-1' })),
+      findAuthAccount: vi.fn(async () => null),
+      findUserByEmail: vi.fn(),
+      createExternalUser: vi.fn(),
+    };
+    const service = createAuthService({
+      repository,
+      facebookProvider: {
+        authenticateCode: vi.fn(async () => ({
+          subject: 'facebook-subject',
+          email: 'user@example.com',
+          emailVerified: false,
+        })),
+      },
+      transaction: vi.fn(async (work) => work({})),
+    });
+
+    await expect(
+      service.completeFacebookSignIn({
+        code: 'authorization-code',
+        state: 'callback-state-value',
+        browserBinding: 'browser-binding',
+      }),
+    ).rejects.toMatchObject({ code: 'PROVIDER_EMAIL_NOT_VERIFIED' });
+    expect(repository.findUserByEmail).not.toHaveBeenCalled();
+    expect(repository.createExternalUser).not.toHaveBeenCalled();
+  });
+
+  it('uses the normal callback URI for provider authorization and exchange', async () => {
+    const repository = {
+      createAuthCallbackState: vi.fn(),
+      findAuthCallbackState: vi.fn(async () => ({
+        purpose: 'link',
+        session_id: 'session-1',
+      })),
+      consumeAuthCallbackState: vi.fn(async () => ({ id: 'state-1' })),
+      findUserById: vi.fn(async () => ({
+        id: 'user-1',
+        email: 'user@example.com',
+        email_verified_at: new Date(),
+      })),
+      findAuthAccount: vi.fn(async () => null),
+      createAuthAccount: vi.fn(),
+    };
+    const authorizationUrl = vi.fn(() => 'https://accounts.google.com/link');
+    const authenticateCode = vi.fn(async () => ({
+      subject: 'google-subject',
+      email: 'user@example.com',
+      emailVerified: true,
+    }));
+    const service = createAuthService({
+      repository,
+      googleProvider: { authorizationUrl, authenticateCode },
+      transaction: vi.fn(async (work) => work({})),
+    });
+
+    await expect(
+      service.startProviderLink({
+        provider: 'google',
+        browserBinding: 'browser-binding',
+        sessionId: 'session-1',
+        userId: 'user-1',
+      }),
+    ).resolves.toBe('https://accounts.google.com/link');
+    expect(authorizationUrl).toHaveBeenCalledWith({
+      state: expect.any(String),
+    });
+
+    await service.completeProviderLink({
+      provider: 'google',
+      code: 'authorization-code',
+      state: 'callback-state-value',
+      browserBinding: 'browser-binding',
+      sessionId: 'session-1',
+      userId: 'user-1',
+    });
+    expect(authenticateCode).toHaveBeenCalledWith({
+      code: 'authorization-code',
+      nonce: 'callback-state-value',
+    });
+  });
+
   it('resolves a linked Facebook identity into the normal session', async () => {
     const repository = {
+      findAuthCallbackState: vi.fn(async () => ({
+        purpose: 'sign_in',
+        session_id: null,
+      })),
       consumeAuthCallbackState: vi.fn(async () => ({ id: 'state-1' })),
-      findIdentity: vi.fn(async () => ({
+      findAuthAccount: vi.fn(async () => ({
         user_id: 'user-1',
         email: 'user@example.com',
         email_verified_at: new Date('2026-09-10T00:00:00Z'),
@@ -445,6 +786,7 @@ describe('authentication service', () => {
         authenticateCode: vi.fn(async () => ({
           subject: 'facebook-subject',
           email: 'user@example.com',
+          emailVerified: true,
         })),
       },
       transaction: vi.fn(async (work) => work({})),
@@ -456,7 +798,7 @@ describe('authentication service', () => {
       browserBinding: 'browser-binding',
     });
 
-    expect(repository.findIdentity).toHaveBeenCalledWith(
+    expect(repository.findAuthAccount).toHaveBeenCalledWith(
       'facebook',
       'facebook-subject',
     );
@@ -475,8 +817,8 @@ describe('authentication service', () => {
         password_hash: null,
         email_verified_at: new Date('2026-09-10T00:00:00Z'),
       })),
-      listIdentities: vi.fn(async () => [{ provider: 'google' }]),
-      deleteIdentity: vi.fn(),
+      listAuthAccounts: vi.fn(async () => [{ provider: 'google' }]),
+      deleteAuthAccount: vi.fn(),
     };
     const service = createAuthService({
       repository,
@@ -486,6 +828,6 @@ describe('authentication service', () => {
     await expect(
       service.unlinkProvider({ provider: 'google', userId: 'user-1' }),
     ).rejects.toMatchObject({ code: 'LAST_SIGN_IN_METHOD' });
-    expect(repository.deleteIdentity).not.toHaveBeenCalled();
+    expect(repository.deleteAuthAccount).not.toHaveBeenCalled();
   });
 });

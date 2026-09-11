@@ -17,8 +17,8 @@ databaseTest('database search', () => {
 
     try {
       const user = await client.query(
-        `INSERT INTO users (email, password_hash)
-         VALUES ($1, 'search-test')
+        `INSERT INTO users (email)
+         VALUES ($1)
          RETURNING id`,
         [`search-integration-${Date.now()}@example.test`],
       );

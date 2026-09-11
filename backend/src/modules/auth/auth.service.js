@@ -60,6 +60,13 @@ const providerIdentityConflictError = () =>
     'This provider account is already linked to another account.',
   );
 
+const providerEmailNotVerifiedError = () =>
+  new AppError(
+    401,
+    'PROVIDER_EMAIL_NOT_VERIFIED',
+    'The provider email could not be verified.',
+  );
+
 const providerNotFoundError = () =>
   new AppError(404, 'IDENTITY_NOT_FOUND', 'The linked identity was not found.');
 
@@ -147,6 +154,51 @@ export function createAuthService({
     return client;
   }
 
+  function userFromAuthAccount(account) {
+    return {
+      id: account.user_id,
+      email: account.email,
+      email_verified_at: account.email_verified_at,
+      password_hash: account.password_hash,
+    };
+  }
+
+  async function resolveProviderUser(provider, profile) {
+    const existingAccount = await repository.findAuthAccount(
+      provider,
+      profile.subject,
+    );
+    if (existingAccount) return userFromAuthAccount(existingAccount);
+
+    const email = normalizeEmail(profile.email);
+    if (!email || profile.emailVerified !== true)
+      throw providerEmailNotVerifiedError();
+
+    const existingUser = await repository.findUserByEmail(email);
+    if (existingUser) throw providerLinkRequiredError();
+
+    try {
+      return await transaction(async (client) => {
+        const createdUser = await repository.createExternalUser(client, email);
+        await repository.createAuthAccount(client, {
+          userId: createdUser.id,
+          provider,
+          providerAccountId: profile.subject,
+        });
+        return createdUser;
+      });
+    } catch (error) {
+      if (error?.code !== '23505') throw error;
+
+      const linkedAccount = await repository.findAuthAccount(
+        provider,
+        profile.subject,
+      );
+      if (linkedAccount) return userFromAuthAccount(linkedAccount);
+      throw providerLinkRequiredError();
+    }
+  }
+
   return {
     async register({ email, password: plaintext }) {
       const passwordHash = await password.hash(plaintext, {
@@ -154,7 +206,13 @@ export function createAuthService({
       });
       try {
         const result = await transaction(async (client) => {
-          const user = await repository.createUser(client, email, passwordHash);
+          const user = await repository.createUser(client, email);
+          await repository.createAuthAccount(client, {
+            userId: user.id,
+            provider: 'local',
+            providerAccountId: email,
+            passwordHash,
+          });
           const token = await createVerificationChallenge(client, user);
           return { user, token };
         });
@@ -348,7 +406,16 @@ export function createAuthService({
       return googleProvider.authorizationUrl({ state });
     },
 
-    async completeGoogleSignIn({ code, state, browserBinding }) {
+    async completeProviderCallback({
+      provider,
+      code,
+      state,
+      browserBinding,
+      sessionId,
+      userId,
+      expectedPurpose,
+    }) {
+      const providerClient = validateProvider(provider);
       if (
         typeof code !== 'string' ||
         typeof state !== 'string' ||
@@ -357,67 +424,118 @@ export function createAuthService({
         throw new AppError(
           400,
           'PROVIDER_CALLBACK_INVALID',
-          'The Google callback is invalid.',
+          'The provider callback is invalid.',
         );
       }
 
-      const callbackState = await transaction((client) =>
-        repository.consumeAuthCallbackState(client, {
-          stateHash: hashOpaqueToken(state),
-          provider: 'google',
-          purpose: 'sign_in',
-          browserBindingHash: hashOpaqueToken(browserBinding),
-          sessionId: null,
-        }),
-      );
-      if (!callbackState) {
+      const callbackState = await repository.findAuthCallbackState({
+        stateHash: hashOpaqueToken(state),
+        provider,
+        browserBindingHash: hashOpaqueToken(browserBinding),
+      });
+      if (
+        !callbackState ||
+        (expectedPurpose && callbackState.purpose !== expectedPurpose)
+      ) {
         throw new AppError(
           400,
           'PROVIDER_CALLBACK_INVALID',
-          'The Google callback is invalid or expired.',
+          'The provider callback is invalid or expired.',
         );
       }
 
-      const profile = await googleProvider.authenticateCode({
+      const isLink = callbackState.purpose === 'link';
+      if (
+        isLink &&
+        (typeof sessionId !== 'string' ||
+          typeof userId !== 'string' ||
+          callbackState.session_id !== sessionId)
+      ) {
+        throw new AppError(
+          401,
+          'AUTHENTICATION_REQUIRED',
+          'Authentication is required to link a provider.',
+        );
+      }
+
+      const consumedState = await transaction((client) =>
+        repository.consumeAuthCallbackState(client, {
+          stateHash: hashOpaqueToken(state),
+          provider,
+          purpose: callbackState.purpose,
+          browserBindingHash: hashOpaqueToken(browserBinding),
+          sessionId: isLink ? sessionId : null,
+        }),
+      );
+      if (!consumedState) {
+        throw new AppError(
+          400,
+          'PROVIDER_CALLBACK_INVALID',
+          'The provider callback is invalid or expired.',
+        );
+      }
+
+      const profile = await providerClient.authenticateCode({
         code,
         nonce: state,
       });
-      const email = normalizeEmail(profile.email);
-      if (!email || !profile.subject) {
+      if (!profile.subject) {
         throw new AppError(
           401,
           'PROVIDER_AUTHENTICATION_FAILED',
-          'Google authentication could not be completed.',
+          'Provider authentication could not be completed.',
         );
       }
 
-      let user = await repository.findIdentity('google', profile.subject);
-      if (user) {
-        user = {
-          id: user.user_id,
-          email: user.email,
-          email_verified_at: user.email_verified_at,
-          password_hash: user.password_hash,
-        };
-      } else {
-        const existingUser = await repository.findUserByEmail(email);
-        if (existingUser) throw providerLinkRequiredError();
-        user = await transaction(async (client) => {
-          const createdUser = await repository.createExternalUser(
-            client,
-            email,
+      if (isLink) {
+        const user = await repository.findUserById(userId);
+        if (!user) {
+          throw new AppError(
+            401,
+            'AUTHENTICATION_REQUIRED',
+            'Authentication is required to link a provider.',
           );
-          await repository.createIdentity(client, {
-            userId: createdUser.id,
-            provider: 'google',
-            providerSubject: profile.subject,
-          });
-          return createdUser;
-        });
+        }
+
+        const existing = await repository.findAuthAccount(
+          provider,
+          profile.subject,
+        );
+        if (existing && existing.user_id !== userId)
+          throw providerIdentityConflictError();
+        if (!existing) {
+          try {
+            await transaction((client) =>
+              repository.createAuthAccount(client, {
+                userId,
+                provider,
+                providerAccountId: profile.subject,
+              }),
+            );
+          } catch (error) {
+            if (error?.code !== '23505') throw error;
+            const linkedAccount = await repository.findAuthAccount(
+              provider,
+              profile.subject,
+            );
+            if (!linkedAccount || linkedAccount.user_id !== userId)
+              throw providerIdentityConflictError();
+          }
+        }
+        return { purpose: 'link', provider };
       }
 
+      const user = await resolveProviderUser(provider, profile);
       const session = await this.createSession(user.id);
-      return { user: publicUser(user), token: session.token };
+      return {
+        purpose: 'sign_in',
+        user: publicUser(user),
+        token: session.token,
+      };
+    },
+
+    async completeGoogleSignIn(args) {
+      return this.completeProviderCallback({ ...args, provider: 'google' });
     },
 
     async startFacebookSignIn({ browserBinding }) {
@@ -442,77 +560,12 @@ export function createAuthService({
       return facebookProvider.authorizationUrl({ state });
     },
 
-    async completeFacebookSignIn({ code, state, browserBinding }) {
-      if (
-        typeof code !== 'string' ||
-        typeof state !== 'string' ||
-        typeof browserBinding !== 'string'
-      ) {
-        throw new AppError(
-          400,
-          'PROVIDER_CALLBACK_INVALID',
-          'The Facebook callback is invalid.',
-        );
-      }
-
-      const callbackState = await transaction((client) =>
-        repository.consumeAuthCallbackState(client, {
-          stateHash: hashOpaqueToken(state),
-          provider: 'facebook',
-          purpose: 'sign_in',
-          browserBindingHash: hashOpaqueToken(browserBinding),
-          sessionId: null,
-        }),
-      );
-      if (!callbackState) {
-        throw new AppError(
-          400,
-          'PROVIDER_CALLBACK_INVALID',
-          'The Facebook callback is invalid or expired.',
-        );
-      }
-
-      const profile = await facebookProvider.authenticateCode({ code });
-      const email = normalizeEmail(profile.email);
-      if (!email || !profile.subject) {
-        throw new AppError(
-          401,
-          'PROVIDER_AUTHENTICATION_FAILED',
-          'Facebook authentication could not be completed.',
-        );
-      }
-
-      let user = await repository.findIdentity('facebook', profile.subject);
-      if (user) {
-        user = {
-          id: user.user_id,
-          email: user.email,
-          email_verified_at: user.email_verified_at,
-          password_hash: user.password_hash,
-        };
-      } else {
-        const existingUser = await repository.findUserByEmail(email);
-        if (existingUser) throw providerLinkRequiredError();
-        user = await transaction(async (client) => {
-          const createdUser = await repository.createExternalUser(
-            client,
-            email,
-          );
-          await repository.createIdentity(client, {
-            userId: createdUser.id,
-            provider: 'facebook',
-            providerSubject: profile.subject,
-          });
-          return createdUser;
-        });
-      }
-
-      const session = await this.createSession(user.id);
-      return { user: publicUser(user), token: session.token };
+    async completeFacebookSignIn(args) {
+      return this.completeProviderCallback({ ...args, provider: 'facebook' });
     },
 
     async listLinkedProviders(userId) {
-      return repository.listIdentities(userId);
+      return repository.listAuthAccounts(userId);
     },
 
     async startProviderLink({ provider, browserBinding, sessionId, userId }) {
@@ -551,85 +604,25 @@ export function createAuthService({
       return providerClient.authorizationUrl({ state });
     },
 
-    async completeProviderLink({
-      provider,
-      code,
-      state,
-      browserBinding,
-      sessionId,
-      userId,
-    }) {
-      const providerClient = validateProvider(provider);
-      if (
-        typeof code !== 'string' ||
-        typeof state !== 'string' ||
-        typeof browserBinding !== 'string' ||
-        typeof sessionId !== 'string' ||
-        typeof userId !== 'string'
-      ) {
-        throw new AppError(
-          400,
-          'PROVIDER_CALLBACK_INVALID',
-          'The provider callback is invalid.',
-        );
-      }
-
-      const callbackState = await transaction((client) =>
-        repository.consumeAuthCallbackState(client, {
-          stateHash: hashOpaqueToken(state),
-          provider,
-          purpose: 'link',
-          browserBindingHash: hashOpaqueToken(browserBinding),
-          sessionId,
-        }),
-      );
-      if (!callbackState) {
-        throw new AppError(
-          400,
-          'PROVIDER_CALLBACK_INVALID',
-          'The provider callback is invalid or expired.',
-        );
-      }
-
-      const profile = await providerClient.authenticateCode({
-        code,
-        nonce: state,
+    async completeProviderLink(args) {
+      const result = await this.completeProviderCallback({
+        ...args,
+        expectedPurpose: 'link',
       });
-      const email = normalizeEmail(profile.email);
-      if (!email || !profile.subject) {
-        throw new AppError(
-          401,
-          'PROVIDER_AUTHENTICATION_FAILED',
-          'Provider authentication could not be completed.',
-        );
-      }
-
-      const existing = await repository.findIdentity(provider, profile.subject);
-      if (existing && existing.user_id !== userId)
-        throw providerIdentityConflictError();
-      if (!existing) {
-        await transaction((client) =>
-          repository.createIdentity(client, {
-            userId,
-            provider,
-            providerSubject: profile.subject,
-          }),
-        );
-      }
-      return { provider };
+      return { provider: result.provider };
     },
 
     async unlinkProvider({ provider, userId }) {
       validateProvider(provider);
       const user = await repository.findUserById(userId);
-      const identities = await repository.listIdentities(userId);
-      if (!identities.some((identity) => identity.provider === provider))
+      const accounts = await repository.listAuthAccounts(userId);
+      if (!accounts.some((account) => account.provider === provider))
         throw providerNotFoundError();
-      if (!user?.password_hash && identities.length <= 1)
+      if (!user?.password_hash && accounts.length <= 1)
         throw lastSignInMethodError();
 
       const removed = await transaction((client) =>
-        repository.deleteIdentity(client, userId, provider),
+        repository.deleteAuthAccount(client, userId, provider),
       );
       if (!removed) throw providerNotFoundError();
       return { provider };

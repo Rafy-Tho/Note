@@ -4,9 +4,13 @@ export function createAuthRepository(database = { query }) {
   return {
     async findUserByEmail(email) {
       const result = await database.query(
-        `SELECT id, email, password_hash, email_verified_at
-         FROM users
-         WHERE email = $1`,
+        `SELECT u.id, u.email, u.email_verified_at,
+                local_account.password_hash
+         FROM users u
+         LEFT JOIN auth_accounts local_account
+           ON local_account.user_id = u.id
+          AND local_account.provider = 'local'
+         WHERE u.email = $1`,
         [email],
       );
       return result.rows[0] ?? null;
@@ -14,20 +18,38 @@ export function createAuthRepository(database = { query }) {
 
     async findUserById(userId) {
       const result = await database.query(
-        `SELECT id, email, password_hash, email_verified_at
-         FROM users
-         WHERE id = $1`,
+        `SELECT u.id, u.email, u.email_verified_at,
+                local_account.password_hash
+         FROM users u
+         LEFT JOIN auth_accounts local_account
+           ON local_account.user_id = u.id
+          AND local_account.provider = 'local'
+         WHERE u.id = $1`,
         [userId],
       );
       return result.rows[0] ?? null;
     },
 
-    async createUser(client, email, passwordHash) {
+    async createUser(client, email, emailVerifiedAt = null) {
       const result = await client.query(
-        `INSERT INTO users (email, password_hash)
+        `INSERT INTO users (email, email_verified_at)
          VALUES ($1, $2)
          RETURNING id, email, email_verified_at`,
-        [email, passwordHash],
+        [email, emailVerifiedAt],
+      );
+      return result.rows[0];
+    },
+
+    async createAuthAccount(
+      client,
+      { userId, provider, providerAccountId, passwordHash = null },
+    ) {
+      const result = await client.query(
+        `INSERT INTO auth_accounts
+           (user_id, provider, provider_account_id, password_hash)
+         VALUES ($1, $2, $3, $4)
+         RETURNING id, user_id, provider, provider_account_id`,
+        [userId, provider, providerAccountId, passwordHash],
       );
       return result.rows[0];
     },
@@ -115,9 +137,12 @@ export function createAuthRepository(database = { query }) {
       const result = await database.query(
         `SELECT t.id, t.user_id, t.expires_at, t.consumed_at,
                 t.attempt_count, u.email, u.email_verified_at,
-                u.password_hash
+                local_account.password_hash
          FROM password_reset_tokens t
          JOIN users u ON u.id = t.user_id
+         JOIN auth_accounts local_account
+           ON local_account.user_id = u.id
+          AND local_account.provider = 'local'
          WHERE t.token_hash = $1`,
         [tokenHash],
       );
@@ -141,13 +166,20 @@ export function createAuthRepository(database = { query }) {
 
     async updatePasswordHash(client, userId, passwordHash) {
       const result = await client.query(
-        `UPDATE users
+        `UPDATE auth_accounts
          SET password_hash = $2, updated_at = NOW()
-         WHERE id = $1
-         RETURNING id, email, email_verified_at`,
+         WHERE user_id = $1 AND provider = 'local'
+         RETURNING user_id`,
         [userId, passwordHash],
       );
-      return result.rows[0] ?? null;
+      if (result.rowCount !== 1) return null;
+      const user = await client.query(
+        `SELECT id, email, email_verified_at
+         FROM users
+         WHERE id = $1`,
+        [userId],
+      );
+      return user.rows[0] ?? null;
     },
 
     async revokeAllSessions(client, userId) {
@@ -207,22 +239,40 @@ export function createAuthRepository(database = { query }) {
       return result.rows[0] ?? null;
     },
 
-    async findIdentity(provider, providerSubject) {
+    async findAuthCallbackState({ stateHash, provider, browserBindingHash }) {
       const result = await database.query(
-        `SELECT ai.id, ai.user_id, u.email, u.email_verified_at,
-                u.password_hash
-         FROM auth_identities ai
-         JOIN users u ON u.id = ai.user_id
-         WHERE ai.provider = $1 AND ai.provider_subject = $2`,
-        [provider, providerSubject],
+        `SELECT id, provider, purpose, session_id, expires_at
+         FROM auth_callback_states
+         WHERE state_hash = $1
+           AND provider = $2
+           AND browser_binding_hash = $3
+           AND consumed_at IS NULL
+           AND expires_at > NOW()`,
+        [stateHash, provider, browserBindingHash],
       );
       return result.rows[0] ?? null;
     },
 
-    async listIdentities(userId) {
+    async findAuthAccount(provider, providerAccountId) {
+      const result = await database.query(
+        `SELECT aa.id, aa.user_id, aa.provider, aa.provider_account_id,
+                u.email, u.email_verified_at,
+                local_account.password_hash
+         FROM auth_accounts aa
+         JOIN users u ON u.id = aa.user_id
+         LEFT JOIN auth_accounts local_account
+           ON local_account.user_id = aa.user_id
+          AND local_account.provider = 'local'
+         WHERE aa.provider = $1 AND aa.provider_account_id = $2`,
+        [provider, providerAccountId],
+      );
+      return result.rows[0] ?? null;
+    },
+
+    async listAuthAccounts(userId) {
       const result = await database.query(
         `SELECT provider, created_at
-         FROM auth_identities
+         FROM auth_accounts
          WHERE user_id = $1
          ORDER BY provider`,
         [userId],
@@ -230,9 +280,9 @@ export function createAuthRepository(database = { query }) {
       return result.rows;
     },
 
-    async deleteIdentity(client, userId, provider) {
+    async deleteAuthAccount(client, userId, provider) {
       const result = await client.query(
-        `DELETE FROM auth_identities
+        `DELETE FROM auth_accounts
          WHERE user_id = $1 AND provider = $2
          RETURNING provider`,
         [userId, provider],
@@ -242,20 +292,10 @@ export function createAuthRepository(database = { query }) {
 
     async createExternalUser(client, email) {
       const result = await client.query(
-        `INSERT INTO users (email, password_hash, email_verified_at)
-         VALUES ($1, NULL, NOW())
-         RETURNING id, email, password_hash, email_verified_at`,
+        `INSERT INTO users (email, email_verified_at)
+         VALUES ($1, NOW())
+         RETURNING id, email, email_verified_at`,
         [email],
-      );
-      return result.rows[0];
-    },
-
-    async createIdentity(client, { userId, provider, providerSubject }) {
-      const result = await client.query(
-        `INSERT INTO auth_identities (user_id, provider, provider_subject)
-         VALUES ($1, $2, $3)
-         RETURNING id, user_id, provider, provider_subject`,
-        [userId, provider, providerSubject],
       );
       return result.rows[0];
     },

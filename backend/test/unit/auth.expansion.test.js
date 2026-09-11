@@ -67,6 +67,7 @@ describe('authentication expansion edge cases', () => {
 
   it('does not retry a provider callback with a missing or invalid state', async () => {
     const repository = {
+      findAuthCallbackState: vi.fn(async () => null),
       consumeAuthCallbackState: vi.fn(async () => null),
     };
     const authenticateCode = vi.fn();
@@ -115,6 +116,7 @@ describe('authentication expansion edge cases', () => {
     ).resolves.toEqual({
       subject: 'google-subject',
       email: 'user@example.com',
+      emailVerified: true,
     });
     expect(jwtVerifyImpl).toHaveBeenCalledWith(
       'id-token',

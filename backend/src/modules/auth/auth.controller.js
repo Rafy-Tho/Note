@@ -1,3 +1,4 @@
+import { URL } from 'node:url';
 import { sendData } from '../../common/utils/response.js';
 import { AppError } from '../../common/errors/errors.js';
 import { assertObject } from '../../common/validation/validation.js';
@@ -49,8 +50,73 @@ function clearBrowserBinding(response, secure) {
 function redirectProviderFailure(request, response, config, error) {
   if (!request.get('accept')?.includes('text/html')) return false;
   const code = error.code ?? 'PROVIDER_CALLBACK_INVALID';
-  response.redirect(`${config.appUrl}/?authError=${encodeURIComponent(code)}`);
+  const redirect = new URL(
+    request.auth ? '/workspace/notes' : '/login',
+    config.appUrl ?? 'http://localhost:5173',
+  );
+  redirect.searchParams.set('authError', code);
+  response.redirect(redirect.toString());
   return true;
+}
+
+function providerRedirect(config, provider) {
+  const redirect = new URL(
+    '/workspace/notes',
+    config.appUrl ?? 'http://localhost:5173',
+  );
+  redirect.searchParams.set('authLinked', provider);
+  return redirect.toString();
+}
+
+function providerSignInRedirect(config) {
+  return new URL(
+    '/workspace/notes',
+    config.appUrl ?? 'http://localhost:5173',
+  ).toString();
+}
+
+async function completeProviderSignInCallback({
+  request,
+  response,
+  next,
+  authService,
+  config,
+  complete,
+}) {
+  try {
+    const browserBinding = readCookie(request, AUTH_BROWSER_BINDING_COOKIE);
+    const result = await complete({
+      code: request.query.code,
+      state: request.query.state,
+      browserBinding,
+      sessionId: request.auth?.id,
+      userId: request.auth?.userId,
+    });
+    const secure = config.nodeEnv === 'production';
+    clearBrowserBinding(response, secure);
+
+    if (result.purpose === 'link') {
+      if (request.get('accept')?.includes('text/html')) {
+        response.redirect(providerRedirect(config, result.provider));
+        return;
+      }
+      sendData(response, { provider: result.provider });
+      return;
+    }
+
+    setSessionCookie(response, config.sessionCookieName, result.token, secure);
+    if (request.get('accept')?.includes('text/html')) {
+      response.redirect(providerSignInRedirect(config));
+      return;
+    }
+    sendData(response, {
+      authenticated: true,
+      user: result.user,
+      csrfToken: authService.csrfToken(result.token, config.csrfSecret),
+    });
+  } catch (error) {
+    if (!redirectProviderFailure(request, response, config, error)) next(error);
+  }
 }
 
 export function createAuthController({ authService, config }) {
@@ -141,34 +207,14 @@ export function createAuthController({ authService, config }) {
     },
 
     async completeGoogleSignIn(request, response, next) {
-      try {
-        const browserBinding = readCookie(request, AUTH_BROWSER_BINDING_COOKIE);
-        const result = await authService.completeGoogleSignIn({
-          code: request.query.code,
-          state: request.query.state,
-          browserBinding,
-        });
-        const secure = config.nodeEnv === 'production';
-        setSessionCookie(
-          response,
-          config.sessionCookieName,
-          result.token,
-          secure,
-        );
-        clearBrowserBinding(response, secure);
-        if (request.get('accept')?.includes('text/html')) {
-          response.redirect(config.appUrl);
-          return;
-        }
-        sendData(response, {
-          authenticated: true,
-          user: result.user,
-          csrfToken: authService.csrfToken(result.token, config.csrfSecret),
-        });
-      } catch (error) {
-        if (!redirectProviderFailure(request, response, config, error))
-          next(error);
-      }
+      return completeProviderSignInCallback({
+        request,
+        response,
+        next,
+        authService,
+        config,
+        complete: (params) => authService.completeGoogleSignIn(params),
+      });
     },
 
     async startFacebookSignIn(request, response, next) {
@@ -189,34 +235,14 @@ export function createAuthController({ authService, config }) {
     },
 
     async completeFacebookSignIn(request, response, next) {
-      try {
-        const browserBinding = readCookie(request, AUTH_BROWSER_BINDING_COOKIE);
-        const result = await authService.completeFacebookSignIn({
-          code: request.query.code,
-          state: request.query.state,
-          browserBinding,
-        });
-        const secure = config.nodeEnv === 'production';
-        setSessionCookie(
-          response,
-          config.sessionCookieName,
-          result.token,
-          secure,
-        );
-        clearBrowserBinding(response, secure);
-        if (request.get('accept')?.includes('text/html')) {
-          response.redirect(config.appUrl);
-          return;
-        }
-        sendData(response, {
-          authenticated: true,
-          user: result.user,
-          csrfToken: authService.csrfToken(result.token, config.csrfSecret),
-        });
-      } catch (error) {
-        if (!redirectProviderFailure(request, response, config, error))
-          next(error);
-      }
+      return completeProviderSignInCallback({
+        request,
+        response,
+        next,
+        authService,
+        config,
+        complete: (params) => authService.completeFacebookSignIn(params),
+      });
     },
 
     async listLinkedProviders(request, response, next) {
@@ -268,7 +294,7 @@ export function createAuthController({ authService, config }) {
         const secure = config.nodeEnv === 'production';
         clearBrowserBinding(response, secure);
         if (request.get('accept')?.includes('text/html')) {
-          response.redirect(config.appUrl);
+          response.redirect(providerRedirect(config, result.provider));
           return;
         }
         sendData(response, result);

@@ -43,10 +43,13 @@ export function AuthForm({
 
   function providerError(requestError) {
     if (requestError.code === 'PROVIDER_LINK_REQUIRED') {
-      return 'This provider is linked to another account. Sign in first, then link it from your workspace.';
+      return 'An account already exists with this email. Sign in first, then link this provider from your workspace.';
     }
     if (requestError.code === 'PROVIDER_UNAVAILABLE') {
       return 'This sign-in provider is temporarily unavailable. Try again later.';
+    }
+    if (requestError.code === 'PROVIDER_EMAIL_NOT_VERIFIED') {
+      return 'This provider did not return a verified email address.';
     }
     return requestError.message;
   }

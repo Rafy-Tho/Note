@@ -19,6 +19,14 @@ export function AuthPage({ mode }) {
     searchParams.get('token') ?? searchParams.get('resetToken') ?? '';
   const verificationEmail = location.state?.verificationEmail ?? '';
 
+  function authErrorMessage(code) {
+    if (code === 'PROVIDER_LINK_REQUIRED')
+      return 'An account already exists with this email. Sign in first, then link this provider from your workspace.';
+    if (code === 'PROVIDER_EMAIL_NOT_VERIFIED')
+      return 'This provider did not return a verified email address.';
+    return 'The authentication request could not be completed. Try again.';
+  }
+
   useEffect(() => {
     if (verificationRequired && mode !== 'verify')
       navigate('/verify-email', { replace: true });
@@ -34,10 +42,7 @@ export function AuthPage({ mode }) {
   return (
     <>
       {(error || authError) && (
-        <Alert>
-          {error ||
-            'The authentication request could not be completed. Try again.'}
-        </Alert>
+        <Alert>{error || authErrorMessage(authError)}</Alert>
       )}
       <AuthForm
         initialMode={mode}

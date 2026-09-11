@@ -15,13 +15,23 @@ try {
   await client.query('BEGIN');
 
   const userResult = await client.query(
-    `INSERT INTO users (email, password_hash)
-     VALUES ($1, $2)
-     ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash
+    `INSERT INTO users (email)
+     VALUES ($1)
+     ON CONFLICT (email) DO UPDATE SET updated_at = NOW()
      RETURNING id`,
-    [email.trim().toLowerCase(), passwordHash],
+    [email.trim().toLowerCase()],
   );
   const userId = userResult.rows[0].id;
+
+  await client.query(
+    `INSERT INTO auth_accounts
+       (user_id, provider, provider_account_id, password_hash)
+     VALUES ($1, 'local', $2, $3)
+     ON CONFLICT (provider, provider_account_id)
+     DO UPDATE SET password_hash = EXCLUDED.password_hash,
+                   updated_at = NOW()`,
+    [userId, email.trim().toLowerCase(), passwordHash],
+  );
 
   const notebookResult = await client.query(
     `INSERT INTO notebooks (user_id, name, normalized_name)

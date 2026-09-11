@@ -34,13 +34,12 @@ export function createGoogleProvider({
   jwks = GOOGLE_JWKS,
 } = {}) {
   return {
-    authorizationUrl({ state }) {
-      if (!googleClientId || !googleRedirectUri)
-        throw providerUnavailableError();
+    authorizationUrl({ state, redirectUri = googleRedirectUri }) {
+      if (!googleClientId || !redirectUri) throw providerUnavailableError();
       const url = new URL(GOOGLE_AUTHORIZATION_ENDPOINT);
       url.search = new URLSearchParams({
         client_id: googleClientId,
-        redirect_uri: googleRedirectUri,
+        redirect_uri: redirectUri,
         response_type: 'code',
         scope: 'openid email',
         state,
@@ -51,8 +50,8 @@ export function createGoogleProvider({
       return url.toString();
     },
 
-    async authenticateCode({ code, nonce }) {
-      if (!googleClientId || !googleClientSecret || !googleRedirectUri) {
+    async authenticateCode({ code, nonce, redirectUri = googleRedirectUri }) {
+      if (!googleClientId || !googleClientSecret || !redirectUri) {
         throw providerUnavailableError();
       }
 
@@ -65,7 +64,7 @@ export function createGoogleProvider({
             code,
             client_id: googleClientId,
             client_secret: googleClientSecret,
-            redirect_uri: googleRedirectUri,
+            redirect_uri: redirectUri,
             grant_type: 'authorization_code',
           }),
         });
@@ -94,6 +93,7 @@ export function createGoogleProvider({
         return {
           subject: claims.sub,
           email: claims.email,
+          emailVerified: true,
         };
       } catch (error) {
         if (error instanceof AppError) throw error;

@@ -3,10 +3,14 @@
 ## Authentication and Authorization
 
 - Visitors can register and sign in with valid credentials.
+- Each application account has one `users` record and may have multiple `auth_accounts` records, including local, Google, and Facebook methods.
+- Local registration stores the Argon2id hash on the local auth account, never on the user record.
 - Authenticated users can sign out and invalidate their session.
 - Private resources require authentication and verified email where required.
 - Every protected read and write is scoped to the authenticated user's ownership.
-- Google and Facebook callbacks are server-validated; provider identities cannot be merged by email alone.
+- Google and Facebook callbacks are server-validated; provider accounts cannot be merged by email alone.
+- A verified social account with no matching user creates one user and one social auth account. An existing matching email requires explicit authenticated account linking and must never create a duplicate user.
+- Unverified social email claims cannot create or locate an account automatically; explicit linking binds only the authenticated user's confirmed provider identity.
 - Verification and password-reset tokens are single-use, expiring, rate-limited, and never exposed.
 
 ## Notes and Organization
