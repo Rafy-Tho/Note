@@ -1,0 +1,29 @@
+# Requirements
+
+## Authentication and Authorization
+
+- Visitors can register and sign in with valid credentials.
+- Authenticated users can sign out and invalidate their session.
+- Private resources require authentication and verified email where required.
+- Every protected read and write is scoped to the authenticated user's ownership.
+- Google and Facebook callbacks are server-validated; provider identities cannot be merged by email alone.
+- Verification and password-reset tokens are single-use, expiring, rate-limited, and never exposed.
+
+## Notes and Organization
+
+- Users can create blank or populated notes and edit supported rich text.
+- Notes have title, content, timestamps, owner, and Active, Archived, or Trashed state.
+- Autosave groups edits, reports its state, retains failed edits, and prevents stale writes.
+- Users can create notebooks, move notes, create and assign tags, favorite notes, archive notes, trash notes, restore notes, and permanently delete trashed notes.
+
+## Search and UI
+
+- Search covers owned Active and Archived notes by title, content, and tags.
+- Trashed notes are excluded from normal search.
+- The application provides dashboard navigation, collection views, responsive layouts, keyboard behavior, and clear loading, empty, success, and failure states.
+
+## Validation and Safety
+
+- External input is validated before processing.
+- Unauthorized or unavailable resources return safe not-found behavior.
+- Failed operations never claim success or leave unintended partial state.
