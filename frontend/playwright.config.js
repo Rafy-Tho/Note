@@ -15,13 +15,13 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: 'npm run dev --workspace frontend -- --host 127.0.0.1',
+      command: 'npm run dev -- --host 127.0.0.1',
       url: 'http://127.0.0.1:5173',
       reuseExistingServer: true,
       timeout: 120000,
     },
     {
-      command: 'npm run dev --workspace backend',
+      command: 'npm --prefix ../backend run dev',
       url: 'http://127.0.0.1:3000/api/v1/health',
       reuseExistingServer: true,
       timeout: 120000,

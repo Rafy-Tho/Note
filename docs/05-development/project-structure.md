@@ -2,10 +2,10 @@
 
 ```text
 frontend/src/{app,components,features,pages,hooks,lib,utils,constants,styles}
+frontend/e2e/
 backend/src/{app,config,common,db,modules}
 backend/migrations/
 backend/test/
-e2e/
 docs/
 ```
 

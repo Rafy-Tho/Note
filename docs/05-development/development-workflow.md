@@ -6,7 +6,7 @@ Review security, ownership, data-loss, accessibility, and responsive behavior be
 
 ## Emptying Development Data
 
-The backend provides a destructive development/test-only database command. It preserves migration history and refuses production:
+The backend provides a destructive development/test-only database command. It preserves migration history and refuses production. Run it from `backend/`:
 
 ```text
 npm run db:empty -- --confirm=EMPTY_DATABASE

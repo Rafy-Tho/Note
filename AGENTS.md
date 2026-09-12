@@ -4,6 +4,7 @@
 
 - The repository is in implementation Step 13I: the React/Vite frontend, Express backend, PostgreSQL migrations, authentication, notes, organization, search, and workspace integration exist; browser verification still requires the local Chromium executable.
 - Read `SPEC.md` before making product or architecture changes. It is the concise product contract; detailed decisions belong in the relevant document under `docs/`.
+- `frontend/` and `backend/` are independent npm projects with their own `package.json`, `package-lock.json`, `node_modules/`, and environment files. There is no root package or workspace; run install, scripts, and tests from the relevant app directory.
 - Keep package manager, test frameworks, formatter, linter, migration tool, PostgreSQL setup, and environment variables aligned with `docs/05-development/tech-stack.md` and `docs/05-development/dependencies.md`.
 - Follow the ordered gates in `docs/06-implementation/implementation-plan.md`; update status and evidence in `docs/06-implementation/progress.md` as work starts and finishes.
 
