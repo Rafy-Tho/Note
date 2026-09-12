@@ -9,6 +9,7 @@ import {
 } from 'node:crypto';
 import { withTransaction } from '../../db/transaction.js';
 import { AppError } from '../../common/errors/errors.js';
+import { isUniqueViolation } from '../../common/errors/databaseErrors.js';
 import {
   ABSOLUTE_TIMEOUT_MS,
   AUTH_CALLBACK_STATE_BYTES,
@@ -188,7 +189,7 @@ export function createAuthService({
         return createdUser;
       });
     } catch (error) {
-      if (error?.code !== '23505') throw error;
+      if (!isUniqueViolation(error)) throw error;
 
       const linkedAccount = await repository.findAuthAccount(
         provider,
@@ -219,7 +220,7 @@ export function createAuthService({
         await sendVerification(result.user, result.token);
         return publicUser(result.user);
       } catch (error) {
-        if (error?.code === '23505') {
+        if (isUniqueViolation(error)) {
           throw new AppError(
             409,
             'DUPLICATE_EMAIL',
@@ -513,7 +514,7 @@ export function createAuthService({
               }),
             );
           } catch (error) {
-            if (error?.code !== '23505') throw error;
+            if (!isUniqueViolation(error)) throw error;
             const linkedAccount = await repository.findAuthAccount(
               provider,
               profile.subject,

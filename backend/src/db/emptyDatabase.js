@@ -17,28 +17,39 @@ export async function emptyDatabase({
   }
 
   const client = await databasePool.connect();
+  let foreignKeyChecksDisabled = false;
   try {
     await client.query('BEGIN');
 
     const tables = await client.query(
-      `SELECT format('%I.%I', schemaname, tablename) AS qualified_name
-       FROM pg_catalog.pg_tables
-       WHERE schemaname = 'public' AND tablename <> 'pgmigrations'
-       ORDER BY tablename`,
+      `SELECT table_name
+       FROM information_schema.tables
+       WHERE table_schema = DATABASE() AND table_name <> 'schema_migrations'
+       ORDER BY table_name`,
     );
-    const tableNames = tables.rows.map((row) => row.qualified_name);
+    const tableNames = tables.rows.map((row) => row.table_name);
 
     if (tableNames.length === 0) {
       await client.query('COMMIT');
       return;
     }
 
+    await client.query('SET FOREIGN_KEY_CHECKS = 0');
+    foreignKeyChecksDisabled = true;
     await client.query(
-      `TRUNCATE TABLE ${tableNames.join(', ')}
-       RESTART IDENTITY CASCADE`,
+      `TRUNCATE TABLE ${tableNames.map((name) => `\`${name}\``).join(', ')}`,
     );
+    await client.query('SET FOREIGN_KEY_CHECKS = 1');
+    foreignKeyChecksDisabled = false;
     await client.query('COMMIT');
   } catch (error) {
+    if (foreignKeyChecksDisabled) {
+      try {
+        await client.query('SET FOREIGN_KEY_CHECKS = 1');
+      } catch {
+        // Preserve the original reset error.
+      }
+    }
     try {
       await client.query('ROLLBACK');
     } catch {

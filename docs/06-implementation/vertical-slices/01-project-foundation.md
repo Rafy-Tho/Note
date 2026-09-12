@@ -5,7 +5,7 @@
 - Tooling and dependency decisions
 - React/Vite and Express bootstrap
 - Environment contract and scripts
-- PostgreSQL connection, migrations, indexes, constraints, and seed support
+- MySQL connection, migrations, indexes, constraints, and seed support
 - Express composition, configuration, common middleware, safe errors, logging, and transaction helpers
 - Approved frontend and backend project structures
 

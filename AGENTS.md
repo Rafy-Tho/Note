@@ -2,15 +2,15 @@
 
 ## Repository State
 
-- The repository is in implementation Step 13I: the React/Vite frontend, Express backend, PostgreSQL migrations, authentication, notes, organization, search, and workspace integration exist; browser verification still requires the local Chromium executable.
+- The repository is in implementation Step 13I: the React/Vite frontend, Express backend, MySQL migrations, authentication, notes, organization, search, and workspace integration exist; browser verification still requires the local Chromium executable.
 - Read `SPEC.md` before making product or architecture changes. It is the concise product contract; detailed decisions belong in the relevant document under `docs/`.
 - `frontend/` and `backend/` are independent npm projects with their own `package.json`, `package-lock.json`, `node_modules/`, and environment files. There is no root package or workspace; run install, scripts, and tests from the relevant app directory.
-- Keep package manager, test frameworks, formatter, linter, migration tool, PostgreSQL setup, and environment variables aligned with `docs/05-development/tech-stack.md` and `docs/05-development/dependencies.md`.
+- Keep package manager, test frameworks, formatter, linter, migration tool, MySQL setup, and environment variables aligned with `docs/05-development/tech-stack.md` and `docs/05-development/dependencies.md`.
 - Follow the ordered gates in `docs/06-implementation/implementation-plan.md`; update status and evidence in `docs/06-implementation/progress.md` as work starts and finishes.
 
 ## Architecture And Security
 
-- The approved direction is a JavaScript React frontend, Node.js/Express REST API, and PostgreSQL modular monolith; do not add microservices or other infrastructure without a demonstrated MVP need. Structure is defined in `docs/04-design/architecture.md`.
+- The approved direction is a JavaScript React frontend, Node.js/Express REST API, and MySQL modular monolith; do not add microservices or other infrastructure without a demonstrated MVP need. Structure is defined in `docs/04-design/architecture.md`.
 - Keep UI, API, application/business-rule, and data-access responsibilities separate. Database and authorization logic do not belong in UI code.
 - Every protected read and write must be scoped to the authenticated user's ownership on the server; the frontend is not a security boundary.
 - Use versioned migrations and transactions for related changes. Follow the `/api/v1` JSON response and error rules defined in `docs/04-design/api.md`.

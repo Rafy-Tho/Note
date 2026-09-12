@@ -23,7 +23,7 @@ function createFakeAuthService(verified = true) {
     async register({ email }) {
       if (users.has(email)) {
         const error = new Error('duplicate');
-        error.code = '23505';
+        error.code = 'ER_DUP_ENTRY';
         throw error;
       }
       const user = { id: `user-${nextUserId++}`, email };

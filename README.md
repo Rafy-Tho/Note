@@ -1,13 +1,13 @@
 # Note App
 
-Note App is a secure personal note-taking application built with React, Express, and PostgreSQL.
+Note App is a secure personal note-taking application built with React, Express, and MySQL.
 
 ## Repository
 
 `frontend/` and `backend/` are independent npm projects. Each has its own `package.json`, `package-lock.json`, `node_modules/`, and environment files; there is no root package or workspace.
 
 - `frontend/` React/Vite application, including Playwright browser journeys in `frontend/e2e/`
-- `backend/` Express API and PostgreSQL migrations
+- `backend/` Express API and MySQL migrations
 - `docs/` product, technical, implementation, testing, and deployment documentation
 - `SPEC.md` concise product and technical contract
 - `AGENTS.md` repository instructions for development agents

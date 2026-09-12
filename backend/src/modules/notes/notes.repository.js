@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { query } from '../../db/query.js';
 
 const NOTE_BASE_COLUMNS = `
@@ -5,15 +6,11 @@ const NOTE_BASE_COLUMNS = `
   is_favorite, revision, trashed_at,
   created_at, updated_at,
   COALESCE((
-    SELECT json_agg(json_build_object('id', tag_rows.id, 'name', tag_rows.name)
-                   ORDER BY tag_rows.normalized_name)
-    FROM (
-      SELECT tags.id, tags.name, tags.normalized_name
-      FROM tags
-      INNER JOIN note_tags ON note_tags.tag_id = tags.id
-      WHERE note_tags.note_id = notes.id
-    ) AS tag_rows
-  ), '[]'::json) AS tags
+    SELECT JSON_ARRAYAGG(JSON_OBJECT('id', tags.id, 'name', tags.name))
+    FROM tags
+    INNER JOIN note_tags ON note_tags.tag_id = tags.id
+    WHERE note_tags.note_id = notes.id
+  ), JSON_ARRAY()) AS tags
 `;
 
 const NOTE_COLUMNS = `
@@ -24,12 +21,6 @@ const NOTE_LIST_COLUMNS = `
   ${NOTE_BASE_COLUMNS}, LEFT(COALESCE(search_content, ''), 240) AS preview
 `;
 
-const SEARCH_VECTOR_FROM_CREATE_VALUES = `
-  setweight(to_tsvector('simple', COALESCE($5, '')), 'A') ||
-  setweight(to_tsvector('simple', COALESCE($6, '')), 'C') ||
-  setweight(to_tsvector('simple', COALESCE($7, '')), 'B')
-`;
-
 function toNote(row, { includeContent = true } = {}) {
   if (!row) return null;
   const note = {
@@ -38,7 +29,7 @@ function toNote(row, { includeContent = true } = {}) {
     title: row.title,
     state: row.state,
     restoreState: row.restore_state,
-    isFavorite: row.is_favorite,
+    isFavorite: Boolean(row.is_favorite),
     tags: row.tags ?? [],
     revision: row.revision,
     trashedAt: row.trashed_at,
@@ -50,21 +41,35 @@ function toNote(row, { includeContent = true } = {}) {
   return note;
 }
 
+function serializeContent(contentJson) {
+  return contentJson === undefined || contentJson === null
+    ? null
+    : JSON.stringify(contentJson);
+}
+
 export function createNotesRepository(database = { query }) {
+  async function findNote(connection, userId, noteId) {
+    const result = await connection.query(
+      `SELECT ${NOTE_COLUMNS} FROM notes WHERE id = ? AND user_id = ?`,
+      [noteId, userId],
+    );
+    return toNote(result.rows[0]);
+  }
+
   return {
     async list(userId, { state, favorite, notebookId = null, page, limit }) {
       const values = [userId, state];
-      const filters = ['user_id = $1', 'state = $2'];
+      const filters = ['user_id = ?', 'state = ?'];
       if (favorite !== null) {
         values.push(favorite);
-        filters.push(`is_favorite = $${values.length}`);
+        filters.push('is_favorite = ?');
       }
       if (notebookId !== null) {
         values.push(notebookId);
-        filters.push(`notebook_id = $${values.length}`);
+        filters.push('notebook_id = ?');
       }
       const count = await database.query(
-        `SELECT COUNT(*)::integer AS total FROM notes WHERE ${filters.join(' AND ')}`,
+        `SELECT COUNT(*) AS total FROM notes WHERE ${filters.join(' AND ')}`,
         values,
       );
       values.push(limit, (page - 1) * limit);
@@ -73,7 +78,7 @@ export function createNotesRepository(database = { query }) {
          FROM notes
          WHERE ${filters.join(' AND ')}
          ORDER BY updated_at DESC, id DESC
-         LIMIT $${values.length - 1} OFFSET $${values.length}`,
+         LIMIT ? OFFSET ?`,
         values,
       );
       return {
@@ -85,14 +90,14 @@ export function createNotesRepository(database = { query }) {
     async listFavorites(userId, { page, limit }) {
       const values = [userId, limit, (page - 1) * limit];
       const count = await database.query(
-        `SELECT COUNT(*)::integer AS total FROM notes
-         WHERE user_id = $1 AND is_favorite = TRUE AND state IN ('active', 'archived')`,
+        `SELECT COUNT(*) AS total FROM notes
+         WHERE user_id = ? AND is_favorite = TRUE AND state IN ('active', 'archived')`,
         [userId],
       );
       const result = await database.query(
         `SELECT ${NOTE_LIST_COLUMNS} FROM notes
-         WHERE user_id = $1 AND is_favorite = TRUE AND state IN ('active', 'archived')
-         ORDER BY updated_at DESC, id DESC LIMIT $2 OFFSET $3`,
+         WHERE user_id = ? AND is_favorite = TRUE AND state IN ('active', 'archived')
+         ORDER BY updated_at DESC, id DESC LIMIT ? OFFSET ?`,
         values,
       );
       return {
@@ -102,11 +107,7 @@ export function createNotesRepository(database = { query }) {
     },
 
     async findById(userId, noteId, connection = database) {
-      const result = await connection.query(
-        `SELECT ${NOTE_COLUMNS} FROM notes WHERE id = $1 AND user_id = $2`,
-        [noteId, userId],
-      );
-      return toNote(result.rows[0]);
+      return findNote(connection, userId, noteId);
     },
 
     async tagNames(connection, userId, noteId) {
@@ -115,9 +116,9 @@ export function createNotesRepository(database = { query }) {
          FROM tags
          INNER JOIN note_tags ON note_tags.tag_id = tags.id
          INNER JOIN notes ON notes.id = note_tags.note_id
-         WHERE tags.user_id = $1 AND notes.user_id = $1 AND notes.id = $2
+         WHERE tags.user_id = ? AND notes.user_id = ? AND notes.id = ?
          ORDER BY tags.normalized_name`,
-        [userId, noteId],
+        [userId, userId, noteId],
       );
       return result.rows.map((row) => row.name);
     },
@@ -134,24 +135,25 @@ export function createNotesRepository(database = { query }) {
         searchTags,
       },
     ) {
-      const result = await client.query(
+      const noteId = randomUUID();
+      await client.query(
         `INSERT INTO notes (
-           user_id, title, content_json, searchable_text,
-           search_title, search_content, search_tags, search_vector
+           id, user_id, title, content_json, searchable_text,
+           search_title, search_content, search_tags
          )
-         VALUES ($1, $2, $3, $4, $5, $6, $7, ${SEARCH_VECTOR_FROM_CREATE_VALUES})
-         RETURNING ${NOTE_COLUMNS}`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [
+          noteId,
           userId,
           title,
-          contentJson,
+          serializeContent(contentJson),
           searchableText,
           searchTitle,
           searchContent,
           searchTags,
         ],
       );
-      return toNote(result.rows[0]);
+      return findNote(client, userId, noteId);
     },
 
     async update(
@@ -170,33 +172,29 @@ export function createNotesRepository(database = { query }) {
     ) {
       const result = await client.query(
         `UPDATE notes
-       SET title = COALESCE($3, title),
-           content_json = COALESCE($4, content_json),
-           searchable_text = COALESCE($5, searchable_text),
-           search_title = COALESCE($6, search_title),
-           search_content = COALESCE($7, search_content),
-           search_tags = COALESCE($8, search_tags),
-           search_vector =
-             setweight(to_tsvector('simple', COALESCE($6, search_title)), 'A') ||
-             setweight(to_tsvector('simple', COALESCE($7, search_content)), 'C') ||
-             setweight(to_tsvector('simple', COALESCE($8, search_tags)), 'B'),
-           revision = revision + 1,
+         SET title = COALESCE(?, title),
+             content_json = COALESCE(?, content_json),
+             searchable_text = COALESCE(?, searchable_text),
+             search_title = COALESCE(?, search_title),
+             search_content = COALESCE(?, search_content),
+             search_tags = COALESCE(?, search_tags),
+             revision = revision + 1,
              updated_at = NOW()
-         WHERE id = $1 AND user_id = $2 AND state IN ('active', 'archived') AND revision = $9
-         RETURNING ${NOTE_COLUMNS}`,
+         WHERE id = ? AND user_id = ? AND state IN ('active', 'archived') AND revision = ?`,
         [
-          noteId,
-          userId,
           title ?? null,
-          contentJson ?? null,
+          serializeContent(contentJson),
           searchableText ?? null,
           searchTitle ?? null,
           searchContent ?? null,
           searchTags ?? null,
+          noteId,
+          userId,
           revision,
         ],
       );
-      return toNote(result.rows[0]);
+      if (result.rowCount !== 1) return null;
+      return findNote(client, userId, noteId);
     },
 
     async moveToTrash(client, userId, noteId) {
@@ -206,52 +204,55 @@ export function createNotesRepository(database = { query }) {
              restore_state = state,
              trashed_at = NOW(),
              updated_at = NOW()
-         WHERE id = $1 AND user_id = $2 AND state IN ('active', 'archived')
-         RETURNING ${NOTE_COLUMNS}`,
+         WHERE id = ? AND user_id = ? AND state IN ('active', 'archived')`,
         [noteId, userId],
       );
-      return toNote(result.rows[0]);
+      if (result.rowCount !== 1) return null;
+      return findNote(client, userId, noteId);
     },
 
     async setState(client, userId, noteId, state) {
       const result = await client.query(
-        `UPDATE notes SET state = $3, updated_at = NOW()
-         WHERE id = $1 AND user_id = $2 RETURNING ${NOTE_COLUMNS}`,
-        [noteId, userId, state],
+        `UPDATE notes SET state = ?, updated_at = NOW()
+         WHERE id = ? AND user_id = ?`,
+        [state, noteId, userId],
       );
-      return toNote(result.rows[0]);
+      if (result.rowCount !== 1) return null;
+      return findNote(client, userId, noteId);
     },
 
     async setFavorite(client, userId, noteId, isFavorite) {
       const result = await client.query(
-        `UPDATE notes SET is_favorite = $3, updated_at = NOW()
-         WHERE id = $1 AND user_id = $2 RETURNING ${NOTE_COLUMNS}`,
-        [noteId, userId, isFavorite],
+        `UPDATE notes SET is_favorite = ?, updated_at = NOW()
+         WHERE id = ? AND user_id = ?`,
+        [isFavorite, noteId, userId],
       );
-      return toNote(result.rows[0]);
+      if (result.rowCount !== 1) return null;
+      return findNote(client, userId, noteId);
     },
 
     async assignNotebook(client, userId, noteId, notebookId) {
       const result = await client.query(
-        `UPDATE notes SET notebook_id = $3, updated_at = NOW()
-         WHERE id = $1 AND user_id = $2 RETURNING ${NOTE_COLUMNS}`,
-        [noteId, userId, notebookId],
+        `UPDATE notes SET notebook_id = ?, updated_at = NOW()
+         WHERE id = ? AND user_id = ?`,
+        [notebookId, noteId, userId],
       );
-      return toNote(result.rows[0]);
+      if (result.rowCount !== 1) return null;
+      return findNote(client, userId, noteId);
     },
 
     async permanentlyDelete(client, userId, noteId) {
       const result = await client.query(
-        `DELETE FROM notes WHERE id = $1 AND user_id = $2 AND state = 'trashed' RETURNING id`,
+        `DELETE FROM notes WHERE id = ? AND user_id = ? AND state = 'trashed'`,
         [noteId, userId],
       );
-      return result.rows[0] ?? null;
+      return result.rowCount === 1 ? { id: noteId } : null;
     },
 
     async findOwnedNotebook(client, userId, notebookId) {
       if (!notebookId) return null;
       const result = await client.query(
-        'SELECT id FROM notebooks WHERE id = $1 AND user_id = $2',
+        'SELECT id FROM notebooks WHERE id = ? AND user_id = ?',
         [notebookId, userId],
       );
       return result.rows[0] ?? null;
@@ -260,16 +261,16 @@ export function createNotesRepository(database = { query }) {
     async restore(client, userId, noteId, { state, notebookId }) {
       const result = await client.query(
         `UPDATE notes
-         SET state = $3,
-             notebook_id = $4,
+         SET state = ?,
+             notebook_id = ?,
              restore_state = NULL,
              trashed_at = NULL,
              updated_at = NOW()
-         WHERE id = $1 AND user_id = $2 AND state = 'trashed'
-         RETURNING ${NOTE_COLUMNS}`,
-        [noteId, userId, state, notebookId ?? null],
+         WHERE id = ? AND user_id = ? AND state = 'trashed'`,
+        [state, notebookId ?? null, noteId, userId],
       );
-      return toNote(result.rows[0]);
+      if (result.rowCount !== 1) return null;
+      return findNote(client, userId, noteId);
     },
   };
 }

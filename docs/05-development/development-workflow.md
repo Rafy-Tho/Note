@@ -12,4 +12,4 @@ The backend provides a destructive development/test-only database command. It pr
 npm run db:empty -- --confirm=EMPTY_DATABASE
 ```
 
-The command discovers and truncates all user tables in the `public` schema in one transaction. It preserves the `pgmigrations` history table so the schema remains managed. It must never be exposed as an HTTP endpoint or run against production data.
+The command discovers all user tables in the current database schema through `information_schema.tables` and truncates them with foreign key checks disabled. It preserves the `schema_migrations` history table so the schema remains managed. MySQL truncation and DDL are not fully transactional, so the command is development/test-only and must never be exposed as an HTTP endpoint or run against production data.

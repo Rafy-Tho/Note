@@ -2,7 +2,7 @@
 
 ## Includes
 
-- PostgreSQL full-text search projection and indexes
+- MySQL InnoDB full-text search projection and indexes
 - Title, content, and tag search
 - Ownership filtering and Active/Archived filtering
 - Trash exclusion, ranking, pagination, empty queries, and empty results

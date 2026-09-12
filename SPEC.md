@@ -20,7 +20,7 @@ Profile management, sharing, collaboration, attachments, offline synchronization
 The application is a JavaScript modular monolith:
 
 ```text
-React/Vite frontend -> Node.js/Express REST API -> PostgreSQL
+React/Vite frontend -> Node.js/Express REST API -> MySQL
 ```
 
 The frontend is not a security boundary. Every protected server read and write must authenticate the user and enforce ownership.

@@ -1,6 +1,6 @@
 # Agent Context
 
-Note App is a JavaScript React/Vite frontend, Node.js/Express REST API, and PostgreSQL modular monolith. The current implementation includes authentication expansion, notes, rich text autosave, trash and restore, tags, search, organization, responsive workspace integration, and sidebar counts.
+Note App is a JavaScript React/Vite frontend, Node.js/Express REST API, and MySQL modular monolith. The current implementation includes authentication expansion, notes, rich text autosave, trash and restore, tags, search, organization, responsive workspace integration, and sidebar counts.
 
 The current implementation phase is Step 13I, Sidebar Note Counts. Authentication, authorization, browser verification, testing hardening, and deployment work still have tracked pending items. See `docs/06-implementation/progress.md`.
 

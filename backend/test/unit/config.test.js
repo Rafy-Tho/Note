@@ -4,7 +4,7 @@ import { getConfig } from '../../src/config/env.js';
 const validEnvironment = {
   NODE_ENV: 'test',
   PORT: '3000',
-  DATABASE_URL: 'postgres://localhost/note_app',
+  DATABASE_URL: 'mysql://localhost/note_app',
   SESSION_SECRET: 'session-secret',
   CSRF_SECRET: 'csrf-secret',
   CORS_ORIGIN: '',

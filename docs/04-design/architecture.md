@@ -3,7 +3,7 @@
 Use a modular monolith:
 
 ```text
-React/Vite frontend -> Node.js/Express REST API -> PostgreSQL
+React/Vite frontend -> Node.js/Express REST API -> MySQL
 ```
 
 Frontend pages compose features. Feature services own feature API operations. Backend route registration belongs to the application composition layer. Controllers depend on services, services depend on repositories or shared infrastructure, and repositories depend on database helpers.

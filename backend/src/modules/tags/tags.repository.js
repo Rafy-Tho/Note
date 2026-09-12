@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { query } from '../../db/query.js';
 
 const TAG_COLUMNS = 'id, user_id, name, normalized_name, created_at';
@@ -25,77 +26,81 @@ function toNote(row) {
 }
 
 export function createTagsRepository(database = { query }) {
+  async function findTagRow(connection, userId, tagId) {
+    const result = await connection.query(
+      `SELECT ${TAG_COLUMNS} FROM tags WHERE id = ? AND user_id = ?`,
+      [tagId, userId],
+    );
+    return result.rows[0] ?? null;
+  }
+
   return {
     async list(userId, { page, limit }) {
       const values = [userId];
       const count = await database.query(
-        'SELECT COUNT(*)::integer AS total FROM tags WHERE user_id = $1',
+        'SELECT COUNT(*) AS total FROM tags WHERE user_id = ?',
         values,
       );
       values.push(limit, (page - 1) * limit);
       const result = await database.query(
         `SELECT tags.id, tags.user_id, tags.name, tags.normalized_name, tags.created_at
          FROM tags
-         WHERE user_id = $1
+         WHERE user_id = ?
          ORDER BY normalized_name, id
-         LIMIT $2 OFFSET $3`,
+         LIMIT ? OFFSET ?`,
         values,
       );
       return { tags: result.rows.map(toTag), total: count.rows[0].total };
     },
 
     async create(client, userId, { name, normalizedName }) {
-      const result = await client.query(
-        `INSERT INTO tags (user_id, name, normalized_name)
-         VALUES ($1, $2, $3)
-         RETURNING ${TAG_COLUMNS}`,
-        [userId, name, normalizedName],
+      const tagId = randomUUID();
+      await client.query(
+        `INSERT INTO tags (id, user_id, name, normalized_name)
+         VALUES (?, ?, ?, ?)`,
+        [tagId, userId, name, normalizedName],
       );
-      return toTag(result.rows[0]);
+      return toTag(await findTagRow(client, userId, tagId));
     },
 
     async rename(client, userId, tagId, { name, normalizedName }) {
       const result = await client.query(
         `UPDATE tags
-         SET name = $3, normalized_name = $4
-         WHERE id = $1 AND user_id = $2
-         RETURNING ${TAG_COLUMNS}`,
-        [tagId, userId, name, normalizedName],
+         SET name = ?, normalized_name = ?
+         WHERE id = ? AND user_id = ?`,
+        [name, normalizedName, tagId, userId],
       );
-      return toTag(result.rows[0]);
+      if (result.rowCount !== 1) return null;
+      return toTag(await findTagRow(client, userId, tagId));
     },
 
     async delete(client, userId, tagId) {
       const result = await client.query(
-        'DELETE FROM tags WHERE id = $1 AND user_id = $2 RETURNING id',
+        'DELETE FROM tags WHERE id = ? AND user_id = ?',
         [tagId, userId],
       );
-      return result.rows[0] ?? null;
+      return result.rowCount === 1 ? { id: tagId } : null;
     },
 
     async removeFromNotes(client, userId, tagId) {
       await client.query(
         `DELETE FROM note_tags
-         WHERE tag_id = $1
-           AND EXISTS (SELECT 1 FROM tags WHERE id = $1 AND user_id = $2)
-           AND EXISTS (SELECT 1 FROM notes WHERE id = note_tags.note_id AND user_id = $2)`,
-        [tagId, userId],
+         WHERE tag_id = ?
+           AND EXISTS (SELECT 1 FROM tags WHERE id = ? AND user_id = ?)
+           AND EXISTS (SELECT 1 FROM notes WHERE id = note_tags.note_id AND user_id = ?)`,
+        [tagId, tagId, userId, userId],
       );
     },
 
     async findTag(client, userId, tagId) {
-      const result = await client.query(
-        `SELECT ${TAG_COLUMNS} FROM tags WHERE id = $1 AND user_id = $2`,
-        [tagId, userId],
-      );
-      return toTag(result.rows[0]);
+      return toTag(await findTagRow(client, userId, tagId));
     },
 
     async findNote(client, userId, noteId) {
       const result = await client.query(
         `SELECT id, user_id, title, content_json, state, revision, created_at, updated_at
          FROM notes
-         WHERE id = $1 AND user_id = $2`,
+         WHERE id = ? AND user_id = ?`,
         [noteId, userId],
       );
       return result.rows[0] ?? null;
@@ -106,7 +111,7 @@ export function createTagsRepository(database = { query }) {
         `SELECT notes.id, notes.title, notes.content_json
          FROM notes
          INNER JOIN note_tags ON note_tags.note_id = notes.id
-         WHERE notes.user_id = $1 AND note_tags.tag_id = $2`,
+         WHERE notes.user_id = ? AND note_tags.tag_id = ?`,
         [userId, tagId],
       );
       return result.rows;
@@ -114,9 +119,8 @@ export function createTagsRepository(database = { query }) {
 
     async assign(client, noteId, tagId) {
       await client.query(
-        `INSERT INTO note_tags (note_id, tag_id)
-         VALUES ($1, $2)
-         ON CONFLICT (note_id, tag_id) DO NOTHING`,
+        `INSERT IGNORE INTO note_tags (note_id, tag_id)
+         VALUES (?, ?)`,
         [noteId, tagId],
       );
     },
@@ -124,10 +128,10 @@ export function createTagsRepository(database = { query }) {
     async remove(client, userId, noteId, tagId) {
       await client.query(
         `DELETE FROM note_tags
-         WHERE note_id = $1 AND tag_id = $2
-           AND EXISTS (SELECT 1 FROM notes WHERE id = $1 AND user_id = $3)
-           AND EXISTS (SELECT 1 FROM tags WHERE id = $2 AND user_id = $3)`,
-        [noteId, tagId, userId],
+         WHERE note_id = ? AND tag_id = ?
+           AND EXISTS (SELECT 1 FROM notes WHERE id = ? AND user_id = ?)
+           AND EXISTS (SELECT 1 FROM tags WHERE id = ? AND user_id = ?)`,
+        [noteId, tagId, noteId, userId, tagId, userId],
       );
     },
 
@@ -137,9 +141,9 @@ export function createTagsRepository(database = { query }) {
          FROM tags
          INNER JOIN note_tags ON note_tags.tag_id = tags.id
          INNER JOIN notes ON notes.id = note_tags.note_id
-         WHERE tags.user_id = $1 AND notes.user_id = $1 AND notes.id = $2
+         WHERE tags.user_id = ? AND notes.user_id = ? AND notes.id = ?
          ORDER BY tags.normalized_name`,
-        [userId, noteId],
+        [userId, userId, noteId],
       );
       return result.rows.map((row) => row.name);
     },
@@ -152,23 +156,19 @@ export function createTagsRepository(database = { query }) {
     ) {
       await client.query(
         `UPDATE notes
-         SET searchable_text = $3,
-             search_title = $4,
-             search_content = $5,
-             search_tags = $6,
-             search_vector =
-               setweight(to_tsvector('simple', COALESCE($4, '')), 'A') ||
-               setweight(to_tsvector('simple', COALESCE($5, '')), 'C') ||
-               setweight(to_tsvector('simple', COALESCE($6, '')), 'B'),
+         SET searchable_text = ?,
+             search_title = ?,
+             search_content = ?,
+             search_tags = ?,
              updated_at = NOW()
-         WHERE id = $1 AND user_id = $2`,
+         WHERE id = ? AND user_id = ?`,
         [
-          noteId,
-          userId,
           searchableText,
           searchTitle,
           searchContent,
           searchTags,
+          noteId,
+          userId,
         ],
       );
     },
@@ -179,9 +179,9 @@ export function createTagsRepository(database = { query }) {
          FROM tags
          INNER JOIN note_tags ON note_tags.tag_id = tags.id
          INNER JOIN notes ON notes.id = note_tags.note_id
-         WHERE tags.user_id = $1 AND notes.user_id = $1 AND notes.id = $2
+         WHERE tags.user_id = ? AND notes.user_id = ? AND notes.id = ?
          ORDER BY tags.normalized_name`,
-        [userId, noteId],
+        [userId, userId, noteId],
       );
       return result.rows.map(toTag);
     },
@@ -189,10 +189,10 @@ export function createTagsRepository(database = { query }) {
     async listNotesByTag(connection, userId, tagId, { page, limit }) {
       const values = [userId, tagId];
       const count = await connection.query(
-        `SELECT COUNT(*)::integer AS total
+        `SELECT COUNT(*) AS total
          FROM notes
          INNER JOIN note_tags ON note_tags.note_id = notes.id
-         WHERE notes.user_id = $1 AND note_tags.tag_id = $2
+         WHERE notes.user_id = ? AND note_tags.tag_id = ?
            AND notes.state IN ('active', 'archived')`,
         values,
       );
@@ -203,10 +203,10 @@ export function createTagsRepository(database = { query }) {
                 notes.state, notes.revision, notes.created_at, notes.updated_at
          FROM notes
          INNER JOIN note_tags ON note_tags.note_id = notes.id
-         WHERE notes.user_id = $1 AND note_tags.tag_id = $2
+         WHERE notes.user_id = ? AND note_tags.tag_id = ?
            AND notes.state IN ('active', 'archived')
          ORDER BY notes.updated_at DESC, notes.id DESC
-         LIMIT $3 OFFSET $4`,
+         LIMIT ? OFFSET ?`,
         values,
       );
       return { notes: result.rows.map(toNote), total: count.rows[0].total };

@@ -31,17 +31,16 @@ describe('emptyDatabase', () => {
     expect(pool.connect).not.toHaveBeenCalled();
   });
 
-  it('truncates application tables in a transaction', async () => {
+  it('truncates application tables with foreign key checks disabled', async () => {
     const client = {
       query: vi
         .fn()
         .mockResolvedValueOnce(undefined)
         .mockResolvedValueOnce({
-          rows: [
-            { qualified_name: 'public.notes' },
-            { qualified_name: 'public.users' },
-          ],
+          rows: [{ table_name: 'notes' }, { table_name: 'users' }],
         })
+        .mockResolvedValueOnce(undefined)
+        .mockResolvedValueOnce(undefined)
         .mockResolvedValueOnce(undefined)
         .mockResolvedValueOnce(undefined),
       release: vi.fn(),
@@ -56,23 +55,33 @@ describe('emptyDatabase', () => {
     expect(client.query).toHaveBeenNthCalledWith(1, 'BEGIN');
     expect(client.query).toHaveBeenNthCalledWith(
       2,
-      expect.stringContaining('pg_catalog.pg_tables'),
+      expect.stringContaining('information_schema.tables'),
     );
     expect(client.query).toHaveBeenNthCalledWith(
       3,
-      expect.stringContaining('TRUNCATE TABLE public.notes, public.users'),
+      'SET FOREIGN_KEY_CHECKS = 0',
     );
-    expect(client.query).toHaveBeenNthCalledWith(4, 'COMMIT');
+    expect(client.query).toHaveBeenNthCalledWith(
+      4,
+      expect.stringContaining('TRUNCATE TABLE `notes`, `users`'),
+    );
+    expect(client.query).toHaveBeenNthCalledWith(
+      5,
+      'SET FOREIGN_KEY_CHECKS = 1',
+    );
+    expect(client.query).toHaveBeenNthCalledWith(6, 'COMMIT');
     expect(client.release).toHaveBeenCalledOnce();
   });
 
-  it('rolls back and releases the client when truncation fails', async () => {
+  it('restores foreign key checks and rolls back when truncation fails', async () => {
     const client = {
       query: vi
         .fn()
         .mockResolvedValueOnce(undefined)
-        .mockResolvedValueOnce({ rows: [{ qualified_name: 'public.users' }] })
+        .mockResolvedValueOnce({ rows: [{ table_name: 'users' }] })
+        .mockResolvedValueOnce(undefined)
         .mockRejectedValueOnce(new Error('truncate failed'))
+        .mockResolvedValueOnce(undefined)
         .mockResolvedValueOnce(undefined),
       release: vi.fn(),
     };
@@ -84,6 +93,10 @@ describe('emptyDatabase', () => {
         confirmation: EMPTY_DATABASE_CONFIRMATION,
       }),
     ).rejects.toThrow('truncate failed');
+    expect(client.query).toHaveBeenNthCalledWith(
+      5,
+      'SET FOREIGN_KEY_CHECKS = 1',
+    );
     expect(client.query).toHaveBeenLastCalledWith('ROLLBACK');
     expect(client.release).toHaveBeenCalledOnce();
   });

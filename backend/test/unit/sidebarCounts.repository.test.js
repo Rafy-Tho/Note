@@ -7,7 +7,16 @@ describe('sidebar counts repository', () => {
       query: vi
         .fn()
         .mockResolvedValueOnce({
-          rows: [{ notes: 2, favorites: 1, archive: 1, trash: 0, notebooks: 4, tags: 3 }],
+          rows: [
+            {
+              notes: 2,
+              favorites: 1,
+              archive: 1,
+              trash: 0,
+              notebooks: 4,
+              tags: 3,
+            },
+          ],
         })
         .mockResolvedValueOnce({ rows: [{ id: 'notebook-1', count: 2 }] })
         .mockResolvedValueOnce({ rows: [{ id: 'tag-1', count: 1 }] }),
@@ -26,8 +35,13 @@ describe('sidebar counts repository', () => {
     });
 
     expect(database.query).toHaveBeenCalledTimes(3);
-    for (const call of database.query.mock.calls) {
-      expect(call[1]).toEqual(['user-1']);
-    }
+    expect(database.query.mock.calls[0][1]).toEqual([
+      'user-1',
+      'user-1',
+      'user-1',
+      'user-1',
+    ]);
+    expect(database.query.mock.calls[1][1]).toEqual(['user-1']);
+    expect(database.query.mock.calls[2][1]).toEqual(['user-1']);
   });
 });

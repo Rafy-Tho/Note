@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { query } from '../../db/query.js';
 
 export function createAuthRepository(database = { query }) {
@@ -10,7 +11,7 @@ export function createAuthRepository(database = { query }) {
          LEFT JOIN auth_accounts local_account
            ON local_account.user_id = u.id
           AND local_account.provider = 'local'
-         WHERE u.email = $1`,
+         WHERE u.email = ?`,
         [email],
       );
       return result.rows[0] ?? null;
@@ -24,41 +25,46 @@ export function createAuthRepository(database = { query }) {
          LEFT JOIN auth_accounts local_account
            ON local_account.user_id = u.id
           AND local_account.provider = 'local'
-         WHERE u.id = $1`,
+         WHERE u.id = ?`,
         [userId],
       );
       return result.rows[0] ?? null;
     },
 
     async createUser(client, email, emailVerifiedAt = null) {
-      const result = await client.query(
-        `INSERT INTO users (email, email_verified_at)
-         VALUES ($1, $2)
-         RETURNING id, email, email_verified_at`,
-        [email, emailVerifiedAt],
+      const userId = randomUUID();
+      await client.query(
+        `INSERT INTO users (id, email, email_verified_at)
+         VALUES (?, ?, ?)`,
+        [userId, email, emailVerifiedAt],
       );
-      return result.rows[0];
+      return { id: userId, email, email_verified_at: emailVerifiedAt };
     },
 
     async createAuthAccount(
       client,
       { userId, provider, providerAccountId, passwordHash = null },
     ) {
-      const result = await client.query(
+      const accountId = randomUUID();
+      await client.query(
         `INSERT INTO auth_accounts
-           (user_id, provider, provider_account_id, password_hash)
-         VALUES ($1, $2, $3, $4)
-         RETURNING id, user_id, provider, provider_account_id`,
-        [userId, provider, providerAccountId, passwordHash],
+           (id, user_id, provider, provider_account_id, password_hash)
+         VALUES (?, ?, ?, ?, ?)`,
+        [accountId, userId, provider, providerAccountId, passwordHash],
       );
-      return result.rows[0];
+      return {
+        id: accountId,
+        user_id: userId,
+        provider,
+        provider_account_id: providerAccountId,
+      };
     },
 
     async invalidateVerificationTokens(client, userId) {
       await client.query(
         `UPDATE email_verification_tokens
          SET consumed_at = COALESCE(consumed_at, NOW())
-         WHERE user_id = $1 AND consumed_at IS NULL`,
+         WHERE user_id = ? AND consumed_at IS NULL`,
         [userId],
       );
     },
@@ -67,13 +73,13 @@ export function createAuthRepository(database = { query }) {
       client,
       { userId, tokenHash, expiresAt },
     ) {
-      const result = await client.query(
-        `INSERT INTO email_verification_tokens (user_id, token_hash, expires_at)
-         VALUES ($1, $2, $3)
-         RETURNING id, user_id, expires_at`,
-        [userId, tokenHash, expiresAt],
+      const tokenId = randomUUID();
+      await client.query(
+        `INSERT INTO email_verification_tokens (id, user_id, token_hash, expires_at)
+         VALUES (?, ?, ?, ?)`,
+        [tokenId, userId, tokenHash, expiresAt],
       );
-      return result.rows[0];
+      return { id: tokenId, user_id: userId, expires_at: expiresAt };
     },
 
     async findEmailVerificationToken(tokenHash) {
@@ -82,7 +88,7 @@ export function createAuthRepository(database = { query }) {
                 u.email, u.email_verified_at
          FROM email_verification_tokens t
          JOIN users u ON u.id = t.user_id
-         WHERE t.token_hash = $1`,
+         WHERE t.token_hash = ?`,
         [tokenHash],
       );
       return result.rows[0] ?? null;
@@ -92,11 +98,10 @@ export function createAuthRepository(database = { query }) {
       const result = await client.query(
         `UPDATE email_verification_tokens
          SET consumed_at = NOW()
-         WHERE token_hash = $1
-           AND user_id = $2
+         WHERE token_hash = ?
+           AND user_id = ?
            AND consumed_at IS NULL
-           AND expires_at > NOW()
-         RETURNING id`,
+           AND expires_at > NOW()`,
         [tokenHash, userId],
       );
       return result.rowCount === 1;
@@ -107,30 +112,34 @@ export function createAuthRepository(database = { query }) {
         `UPDATE users
          SET email_verified_at = COALESCE(email_verified_at, NOW()),
              updated_at = NOW()
-         WHERE id = $1
-         RETURNING id, email, email_verified_at`,
+         WHERE id = ?`,
         [userId],
       );
-      return result.rows[0] ?? null;
+      if (result.rowCount !== 1) return null;
+      const user = await client.query(
+        `SELECT id, email, email_verified_at FROM users WHERE id = ?`,
+        [userId],
+      );
+      return user.rows[0] ?? null;
     },
 
     async invalidatePasswordResetTokens(client, userId) {
       await client.query(
         `UPDATE password_reset_tokens
          SET consumed_at = COALESCE(consumed_at, NOW())
-         WHERE user_id = $1 AND consumed_at IS NULL`,
+         WHERE user_id = ? AND consumed_at IS NULL`,
         [userId],
       );
     },
 
     async createPasswordResetToken(client, { userId, tokenHash, expiresAt }) {
-      const result = await client.query(
-        `INSERT INTO password_reset_tokens (user_id, token_hash, expires_at)
-         VALUES ($1, $2, $3)
-         RETURNING id, user_id, expires_at`,
-        [userId, tokenHash, expiresAt],
+      const tokenId = randomUUID();
+      await client.query(
+        `INSERT INTO password_reset_tokens (id, user_id, token_hash, expires_at)
+         VALUES (?, ?, ?, ?)`,
+        [tokenId, userId, tokenHash, expiresAt],
       );
-      return result.rows[0];
+      return { id: tokenId, user_id: userId, expires_at: expiresAt };
     },
 
     async findPasswordResetToken(tokenHash) {
@@ -143,7 +152,7 @@ export function createAuthRepository(database = { query }) {
          JOIN auth_accounts local_account
            ON local_account.user_id = u.id
           AND local_account.provider = 'local'
-         WHERE t.token_hash = $1`,
+         WHERE t.token_hash = ?`,
         [tokenHash],
       );
       return result.rows[0] ?? null;
@@ -153,12 +162,11 @@ export function createAuthRepository(database = { query }) {
       const result = await client.query(
         `UPDATE password_reset_tokens
          SET consumed_at = NOW(), attempt_count = attempt_count + 1
-         WHERE token_hash = $1
-           AND user_id = $2
+         WHERE token_hash = ?
+           AND user_id = ?
            AND consumed_at IS NULL
            AND expires_at > NOW()
-           AND attempt_count < $3
-         RETURNING id`,
+           AND attempt_count < ?`,
         [tokenHash, userId, maxAttempts],
       );
       return result.rowCount === 1;
@@ -167,16 +175,15 @@ export function createAuthRepository(database = { query }) {
     async updatePasswordHash(client, userId, passwordHash) {
       const result = await client.query(
         `UPDATE auth_accounts
-         SET password_hash = $2, updated_at = NOW()
-         WHERE user_id = $1 AND provider = 'local'
-         RETURNING user_id`,
-        [userId, passwordHash],
+         SET password_hash = ?, updated_at = NOW()
+         WHERE user_id = ? AND provider = 'local'`,
+        [passwordHash, userId],
       );
       if (result.rowCount !== 1) return null;
       const user = await client.query(
         `SELECT id, email, email_verified_at
          FROM users
-         WHERE id = $1`,
+         WHERE id = ?`,
         [userId],
       );
       return user.rows[0] ?? null;
@@ -186,7 +193,7 @@ export function createAuthRepository(database = { query }) {
       await client.query(
         `UPDATE sessions
          SET revoked_at = COALESCE(revoked_at, NOW())
-         WHERE user_id = $1 AND revoked_at IS NULL`,
+         WHERE user_id = ? AND revoked_at IS NULL`,
         [userId],
       );
     },
@@ -202,12 +209,13 @@ export function createAuthRepository(database = { query }) {
         expiresAt,
       },
     ) {
-      const result = await client.query(
+      const stateId = randomUUID();
+      await client.query(
         `INSERT INTO auth_callback_states
-           (state_hash, provider, purpose, session_id, browser_binding_hash, expires_at)
-         VALUES ($1, $2, $3, $4, $5, $6)
-         RETURNING id, provider, purpose, session_id, expires_at`,
+           (id, state_hash, provider, purpose, session_id, browser_binding_hash, expires_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
+          stateId,
           stateHash,
           provider,
           purpose,
@@ -216,7 +224,13 @@ export function createAuthRepository(database = { query }) {
           expiresAt,
         ],
       );
-      return result.rows[0];
+      return {
+        id: stateId,
+        provider,
+        purpose,
+        session_id: sessionId,
+        expires_at: expiresAt,
+      };
     },
 
     async consumeAuthCallbackState(
@@ -226,26 +240,26 @@ export function createAuthRepository(database = { query }) {
       const result = await client.query(
         `UPDATE auth_callback_states
          SET consumed_at = NOW()
-         WHERE state_hash = $1
-           AND provider = $2
-           AND purpose = $3
-           AND browser_binding_hash = $4
+         WHERE state_hash = ?
+           AND provider = ?
+           AND purpose = ?
+           AND browser_binding_hash = ?
            AND consumed_at IS NULL
            AND expires_at > NOW()
-           AND session_id IS NOT DISTINCT FROM $5
-         RETURNING id, session_id`,
+           AND session_id <=> ?`,
         [stateHash, provider, purpose, browserBindingHash, sessionId],
       );
-      return result.rows[0] ?? null;
+      if (result.rowCount !== 1) return null;
+      return { id: null, session_id: sessionId ?? null };
     },
 
     async findAuthCallbackState({ stateHash, provider, browserBindingHash }) {
       const result = await database.query(
         `SELECT id, provider, purpose, session_id, expires_at
          FROM auth_callback_states
-         WHERE state_hash = $1
-           AND provider = $2
-           AND browser_binding_hash = $3
+         WHERE state_hash = ?
+           AND provider = ?
+           AND browser_binding_hash = ?
            AND consumed_at IS NULL
            AND expires_at > NOW()`,
         [stateHash, provider, browserBindingHash],
@@ -263,7 +277,7 @@ export function createAuthRepository(database = { query }) {
          LEFT JOIN auth_accounts local_account
            ON local_account.user_id = aa.user_id
           AND local_account.provider = 'local'
-         WHERE aa.provider = $1 AND aa.provider_account_id = $2`,
+         WHERE aa.provider = ? AND aa.provider_account_id = ?`,
         [provider, providerAccountId],
       );
       return result.rows[0] ?? null;
@@ -273,7 +287,7 @@ export function createAuthRepository(database = { query }) {
       const result = await database.query(
         `SELECT provider, created_at
          FROM auth_accounts
-         WHERE user_id = $1
+         WHERE user_id = ?
          ORDER BY provider`,
         [userId],
       );
@@ -283,40 +297,47 @@ export function createAuthRepository(database = { query }) {
     async deleteAuthAccount(client, userId, provider) {
       const result = await client.query(
         `DELETE FROM auth_accounts
-         WHERE user_id = $1 AND provider = $2
-         RETURNING provider`,
+         WHERE user_id = ? AND provider = ?`,
         [userId, provider],
       );
       return result.rowCount === 1;
     },
 
     async createExternalUser(client, email) {
-      const result = await client.query(
-        `INSERT INTO users (email, email_verified_at)
-         VALUES ($1, NOW())
-         RETURNING id, email, email_verified_at`,
-        [email],
+      const userId = randomUUID();
+      await client.query(
+        `INSERT INTO users (id, email, email_verified_at)
+         VALUES (?, ?, NOW())`,
+        [userId, email],
       );
-      return result.rows[0];
+      const user = await client.query(
+        `SELECT id, email, email_verified_at FROM users WHERE id = ?`,
+        [userId],
+      );
+      return user.rows[0];
     },
 
     async createSession(client, { userId, tokenHash, expiresAt }) {
-      const result = await client.query(
-        `INSERT INTO sessions (user_id, token_hash, expires_at)
-         VALUES ($1, $2, $3)
-         RETURNING id, user_id, created_at, expires_at`,
-        [userId, tokenHash, expiresAt],
+      const sessionId = randomUUID();
+      await client.query(
+        `INSERT INTO sessions (id, user_id, token_hash, expires_at)
+         VALUES (?, ?, ?, ?)`,
+        [sessionId, userId, tokenHash, expiresAt],
       );
-      return result.rows[0];
+      const session = await client.query(
+        `SELECT id, user_id, created_at, expires_at FROM sessions WHERE id = ?`,
+        [sessionId],
+      );
+      return session.rows[0];
     },
 
     async findSession(tokenHash) {
       const result = await database.query(
         `SELECT s.id, s.user_id, s.created_at, s.expires_at, s.revoked_at,
-                 u.email, u.email_verified_at
+                u.email, u.email_verified_at
          FROM sessions s
          JOIN users u ON u.id = s.user_id
-         WHERE s.token_hash = $1`,
+         WHERE s.token_hash = ?`,
         [tokenHash],
       );
       return result.rows[0] ?? null;
@@ -325,9 +346,9 @@ export function createAuthRepository(database = { query }) {
     async touchSession(sessionId, expiresAt) {
       await database.query(
         `UPDATE sessions
-         SET last_used_at = NOW(), expires_at = $2
-         WHERE id = $1 AND revoked_at IS NULL`,
-        [sessionId, expiresAt],
+         SET last_used_at = NOW(), expires_at = ?
+         WHERE id = ? AND revoked_at IS NULL`,
+        [expiresAt, sessionId],
       );
     },
 
@@ -335,7 +356,7 @@ export function createAuthRepository(database = { query }) {
       await database.query(
         `UPDATE sessions
          SET revoked_at = COALESCE(revoked_at, NOW())
-         WHERE token_hash = $1`,
+         WHERE token_hash = ?`,
         [tokenHash],
       );
     },

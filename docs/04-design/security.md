@@ -1,7 +1,7 @@
 # Security Design
 
 - Hash passwords with Argon2id.
-- Use server-managed opaque PostgreSQL-backed sessions with secure HTTP-only cookies, expiry, and revocation.
+- Use server-managed opaque MySQL-backed sessions with secure HTTP-only cookies, expiry, and revocation.
 - Protect state-changing requests with session-bound HMAC CSRF controls and same-origin checks. Unsafe requests must provide an allowed `Origin` or `Referer` by default; explicitly set `REQUIRE_SAME_ORIGIN_HEADERS=false` only for a trusted non-browser client boundary.
 - Use exact configured CORS origins with credentials enabled; wildcard origins are not allowed.
 - When `CORS_ORIGIN` is empty in development, configuration explicitly defaults to `http://localhost:5173`; production requires a non-empty exact-origin allowlist.

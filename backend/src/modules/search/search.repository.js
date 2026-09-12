@@ -11,42 +11,38 @@ function toResult(row) {
   };
 }
 
+const SEARCH_MATCH =
+  'MATCH(notes.search_title, notes.search_content, notes.search_tags) AGAINST (? IN NATURAL LANGUAGE MODE)';
+
 const SEARCH_FILTER = `
-  notes.user_id = $1
+  notes.user_id = ?
   AND notes.state IN ('active', 'archived')
-  AND notes.search_vector @@ websearch_to_tsquery('simple', $2)
+  AND ${SEARCH_MATCH}
 `;
 
 export function createSearchRepository(database = { query }) {
   return {
     async search(userId, { q, page, limit }) {
       const count = await database.query(
-        `SELECT COUNT(*)::integer AS total
+        `SELECT COUNT(*) AS total
          FROM notes
          WHERE ${SEARCH_FILTER}`,
         [userId, q],
       );
       const result = await database.query(
         `SELECT notes.id, notes.title, notes.state, notes.updated_at,
-                ts_rank_cd(
-                  notes.search_vector,
-                  websearch_to_tsquery('simple', $2)
-                ) AS rank,
+                ${SEARCH_MATCH} AS rank,
                 COALESCE((
-                  SELECT json_agg(json_build_object('id', tag_rows.id, 'name', tag_rows.name)
-                                 ORDER BY tag_rows.normalized_name)
-                  FROM (
-                    SELECT tags.id, tags.name, tags.normalized_name
-                    FROM tags
-                    INNER JOIN note_tags ON note_tags.tag_id = tags.id
-                    WHERE note_tags.note_id = notes.id
-                  ) AS tag_rows
-                ), '[]'::json) AS tags
+                  SELECT JSON_ARRAYAGG(JSON_OBJECT('id', tags.id, 'name', tags.name))
+                  FROM tags
+                  INNER JOIN note_tags ON note_tags.tag_id = tags.id
+                  WHERE note_tags.note_id = notes.id
+                ), JSON_ARRAY()) AS tags
          FROM notes
          WHERE ${SEARCH_FILTER}
          ORDER BY rank DESC, notes.updated_at DESC, notes.id DESC
-         LIMIT $3 OFFSET $4`,
-        [userId, q, limit, (page - 1) * limit],
+         LIMIT ? OFFSET ?`,
+        [q, userId, q, limit, (page - 1) * limit],
       );
       return { results: result.rows.map(toResult), total: count.rows[0].total };
     },

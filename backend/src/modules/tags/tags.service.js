@@ -1,4 +1,5 @@
 import { AppError, notFoundError } from '../../common/errors/errors.js';
+import { isUniqueViolation } from '../../common/errors/databaseErrors.js';
 import { withTransaction } from '../../db/transaction.js';
 import { assertNoteState } from '../authorization/authorization.js';
 import { buildSearchProjection } from '../notes/notes.search.js';
@@ -35,7 +36,7 @@ export function createTagsService({
           repository.create(client, userId, input),
         );
       } catch (error) {
-        if (error.code === '23505')
+        if (isUniqueViolation(error))
           throw new AppError(
             409,
             'DUPLICATE_TAG',
@@ -55,7 +56,7 @@ export function createTagsService({
           return renamed;
         });
       } catch (error) {
-        if (error.code === '23505')
+        if (isUniqueViolation(error))
           throw new AppError(
             409,
             'DUPLICATE_TAG',

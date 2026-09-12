@@ -13,7 +13,9 @@ describe('authorization helpers', () => {
     expect(() => getAuthenticatedUserId({})).toThrow(
       'Authentication is required.',
     );
-    expect(getAuthenticatedUserId({ auth: { userId: 'user-a' } })).toBe('user-a');
+    expect(getAuthenticatedUserId({ auth: { userId: 'user-a' } })).toBe(
+      'user-a',
+    );
   });
 
   it('allows owned resources and hides missing or foreign resources', () => {
@@ -44,9 +46,7 @@ describe('authorization helpers', () => {
 
   it('passes the owner into resource loading and safely rejects foreign data', async () => {
     const load = async (id, userId) =>
-      id === 'note-1' && userId === 'user-a'
-        ? { id, user_id: userId }
-        : null;
+      id === 'note-1' && userId === 'user-a' ? { id, user_id: userId } : null;
     const loadOwnedNote = createOwnedResourceLoader(load);
 
     await expect(loadOwnedNote('note-1', 'user-a')).resolves.toEqual({
@@ -63,6 +63,8 @@ describe('authorization helpers', () => {
     expect(() => assertNoteState('archive', 'trashed')).toThrow(
       'The resource is not available for this operation.',
     );
-    expect(() => assertAllowedState('active', ['active', 'archived'])).not.toThrow();
+    expect(() =>
+      assertAllowedState('active', ['active', 'archived']),
+    ).not.toThrow();
   });
 });

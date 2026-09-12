@@ -132,7 +132,7 @@ describe('authentication service', () => {
 
   it('keeps duplicate registration from creating a second account', async () => {
     const duplicateError = new Error('duplicate');
-    duplicateError.code = '23505';
+    duplicateError.code = 'ER_DUP_ENTRY';
     const repository = {
       createUser: vi.fn(async () => {
         throw duplicateError;
@@ -446,7 +446,7 @@ describe('authentication service', () => {
 
   it('logs in the account that wins a concurrent Google account insert', async () => {
     const duplicateError = new Error('duplicate email');
-    duplicateError.code = '23505';
+    duplicateError.code = 'ER_DUP_ENTRY';
     const repository = {
       findAuthCallbackState: vi.fn(async () => ({
         purpose: 'sign_in',
