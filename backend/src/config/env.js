@@ -63,6 +63,9 @@ export function getConfig(env = process.env) {
   const authRateLimitMax = parseInteger(env.AUTH_RATE_LIMIT_MAX, 10);
   const rateLimitStoreMode = env.RATE_LIMIT_STORE ?? 'memory';
   const backendInstanceCount = parseInteger(env.BACKEND_INSTANCE_COUNT, 1);
+  const smtpPort = parseInteger(env.SMTP_PORT, 465);
+  const smtpSecureValue = env.SMTP_SECURE;
+  let smtpSecure = smtpPort === 465;
   const trustProxyValue = env.TRUST_PROXY;
   let trustProxy = false;
 
@@ -176,6 +179,18 @@ export function getConfig(env = process.env) {
     errors.PORT = 'PORT must be an integer between 1 and 65535.';
   }
 
+  if (smtpPort === null || smtpPort > 65535) {
+    errors.SMTP_PORT = 'SMTP_PORT must be an integer between 1 and 65535.';
+  }
+
+  if (smtpSecureValue !== undefined) {
+    if (!['true', 'false'].includes(smtpSecureValue)) {
+      errors.SMTP_SECURE = 'SMTP_SECURE must be true or false.';
+    } else {
+      smtpSecure = smtpSecureValue === 'true';
+    }
+  }
+
   if (!env.DATABASE_URL) {
     errors.DATABASE_URL = 'DATABASE_URL is required.';
   }
@@ -188,16 +203,24 @@ export function getConfig(env = process.env) {
     errors.CSRF_SECRET = 'CSRF_SECRET is required outside development.';
   }
 
-  if (nodeEnv === 'production' && !env.BREVO_API_KEY) {
-    errors.BREVO_API_KEY = 'BREVO_API_KEY is required in production.';
+  if (nodeEnv === 'production' && !env.SMTP_HOST) {
+    errors.SMTP_HOST = 'SMTP_HOST is required in production.';
   }
 
-  if (nodeEnv === 'production' && !env.BREVO_FROM_EMAIL) {
-    errors.BREVO_FROM_EMAIL = 'BREVO_FROM_EMAIL is required in production.';
+  if (nodeEnv === 'production' && !env.SMTP_USER) {
+    errors.SMTP_USER = 'SMTP_USER is required in production.';
   }
 
-  if (nodeEnv === 'production' && !env.BREVO_FROM_NAME) {
-    errors.BREVO_FROM_NAME = 'BREVO_FROM_NAME is required in production.';
+  if (nodeEnv === 'production' && !env.SMTP_PASSWORD) {
+    errors.SMTP_PASSWORD = 'SMTP_PASSWORD is required in production.';
+  }
+
+  if (nodeEnv === 'production' && !env.MAIL_FROM) {
+    errors.MAIL_FROM = 'MAIL_FROM is required in production.';
+  }
+
+  if (nodeEnv === 'production' && !env.MAIL_FROM_NAME) {
+    errors.MAIL_FROM_NAME = 'MAIL_FROM_NAME is required in production.';
   }
 
   if (nodeEnv === 'production' && !env.APP_URL) {
@@ -264,9 +287,13 @@ export function getConfig(env = process.env) {
     rateLimitStoreMode,
     backendInstanceCount,
     trustProxy,
-    brevoApiKey: env.BREVO_API_KEY ?? '',
-    brevoFromEmail: env.BREVO_FROM_EMAIL ?? '',
-    brevoFromName: env.BREVO_FROM_NAME ?? '',
+    smtpHost: env.SMTP_HOST ?? '',
+    smtpPort: smtpPort ?? 465,
+    smtpSecure,
+    smtpUser: env.SMTP_USER ?? '',
+    smtpPassword: env.SMTP_PASSWORD ?? '',
+    mailFrom: env.MAIL_FROM ?? '',
+    mailFromName: env.MAIL_FROM_NAME ?? '',
     appUrl: env.APP_URL ?? 'http://localhost:5173',
     googleClientId: env.GOOGLE_CLIENT_ID ?? '',
     googleClientSecret: env.GOOGLE_CLIENT_SECRET ?? '',

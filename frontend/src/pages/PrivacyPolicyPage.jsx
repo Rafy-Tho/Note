@@ -8,7 +8,7 @@ export function PrivacyPolicyPage() {
         <p className={styles.eyebrow}>Privacy / policy</p>
         <h1 id="privacy-policy-title">Privacy Policy</h1>
         <p className={styles.intro}>
-          Note App is a private note workspace. This policy explains what the
+          Oqira is a private note workspace. This policy explains what the
           current MVP stores, why it is needed, and which services support the
           account flows.
         </p>
@@ -60,10 +60,10 @@ export function PrivacyPolicyPage() {
       <section>
         <h2>Cookies and similar technologies</h2>
         <p>
-          Note App uses necessary HTTP-only cookies for authenticated sessions
-          and, when using social sign-in, a short-lived browser binding for the
-          OAuth flow. These cookies support security and account access. The MVP
-          does not intentionally use advertising cookies, analytics trackers, or
+          Oqira uses necessary HTTP-only cookies for authenticated sessions and,
+          when using social sign-in, a short-lived browser binding for the OAuth
+          flow. These cookies support security and account access. The MVP does
+          not intentionally use advertising cookies, analytics trackers, or
           cross-site tracking pixels.
         </p>
       </section>
@@ -72,10 +72,10 @@ export function PrivacyPolicyPage() {
         <h2>Service providers</h2>
         <p>
           Email verification and password-reset messages may be delivered
-          through Brevo. If you choose Google or Facebook sign-in, that provider
-          processes information under its own privacy policy and terms. Note App
-          does not sell your personal information or share your note content for
-          advertising.
+          through Hostinger. If you choose Google or Facebook sign-in, that
+          provider processes information under its own privacy policy and terms.
+          Oqira does not sell your personal information or share your note
+          content for advertising.
         </p>
       </section>
 
@@ -87,14 +87,14 @@ export function PrivacyPolicyPage() {
           practices. Expired or consumed authentication tokens are not usable.
           The current MVP does not provide self-service account deletion or data
           export. To request account-data assistance, contact the operator
-          through the support channel provided with your Note App deployment.
+          through the support channel provided with your Oqira deployment.
         </p>
       </section>
 
       <section>
         <h2>Security</h2>
         <p>
-          Note App uses server-managed opaque sessions, secure cookie settings,
+          Oqira uses server-managed opaque sessions, secure cookie settings,
           CSRF protection, authentication rate limits, server-side validation,
           rich-text sanitization, and ownership checks for protected data. Notes
           are stored as structured server-side content for the current MVP; this
@@ -110,7 +110,7 @@ export function PrivacyPolicyPage() {
           The policy may be updated when the product or its data practices
           change. The effective date above identifies the current version.
           Privacy questions should be directed to the operator or support
-          contact published with your Note App deployment.
+          contact published with your Oqira deployment.
         </p>
       </section>
 

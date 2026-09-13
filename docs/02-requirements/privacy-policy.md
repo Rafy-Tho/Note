@@ -2,13 +2,13 @@
 
 ## Status
 
-This is the product privacy policy for the current Note App MVP. The frontend publishes it at `/privacy-policy` and links to it from the registration form. The deployment operator is responsible for supplying the appropriate support contact and reviewing the policy for the deployment's legal requirements.
+This is the product privacy policy for the current Oqira MVP. The frontend publishes it at `/privacy-policy` and links to it from the registration form. The deployment operator is responsible for supplying the appropriate support contact and reviewing the policy for the deployment's legal requirements.
 
 Last updated: 2026-09-11
 
 ## Information We Collect
 
-Note App collects the information needed to provide a private note workspace and protect account access:
+Oqira collects the information needed to provide a private note workspace and protect account access:
 
 - Account email address, email-verification status, and account timestamps.
 - Authentication records for local, Google, or Facebook sign-in.
@@ -29,7 +29,7 @@ The service uses necessary HTTP-only cookies for authenticated sessions and a sh
 
 ## Service Providers
 
-Brevo may deliver email verification and password-reset messages. Google and Facebook process information under their own privacy policies and terms when a user chooses those sign-in methods. Note App does not sell personal information or share note content for advertising.
+Hostinger may deliver email verification and password-reset messages. Google and Facebook process information under their own privacy policies and terms when a user chooses those sign-in methods. Oqira does not sell personal information or share note content for advertising.
 
 ## Storage, Retention, and Choices
 
