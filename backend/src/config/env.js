@@ -63,9 +63,6 @@ export function getConfig(env = process.env) {
   const authRateLimitMax = parseInteger(env.AUTH_RATE_LIMIT_MAX, 10);
   const rateLimitStoreMode = env.RATE_LIMIT_STORE ?? 'memory';
   const backendInstanceCount = parseInteger(env.BACKEND_INSTANCE_COUNT, 1);
-  const smtpPort = parseInteger(env.SMTP_PORT, 465);
-  const smtpSecureValue = env.SMTP_SECURE;
-  let smtpSecure = smtpPort === 465;
   const trustProxyValue = env.TRUST_PROXY;
   let trustProxy = false;
 
@@ -179,18 +176,6 @@ export function getConfig(env = process.env) {
     errors.PORT = 'PORT must be an integer between 1 and 65535.';
   }
 
-  if (smtpPort === null || smtpPort > 65535) {
-    errors.SMTP_PORT = 'SMTP_PORT must be an integer between 1 and 65535.';
-  }
-
-  if (smtpSecureValue !== undefined) {
-    if (!['true', 'false'].includes(smtpSecureValue)) {
-      errors.SMTP_SECURE = 'SMTP_SECURE must be true or false.';
-    } else {
-      smtpSecure = smtpSecureValue === 'true';
-    }
-  }
-
   if (!env.DATABASE_URL) {
     errors.DATABASE_URL = 'DATABASE_URL is required.';
   }
@@ -203,16 +188,14 @@ export function getConfig(env = process.env) {
     errors.CSRF_SECRET = 'CSRF_SECRET is required outside development.';
   }
 
-  if (nodeEnv === 'production' && !env.SMTP_HOST) {
-    errors.SMTP_HOST = 'SMTP_HOST is required in production.';
+  if (nodeEnv === 'production' && !env.HOSTINGER_API_TOKEN) {
+    errors.HOSTINGER_API_TOKEN =
+      'HOSTINGER_API_TOKEN is required in production.';
   }
 
-  if (nodeEnv === 'production' && !env.SMTP_USER) {
-    errors.SMTP_USER = 'SMTP_USER is required in production.';
-  }
-
-  if (nodeEnv === 'production' && !env.SMTP_PASSWORD) {
-    errors.SMTP_PASSWORD = 'SMTP_PASSWORD is required in production.';
+  if (nodeEnv === 'production' && !env.HOSTINGER_MAILBOX_RESOURCE_ID) {
+    errors.HOSTINGER_MAILBOX_RESOURCE_ID =
+      'HOSTINGER_MAILBOX_RESOURCE_ID is required in production.';
   }
 
   if (nodeEnv === 'production' && !env.MAIL_FROM) {
@@ -287,11 +270,9 @@ export function getConfig(env = process.env) {
     rateLimitStoreMode,
     backendInstanceCount,
     trustProxy,
-    smtpHost: env.SMTP_HOST ?? '',
-    smtpPort: smtpPort ?? 465,
-    smtpSecure,
-    smtpUser: env.SMTP_USER ?? '',
-    smtpPassword: env.SMTP_PASSWORD ?? '',
+    hostingerApiToken: env.HOSTINGER_API_TOKEN ?? '',
+    hostingerMailboxResourceId: env.HOSTINGER_MAILBOX_RESOURCE_ID ?? '',
+    hostingerApiBaseUrl: env.HOSTINGER_API_BASE_URL ?? '',
     mailFrom: env.MAIL_FROM ?? '',
     mailFromName: env.MAIL_FROM_NAME ?? '',
     appUrl: env.APP_URL ?? 'http://localhost:5173',

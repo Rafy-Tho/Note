@@ -14,7 +14,7 @@ import { configureRoutes } from './routes.js';
 import { getConfig } from '../config/env.js';
 import { createAuthRepository } from '../modules/auth/auth.repository.js';
 import { createAuthService } from '../modules/auth/auth.service.js';
-import { createSmtpMailService } from '../modules/auth/mail.service.js';
+import { createHostingerMailService } from '../modules/auth/mail.service.js';
 import { createGoogleProvider } from '../modules/auth/providers/google.provider.js';
 import { createFacebookProvider } from '../modules/auth/providers/facebook.provider.js';
 import { createTagsRepository } from '../modules/tags/tags.repository.js';
@@ -84,12 +84,10 @@ export function createApp({
   config = getConfig(),
   authService = createAuthService({
     repository: createAuthRepository(),
-    mailService: createSmtpMailService({
-      host: config.smtpHost,
-      port: config.smtpPort,
-      secure: config.smtpSecure,
-      user: config.smtpUser,
-      password: config.smtpPassword,
+    mailService: createHostingerMailService({
+      accessToken: config.hostingerApiToken,
+      mailboxResourceId: config.hostingerMailboxResourceId,
+      basePath: config.hostingerApiBaseUrl,
       fromEmail: config.mailFrom,
       fromName: config.mailFromName,
       appUrl: config.appUrl,

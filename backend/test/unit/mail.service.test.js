@@ -1,14 +1,19 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createSmtpMailService } from '../../src/modules/auth/mail.service.js';
+import { createHostingerMailService } from '../../src/modules/auth/mail.service.js';
+
+function createClient() {
+  return { sendEmail: vi.fn(async () => ({})) };
+}
 
 describe('authentication mail service', () => {
-  it('sends verification mail through SMTP without exposing configuration', async () => {
-    const transport = { sendMail: vi.fn(async () => ({ messageId: '1' })) };
-    const service = createSmtpMailService({
+  it('sends verification mail through the Hostinger API without exposing configuration', async () => {
+    const client = createClient();
+    const service = createHostingerMailService({
+      mailboxResourceId: 'mbx_123',
       fromEmail: 'notes@example.com',
       fromName: 'Oqira',
       appUrl: 'https://notes.example.com',
-      transport,
+      client,
     });
 
     await service.sendVerificationEmail({
@@ -16,28 +21,30 @@ describe('authentication mail service', () => {
       code: '482913',
     });
 
-    expect(transport.sendMail).toHaveBeenCalledWith(
+    expect(client.sendEmail).toHaveBeenCalledWith(
+      'mbx_123',
       expect.objectContaining({
-        from: { name: 'Oqira', address: 'notes@example.com' },
-        to: 'user@example.com',
+        to: ['user@example.com'],
+        displayName: 'Oqira',
         subject: 'Verify your Oqira email',
       }),
     );
-    const message = transport.sendMail.mock.calls[0][0];
+    const message = client.sendEmail.mock.calls[0][1];
     expect(message.text).toContain('Your Oqira verification code is: 482913');
   });
 
   it('converts provider failures into a safe mail error', async () => {
-    const transport = {
-      sendMail: vi.fn(async () => {
-        throw new Error('smtp rejected the message');
+    const client = {
+      sendEmail: vi.fn(async () => {
+        throw new Error('hostinger rejected the message');
       }),
     };
-    const service = createSmtpMailService({
+    const service = createHostingerMailService({
+      mailboxResourceId: 'mbx_123',
       fromEmail: 'notes@example.com',
       fromName: 'Oqira',
       appUrl: 'https://notes.example.com',
-      transport,
+      client,
     });
 
     await expect(
@@ -52,20 +59,23 @@ describe('authentication mail service', () => {
   });
 
   it('logs a redacted provider error when delivery fails', async () => {
-    const transport = {
-      sendMail: vi.fn(async () => {
-        const error = new Error('invalid login');
-        error.code = 'EAUTH';
-        error.responseCode = 535;
+    const client = {
+      sendEmail: vi.fn(async () => {
+        const error = new Error('invalid token');
+        error.response = {
+          status: 401,
+          data: { code: 'INVALID_TOKEN' },
+        };
         throw error;
       }),
     };
     const logger = { warn: vi.fn(), error: vi.fn() };
-    const service = createSmtpMailService({
+    const service = createHostingerMailService({
+      mailboxResourceId: 'mbx_123',
       fromEmail: 'notes@example.com',
       fromName: 'Oqira',
       appUrl: 'https://notes.example.com',
-      transport,
+      client,
       logger,
     });
 
@@ -81,8 +91,8 @@ describe('authentication mail service', () => {
 
     expect(logger.error).toHaveBeenCalledWith(
       'Mail delivery failed.',
-      expect.objectContaining({ code: 'EAUTH' }),
-      expect.objectContaining({ responseCode: 535 }),
+      expect.objectContaining({ name: 'Error' }),
+      expect.objectContaining({ status: 401, providerCode: 'INVALID_TOKEN' }),
     );
     const logged = JSON.stringify(logger.error.mock.calls);
     expect(logged).not.toContain('482913');
@@ -91,7 +101,8 @@ describe('authentication mail service', () => {
 
   it('warns without leaking configuration when mail is not configured', async () => {
     const logger = { warn: vi.fn(), error: vi.fn() };
-    const service = createSmtpMailService({
+    const service = createHostingerMailService({
+      mailboxResourceId: 'mbx_123',
       fromEmail: 'notes@example.com',
       fromName: 'Oqira',
       appUrl: 'https://notes.example.com',
@@ -114,13 +125,43 @@ describe('authentication mail service', () => {
     );
   });
 
-  it('uses a password-reset route for reset messages', async () => {
-    const transport = { sendMail: vi.fn(async () => ({ messageId: '1' })) };
-    const service = createSmtpMailService({
+  it('warns when the mailbox resource id is missing', async () => {
+    const logger = { warn: vi.fn(), error: vi.fn() };
+    const client = createClient();
+    const service = createHostingerMailService({
       fromEmail: 'notes@example.com',
       fromName: 'Oqira',
       appUrl: 'https://notes.example.com',
-      transport,
+      client,
+      logger,
+    });
+
+    await expect(
+      service.sendVerificationEmail({
+        to: 'user@example.com',
+        code: '482913',
+      }),
+    ).rejects.toMatchObject({
+      status: 503,
+      code: 'MAIL_UNAVAILABLE',
+    });
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      'Mail service is not configured.',
+      expect.objectContaining({
+        missing: expect.arrayContaining(['HOSTINGER_MAILBOX_RESOURCE_ID']),
+      }),
+    );
+  });
+
+  it('uses a password-reset route for reset messages', async () => {
+    const client = createClient();
+    const service = createHostingerMailService({
+      mailboxResourceId: 'mbx_123',
+      fromEmail: 'notes@example.com',
+      fromName: 'Oqira',
+      appUrl: 'https://notes.example.com',
+      client,
     });
 
     await service.sendPasswordResetEmail({
@@ -128,7 +169,7 @@ describe('authentication mail service', () => {
       token: 'reset-token',
     });
 
-    const message = transport.sendMail.mock.calls[0][0];
+    const message = client.sendEmail.mock.calls[0][1];
     expect(message.subject).toBe('Reset your Oqira password');
     expect(message.text).toContain(
       'https://notes.example.com/reset-password?token=reset-token',

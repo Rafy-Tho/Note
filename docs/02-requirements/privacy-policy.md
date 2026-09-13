@@ -29,7 +29,7 @@ The service uses necessary HTTP-only cookies for authenticated sessions and a sh
 
 ## Service Providers
 
-Hostinger may deliver email verification and password-reset messages. Google and Facebook process information under their own privacy policies and terms when a user chooses those sign-in methods. Oqira does not sell personal information or share note content for advertising.
+Hostinger may deliver email verification and password-reset messages through its Mail API. Google and Facebook process information under their own privacy policies and terms when a user chooses those sign-in methods. Oqira does not sell personal information or share note content for advertising.
 
 ## Storage, Retention, and Choices
 
